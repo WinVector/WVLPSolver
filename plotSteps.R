@@ -1,0 +1,6 @@
+library(plyr)
+library(reshape)
+library(ggplot2)
+d <- read.table('assignmentSpeed.tsv',header=T,sep='\t')
+d2 <- melt(d,id.vars=c('n'))
+ggplot(data=d2,aes(x=n,y=value,color=variable)) + geom_point() + geom_smooth()
