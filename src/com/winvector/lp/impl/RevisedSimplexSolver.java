@@ -21,6 +21,7 @@ import com.winvector.lp.LPSoln;
 public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImpl<T> {
 	public int debug = 0;
 	public boolean checkAll = false;
+	public double checkTol = 1.0e-8;
 	public double leavingTol = 1.0e-5;
 	public double earlyLeavingTol = 1.0e-2;
 	public boolean perturb = false;               // perturb b and c by simulated infinitesimals to avoid degenerate cases
@@ -176,7 +177,7 @@ public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImp
 	 * @param v
 	 * @return
 	 */
-	private static <Z extends Matrix<Z>> int findLeaving(final double tol, final Vector preB, final Vector preBprime,
+	private <Z extends Matrix<Z>> int findLeaving(final double tol, final Vector preB, final Vector preBprime,
 			final Vector v) {
 		// find least ratio of xB[i] to v[i] where v[i]>0
 		// determines joining variable
@@ -196,28 +197,30 @@ public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImp
 				//System.out.println("l(" + basis[i] + ")= " + vi);
 				if (vi>tol) {
 					final double xBi = preB.get(i);
-					if (xBi > 0) {
-						final double rat = xBi/vi;
-						if (Double.isNaN(bestRat)
-								|| (bestRat > rat)) {
-							bestRat = rat;
-							leavingI = i;
-						}
-					} else if((null!=preBprime)&&(preBprime.get(i)>0)) {
-						// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
-						final double prat = preBprime.get(i)/vi;
-						if (Double.isNaN(bestPRat)
-								|| (bestZRat>prat)) {
-							bestPRat = prat;
-							leavingPI = i;
-						}
-					} else {
-						// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
-						final double zrat = 1.0/vi;
-						if (Double.isNaN(bestZRat)
-								|| (bestZRat>zrat)) {
-							bestZRat = zrat;
-							leavingZI = i;
+					if (xBi>=-checkTol) {
+						if (xBi > 0) {
+							final double rat = xBi/vi;
+							if (Double.isNaN(bestRat)
+									|| (bestRat > rat)) {
+								bestRat = rat;
+								leavingI = i;
+							}
+						} else if((null!=preBprime)&&(preBprime.get(i)>0)) {
+							// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
+							final double prat = preBprime.get(i)/vi;
+							if (Double.isNaN(bestPRat)
+									|| (bestZRat>prat)) {
+								bestPRat = prat;
+								leavingPI = i;
+							}
+						} else {
+							// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
+							final double zrat = 1.0/vi;
+							if (Double.isNaN(bestZRat)
+									|| (bestZRat>zrat)) {
+								bestZRat = zrat;
+								leavingZI = i;
+							}
 						}
 					}
 				}
