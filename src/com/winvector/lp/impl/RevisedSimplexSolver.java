@@ -18,7 +18,7 @@ import com.winvector.lp.LPSoln;
  * see: http://www.win-vector.com/blog/2012/11/yet-another-java-linear-programming-library/
  * hosted at: https://github.com/WinVector/WVLPSolver
  */
-public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImpl<T> {
+public final class RevisedSimplexSolver extends LPSolverImpl {
 	public int debug = 0;
 	public boolean checkAll = false;
 	public double checkTol = 1.0e-8;
@@ -253,7 +253,7 @@ public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImp
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	protected LPSoln<T> rawSolve(final LPEQProb<T> prob, final int[] basis0, double tol, final int maxRounds) 
+	protected <T extends Matrix<T>> LPSoln<T> rawSolve(final LPEQProb<T> prob, final int[] basis0, double tol, final int maxRounds) 
 			throws LPException {
 		if ((tol<=0)||Double.isNaN(tol)||Double.isInfinite(tol)) {
 			tol = 0.0;

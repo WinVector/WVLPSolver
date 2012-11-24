@@ -373,7 +373,7 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	public LPSoln<T> solveDual(final LPSolver<T> solver, final int[] basis_in, final double tol, final int maxRounds)
+	public LPSoln<T> solveDual(final LPSolver solver, final int[] basis_in, final double tol, final int maxRounds)
 			throws LPException {
 		int m = A.rows();
 		final LPEQProb<T> dual = dual();
@@ -394,7 +394,7 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	public LPSoln<T> solveDebugByInspect(final LPSolver<T> solver, final double tol, final LinalgFactory<T> factory, final int maxRounds)
+	public LPSoln<T> solveDebugByInspect(final LPSolver solver, final double tol, final LinalgFactory<T> factory, final int maxRounds)
 			throws LPException {
 		final LPSoln<T> primSoln = solver.solve(this, null, 1.0e-6,maxRounds);
 		final Vector y2 = inspectForDual(primSoln, tol, factory);
@@ -439,7 +439,7 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	public LPSoln<T> solveDebug(final LPSolver<T> solver, final double tol, final int maxRounds) throws LPException {
+	public LPSoln<T> solveDebug(final LPSolver solver, final double tol, final int maxRounds) throws LPException {
 		final LPSoln<T> primSoln = solver.solve(this, null, tol,maxRounds);
 		final LPSoln<T> dualSoln = solveDual(solver, null, tol,maxRounds);
 		checkPrimDualOpt(A, b, c, primSoln.x, dualSoln.x, tol);

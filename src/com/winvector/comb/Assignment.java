@@ -5,13 +5,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.winvector.linagl.LinalgFactory;
+import com.winvector.linagl.Matrix;
 import com.winvector.linagl.Vector;
 import com.winvector.linalg.colt.NativeLinAlg;
-import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.LPSoln;
+import com.winvector.lp.LPSolver;
 import com.winvector.lp.impl.RevisedSimplexSolver;
 
 /**
@@ -31,9 +32,8 @@ public final class Assignment {
 	 * @return minimal cost total assignment, or null if there is no complete matching
 	 * @throws LPMalformedException 
 	 */
-	public static LPEQProb<NativeMatrix> buildAssignmentProb(final double[][] cost) throws LPMalformedException {
+	public static <T extends Matrix<T>> LPEQProb<T> buildAssignmentProb(final LinalgFactory<T> factory, final double[][] cost) throws LPMalformedException {
 		final int n = cost.length;
-		final LinalgFactory<NativeMatrix> factory = NativeLinAlg.factory;
 		final double maxAbsVal;
 		{
 			final BitSet lhs = new BitSet(n);
@@ -57,7 +57,7 @@ public final class Assignment {
 		final int m = 2*n;
 		final int nVars = n*n;
 		final double bigValue = (m+1)*(nVars+1)*(maxAbsVal+1.0);
-		final NativeMatrix a = factory.newMatrix(m, nVars, false);
+		final T a = factory.newMatrix(m, nVars, false);
 		final Vector b = factory.newVector(m);
 		final Vector c = factory.newVector(nVars);
 		{
@@ -75,11 +75,11 @@ public final class Assignment {
 		for(int i=0;i<m;++i) {
 			b.set(i,1.0);
 		}
-		final LPEQProb<NativeMatrix> prob = new LPEQProb<NativeMatrix>(a,b,c);
+		final LPEQProb<T> prob = new LPEQProb<T>(a,b,c);
 		return prob;
 	}
 	
-	public static int[] computeAssignment(final double[][] cost, final int maxIts) {
+	public static <T extends Matrix<T>> int[] computeAssignment(final double[][] cost, final LinalgFactory<T> factory, final LPSolver solver, final int maxIts) {
 		final int n = cost.length;
 		if(n<=0) {
 			return new int[0];
@@ -88,8 +88,8 @@ public final class Assignment {
 			return null;
 		}
 		try {
-			final LPEQProb<NativeMatrix> prob = buildAssignmentProb(cost);
-			final LPSoln<NativeMatrix> soln1 = new RevisedSimplexSolver<NativeMatrix>().solve(prob, null, 1.0e-6,maxIts);
+			final LPEQProb<T> prob = buildAssignmentProb(factory,cost);
+			final LPSoln<T> soln1 = solver.solve(prob, null, 1.0e-6,maxIts);
 			final int[] assignment = new int[n];
 			int nextIndex = 0;
 			for(int i=0;i<n;++i) {
@@ -108,6 +108,11 @@ public final class Assignment {
 		} catch (LPException e) {
 			return null;
 		}
+	}
+	
+	public static int[] computeAssignment(final double[][] cost, final int maxIts) {
+		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
+		return computeAssignment(cost,NativeLinAlg.factory,solver,maxIts);
 	}
 	
 	public static boolean checkValid(final double[][] cost, final int[] assignment) {
@@ -133,5 +138,13 @@ public final class Assignment {
 			return false;
 		}
 		return true;
+	}
+	
+	public static double cost(final double[][] cost, final int[] assignment) {
+		double tot = 0.0;
+		for(int i=0;i<cost.length;++i) {
+			tot += cost[i][assignment[i]];
+		}
+		return tot;
 	}
 }

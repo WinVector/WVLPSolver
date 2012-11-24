@@ -8,6 +8,8 @@ import com.winvector.linagl.Matrix;
 import com.winvector.linagl.Vector;
 
 public class NativeMatrix extends Matrix<NativeMatrix> {
+	private static final long serialVersionUID = 1L;
+	
 	private final int rows;
 	private final int cols;
 	private final double[][] u;

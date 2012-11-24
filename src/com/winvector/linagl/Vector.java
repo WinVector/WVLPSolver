@@ -1,8 +1,12 @@
 package com.winvector.linagl;
 
 import java.io.PrintStream;
+import java.io.Serializable;
 
-public abstract class Vector {
+public abstract class Vector implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
+
 	abstract public int size();
 	abstract public double get(int i);
 	abstract public void set(int i, double xpi);

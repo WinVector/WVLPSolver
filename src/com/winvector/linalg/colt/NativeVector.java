@@ -5,6 +5,8 @@ import java.util.Arrays;
 import com.winvector.linagl.Vector;
 
 public final class NativeVector extends Vector {
+	private static final long serialVersionUID = 1L;
+	
 	private final double[] underlying;
 	
 	public NativeVector(final int dim) {

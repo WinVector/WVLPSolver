@@ -8,6 +8,9 @@ import java.util.Set;
 
 
 public abstract class Matrix<T extends Matrix<T>> implements LinalgFactory<T> {
+	private static final long serialVersionUID = 1L;
+	
+
 	abstract public int cols();
 	abstract public int rows();
 	abstract public boolean sparseRep();

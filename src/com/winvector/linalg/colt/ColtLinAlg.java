@@ -3,6 +3,9 @@ package com.winvector.linalg.colt;
 import com.winvector.linagl.LinalgFactory;
 
 public final class ColtLinAlg implements LinalgFactory<ColtMatrix> {
+	private static final long serialVersionUID = 1L;
+	
+
 	private ColtLinAlg() {
 	}
 	

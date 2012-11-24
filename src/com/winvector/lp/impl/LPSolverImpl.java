@@ -6,9 +6,9 @@ import java.util.Set;
 
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.Vector;
+import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
-import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.LPSolver;
 
@@ -21,7 +21,7 @@ import com.winvector.lp.LPSolver;
  * x(basis0) = vector with entries selected by basis0 then x(basis0) =
  * A(basis0)^-1 b, x>=0 and x=0 for non-basis elements)
  */
-abstract class LPSolverImpl<T extends Matrix<T>> implements LPSolver<T> {
+abstract class LPSolverImpl implements LPSolver {
 	public int verbose = 0;
 	public double minBasisEpsilon = 1.0e-5;
 
@@ -253,7 +253,7 @@ abstract class LPSolverImpl<T extends Matrix<T>> implements LPSolver<T> {
 	 *             (if infeas or unbounded) no need to check feasibility of
 	 *             input or output (check by wrapper)
 	 */
-	protected abstract LPSoln<T> rawSolve(LPEQProb<T> prob, int[] basis0,
+	protected abstract <T extends Matrix<T>> LPSoln<T> rawSolve(LPEQProb<T> prob, int[] basis0,
 			final double tol, final int maxRounds) throws LPException;
 
 	/**
@@ -270,7 +270,7 @@ abstract class LPSolverImpl<T extends Matrix<T>> implements LPSolver<T> {
 	 * 
 	 * phase 1: min 1.s (A b) (x) = b, x,s>=0 (s) start with x = 0, s = 1.
 	 */
-	private LPSoln<T> solvePhase1(final Matrix<T> A, final Vector b, final double tol, final int maxRounds) 
+	private <T extends Matrix<T>> LPSoln<T> solvePhase1(final Matrix<T> A, final Vector b, final double tol, final int maxRounds) 
 			throws LPException {
 		{
 			final LPSoln<T> r = inspectForBasis(A, null, b);
@@ -387,7 +387,7 @@ abstract class LPSolverImpl<T extends Matrix<T>> implements LPSolver<T> {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	public LPSoln<T> solve(LPEQProb<T> prob, final int[] basis_in, final double tol,final int maxRounds)
+	public <T extends Matrix<T>> LPSoln<T> solve(LPEQProb<T> prob, final int[] basis_in, final double tol,final int maxRounds)
 			throws LPException {
 		if (verbose > 0) {
 			System.out.println("solve:");

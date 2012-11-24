@@ -8,6 +8,9 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import com.winvector.linalg.colt.NativeLinAlg;
+import com.winvector.lp.apachem3.M3Solver;
+
 public class TestAssignment {
 	@Test
 	public void testAssignment() {
@@ -31,15 +34,25 @@ public class TestAssignment {
 	public void testRandAssignment() {
 		final int n = 20;
 		final Random rand = new Random(235135L);
-		final double[][] c = new double[n][n];
-		for(int i=0;i<n;++i) {
-			for(int j=0;j<n;++j) {
-				c[i][j] = rand.nextDouble();
+		final int reps = 10;
+		for(int rep=0;rep<reps;++rep) {
+			final double[][] c = new double[n][n];
+			for(int i=0;i<n;++i) {
+				for(int j=0;j<n;++j) {
+					c[i][j] = rand.nextDouble();
+				}
 			}
+			for(int splotch=0;splotch<n-1;++splotch) {
+				c[rand.nextInt(n)][rand.nextInt(n)] = Double.NaN;
+			}
+			final int[] assignment = Assignment.computeAssignment(c,1000);
+			assertNotNull(assignment);
+			final boolean valid = Assignment.checkValid(c,assignment);
+			assertTrue(valid);
+			final double solnCost = Assignment.cost(c,assignment);
+			final int[] check = Assignment.computeAssignment(c, NativeLinAlg.factory, new M3Solver(), 1000);
+			final double checkCost = Assignment.cost(c,check);
+			assertTrue(Math.abs(solnCost-checkCost)<1.0e-3);
 		}
-		final int[] assignment = Assignment.computeAssignment(c,1000);
-		assertNotNull(assignment);
-		final boolean valid = Assignment.checkValid(c,assignment);
-		assertTrue(valid);
 	}
 }

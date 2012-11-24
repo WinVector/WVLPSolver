@@ -5,6 +5,7 @@ import java.util.Random;
 import org.apache.commons.math3.optimization.linear.SimplexSolver;
 
 import com.winvector.comb.Assignment;
+import com.winvector.linalg.colt.NativeLinAlg;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPSoln;
@@ -22,11 +23,11 @@ public class AssignmentSpeed {
 				c[i][j] = rand.nextDouble();
 			}
 		}
-		final LPEQProb<NativeMatrix> prob = Assignment.buildAssignmentProb(c);
+		final LPEQProb<NativeMatrix> prob = Assignment.buildAssignmentProb(NativeLinAlg.factory,c);
 		// solve
 		final int maxIts = 2000;
 		final int nreps = 5;
-		final LPSolver<NativeMatrix> rSolver = new RevisedSimplexSolver<NativeMatrix>();
+		final LPSolver rSolver = new RevisedSimplexSolver();
 		LPSoln<NativeMatrix> soln1 = null;
 		// apache library
 		final M3Prob m3Prob = M3Solver.convertProbToM3(prob);

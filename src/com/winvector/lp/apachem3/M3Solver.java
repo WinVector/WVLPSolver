@@ -22,7 +22,7 @@ import com.winvector.lp.LPSolver;
  *
  * @param <T>
  */
-public final class M3Solver<T extends Matrix<T>> implements LPSolver<T> {
+public final class M3Solver implements LPSolver {
 	
 	public static final class M3Prob {
 		public final ArrayList<LinearConstraint> constraints = new ArrayList<LinearConstraint>();
@@ -59,10 +59,11 @@ public final class M3Solver<T extends Matrix<T>> implements LPSolver<T> {
 	
 
 	@Override
-	public LPSoln<T> solve(final LPEQProb<T> prob, final int[] basis_in, final double tol,
+	public <T extends Matrix<T>> LPSoln<T> solve(final LPEQProb<T> prob, final int[] basis_in, final double tol,
 			final int maxRounds) throws LPException {
 		final M3Prob m3Prob = convertProbToM3(prob);
 		final SimplexSolver m3solver = new SimplexSolver();
+		m3solver.setMaxIterations(maxRounds);
 		final double[] s = m3Prob.solve(m3solver);
 		final Vector solnVec = prob.A.newVector(s.length);
 		for(int i=0;i<s.length;++i) {

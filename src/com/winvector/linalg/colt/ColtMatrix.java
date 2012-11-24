@@ -10,6 +10,8 @@ import com.winvector.linagl.Vector;
 
 
 class ColtMatrix extends Matrix<ColtMatrix> {
+	private static final long serialVersionUID = 1L;
+	
 	private final boolean wantSparse;
 	private final DoubleMatrix2D underlying;
 	

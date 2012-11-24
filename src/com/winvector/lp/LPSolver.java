@@ -11,7 +11,7 @@ import com.winvector.linagl.Matrix;
  * primal: min c.x: A x = b, x>=0 dual: max y.b: y A <= c y b = y A x <= c x (by
  * y A <=c, x>=0) , so y . b <= c . x at optimial y.b = c.x
  */
-public interface LPSolver<T extends Matrix<T>> {
+public interface LPSolver {
 	/**
 	 * @param prob
 	 *            well formed LPProb
@@ -22,6 +22,6 @@ public interface LPSolver<T extends Matrix<T>> {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	LPSoln<T> solve(LPEQProb<T> prob, int[] basis_in, double tol, final int maxRounds)
+	<T extends Matrix<T>> LPSoln<T> solve(LPEQProb<T> prob, int[] basis_in, double tol, final int maxRounds)
 			throws LPException;
 }
