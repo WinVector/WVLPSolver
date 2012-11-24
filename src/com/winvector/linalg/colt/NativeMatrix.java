@@ -94,23 +94,6 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 	}
 	
 	@Override
-	public String toString() {
-		final StringBuilder b = new StringBuilder();
-		b.append("{\n");
-		for(int i=0;i<rows;++i) {
-			b.append(" ");
-			b.append(NativeVector.toString(u[i]));
-			b.append("}");
-			if(i<rows-1) {
-				b.append(",");
-			}
-			b.append("\n");
-		}
-		b.append("}\n");
-		return b.toString();
-	}
-
-	@Override
 	public NativeMatrix inverse() {
 		if(rows!=cols) {
 			throw new IllegalArgumentException();
@@ -146,6 +129,22 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 	@Override
 	public boolean sparseRep() {
 		return false;
+	}
+	
+	@Override
+	public String toString() {
+		final StringBuilder b = new StringBuilder();
+		b.append("[" + rows + "][" + cols + "]{\n");
+		for(int i=0;i<rows;++i) {
+			b.append(" ");
+			b.append(NativeVector.toString(u[i]));
+			if(i<rows-1) {
+				b.append(",");
+			}
+			b.append("\n");
+		}
+		b.append("}\n");
+		return b.toString();
 	}
 }
 

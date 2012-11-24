@@ -2,30 +2,29 @@ package com.winvector.lp.impl;
 
 import java.util.BitSet;
 import java.util.Random;
-import java.util.Set;
-import java.util.TreeSet;
-
-
 
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.Vector;
+import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
 import com.winvector.lp.LPException.LPTooManyStepsException;
-import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPSoln;
 
 /**
- * basic primal simplex method
+ * basic primal revised simplex method
+ * primal: min c.x: A x = b, x>=0
+ * based on Strang "Linear Algebra and its Applications" second edition
+ * see: http://www.win-vector.com/blog/2012/11/yet-another-java-linear-programming-library/
+ * hosted at: https://github.com/WinVector/WVLPSolver
  */
 public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImpl<T> {
 	public int debug = 0;
 	public boolean checkAll = false;
 	public double leavingTol = 1.0e-5;
 	public double earlyLeavingTol = 1.0e-2;
-	public boolean breakCycles = false;
-	public boolean perturb = false;
-	public boolean earlyR = true;
+	public boolean perturb = false;               // perturb b and c by simulated infinitesimals to avoid degenerate cases
+	public boolean earlyR = true;                 // allow partial inspection for entering columns
 	public Random rand = new Random(3252351L);
 
 	
@@ -51,14 +50,25 @@ public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImp
 		if (debug > 0) {
 			System.out.println("start: " + stringBasis(tab.basis));
 		}
-		final Set<SBasis> recentBases;
-		if(breakCycles) {
-			recentBases = new TreeSet<SBasis>();
+		final Vector cPrime;   // optional perturbation
+		final Vector bPrime;   // optional perturbation
+		if(perturb) {
+			// perturb c
+			cPrime = tab.prob.c.newVector(tab.prob.c.size());
+			for(int i=0;i<cPrime.size();++i) {
+				cPrime.set(i, rand.nextDouble());  // non-negative entries- don't convert problem to unbounded
+			}
+			// perturb b, but make sure initial basis is still feasible
+			final Vector tmp = tab.prob.c.newVector(tab.prob.c.size());
+			for(int i=0;i<tmp.size();++i) {
+				tmp.set(i, rand.nextDouble());
+			}
+			bPrime = tab.prob.A.mult(tmp);
 		} else {
-			recentBases = null;
+			cPrime = null;
+			bPrime = null;
 		}
 		final int nvars = tab.prob.A.cols();
-		double lastVal = Double.NaN;
 		while (tab.normalSteps<=maxRounds) {
 			int enteringV = -1;
 			{
@@ -69,7 +79,7 @@ public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImp
 					curBasisIndicator.set(bi);
 				}
 				final Vector lambda = tab.leftBasisSoln(tab.prob.c);
-				final Vector lambdaPrime = perturb?tab.leftBasisSoln(tab.cPrime):lambda;
+				final Vector lambdaPrime = perturb?tab.leftBasisSoln(cPrime):lambda;
 				// find most negative entry of r, if any
 				// determines joining variable
 				double prevRi = Double.NaN;
@@ -80,7 +90,7 @@ public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImp
 					final int v = (null!=perm)?perm[ii]:ii;
 					if(!curBasisIndicator.get(v)) {
 						final double ri = tab.computeRI(lambda, tab.prob.c, v);
-						final double rpi = perturb?tab.computeRI(lambdaPrime,tab.cPrime, v):ri;
+						final double rpi = perturb?tab.computeRI(lambdaPrime,cPrime,v):ri;
 						if ((ri < -leavingTol) || ((ri <= 0) && (rpi < -leavingTol))) {
 							if ((enteringV < 0)
 									|| (ri < prevRi)
@@ -104,6 +114,7 @@ public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImp
 				}
 			}
 			final Vector preB = tab.basisSolveRight(tab.prob.b);
+			final Vector preBprime = perturb?tab.basisSolveRight(bPrime):preB;
 			if (checkAll) {
 				final Matrix<Z> checkMat = tab.prob.A.extractColumns(tab.basis); 
 				final Vector check = checkMat.mult(preB);
@@ -136,9 +147,9 @@ public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImp
 			}
 			final Vector u = tab.prob.A.extractColumn(enteringV);
 			final Vector v = tab.basisSolveRight(u);
-			int leavingI = findLeaving(leavingTol, preB, v);
+			int leavingI = findLeaving(leavingTol, preB, preBprime, v);
 			if(leavingI<0) {
-				leavingI = findLeaving(0.0, preB, v);
+				leavingI = findLeaving(0.0, preB, preBprime, v);
 			}
 			if (debug > 0) {
 				System.out.print(" leavingI: " + leavingI);
@@ -153,38 +164,6 @@ public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImp
 			}
 			// perform the swap
 			tab.basisPivot(leavingI,enteringV,v);
-			// record this basis and check for cycling
-			if(null!=recentBases) {
-				final SBasis sstart = new SBasis(tab.basis);
-				if (recentBases.contains(sstart)) {
-					// found cycle
-					// take brute-force search until we escape
-					// really should never get here as we have the infinitesimal object perturbation in to fight cycles
-					recentBases.clear();
-					final RSearch<Z> searcher = new RSearch<Z>(tab.prob, tab.cPrime, tol);
-					//System.out.println("start cycle search");
-					final SBasis send = searcher.escape(sstart);
-					if (send == null) {
-						// no more improvements, at optimal
-						return tab.basis();
-					}
-					//System.out.println("done cycle search");
-					// force step
-					tab.resetBasis(send.d);
-					recentBases.add(send);
-					continue;
-				} else {
-					if(null!=recentBases) {
-						recentBases.add(sstart);
-					}
-				}
-				final double objVal = tab.prob.c.extract(tab.basis).dot(preB);
-				if ( Double.isNaN(lastVal) || (lastVal>objVal) ) {
-					// 	non-trivial improvement
-					lastVal = objVal;
-					recentBases.clear();
-				}
-			}
 			//System.out.println("leave: " + basis[leavingI]);
 		}
 		throw new LPTooManyStepsException("max steps>" + maxRounds);
@@ -197,13 +176,16 @@ public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImp
 	 * @param v
 	 * @return
 	 */
-	private static <Z extends Matrix<Z>> int findLeaving(final double tol, final Vector preB,
+	private static <Z extends Matrix<Z>> int findLeaving(final double tol, final Vector preB, final Vector preBprime,
 			final Vector v) {
 		// find least ratio of xB[i] to v[i] where v[i]>0
 		// determines joining variable
 		//(degenerate when xB[i] = 0, could put anti-cycling code here)
 		double bestRat = Double.NaN;
 		int leavingI = -1;
+		// separate record keeping for the xB[i] <=0 case so we can still see relative sizes of the vi
+		double bestPRat = Double.NaN;
+		int leavingPI = -1;
 		// separate record keeping for the xB[i] <=0 case so we can still see relative sizes of the vi
 		double bestZRat = Double.NaN;
 		int leavingZI = -1;
@@ -221,6 +203,14 @@ public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImp
 							bestRat = rat;
 							leavingI = i;
 						}
+					} else if((null!=preBprime)&&(preBprime.get(i)>0)) {
+						// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
+						final double prat = preBprime.get(i)/vi;
+						if (Double.isNaN(bestPRat)
+								|| (bestZRat>prat)) {
+							bestPRat = prat;
+							leavingPI = i;
+						}
 					} else {
 						// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
 						final double zrat = 1.0/vi;
@@ -233,12 +223,16 @@ public final class RevisedSimplexSolver<T extends Matrix<T>> extends LPSolverImp
 				}
 			}
 		}
-		if (leavingZI >= 0) { // any xBi<=0 solution dominates all xBi>= solutions
-			// use one of the zero ratios
-			leavingI = leavingZI;
-			bestRat = bestZRat;
+		if(leavingZI>=0) {
+			return leavingZI;
 		}
-		return leavingI;
+		if(leavingPI>=0) {
+			return leavingPI;
+		}
+		if(leavingI>=0) {
+			return leavingI;
+		}
+		return -1;
 	}
 
 	/**

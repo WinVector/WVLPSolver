@@ -19,8 +19,6 @@ import com.winvector.lp.LPException.LPErrorException;
 final class RTableau<Z extends Matrix<Z>> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	public final Vector cPrime; // represents infinitesimal perturbation of obj-fn
-
 	public final LPEQProb<Z> prob;
 
 	public final int m;
@@ -88,10 +86,6 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 		//RevisedSimplexSolver.checkParams(prob.A, prob.b, prob.c, basis_in);
 		m = prob.A.rows();
 		n = prob.A.cols();
-		cPrime = prob.c.newVector(n);
-		for (int i = 0; i < n; ++i) {
-			cPrime.set(i, n + 1 - i);
-		}
 		basis = new int[basis_in.length];
 		for (int i = 0; i < basis.length; ++i) {
 			basis[i] = basis_in[i];
