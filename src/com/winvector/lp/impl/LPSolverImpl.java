@@ -314,7 +314,7 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		// check objective value is zero
 		final double v = c.dot(soln.x);
-		if (Math.abs(v)<0) {
+		if (Math.abs(v)>1.0e-5) {
 			throw new LPException.LPInfeasibleException("primal infeasible");
 		}
 		// check basis is good

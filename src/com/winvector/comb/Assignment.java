@@ -16,7 +16,8 @@ import com.winvector.lp.LPSolver;
 import com.winvector.lp.impl.RevisedSimplexSolver;
 
 /**
- * assignment problem
+ * assignment problem solved by a linear program.  mostly test/demo the lp code as you would want to solve actual assignemnt
+ * problems in production with direct combinatorial code like: http://algs4.cs.princeton.edu/65reductions/AssignmentProblem.java.html
  * Find permutation of 0...n-1 such that sum_i cost(i,p(i)) is minimized and for all i cost(i,p(i)) is finite and not-NaN (so 
  * user can use NaN to signal non edges).   This is a minimual weight complete matching 
  * @author johnmount
@@ -106,6 +107,7 @@ public final class Assignment {
 			}
 			return assignment;
 		} catch (LPException e) {
+			//e.printStackTrace();
 			return null;
 		}
 	}
@@ -116,6 +118,9 @@ public final class Assignment {
 	}
 	
 	public static boolean checkValid(final double[][] cost, final int[] assignment) {
+		if(null==assignment) {
+			return false;
+		}
 		final int n = cost.length;
 		if(n!=assignment.length) {
 			return false;

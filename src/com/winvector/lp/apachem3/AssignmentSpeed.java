@@ -25,7 +25,7 @@ public class AssignmentSpeed {
 		}
 		final LPEQProb<NativeMatrix> prob = Assignment.buildAssignmentProb(NativeLinAlg.factory,c);
 		// solve
-		final int maxIts = 2000;
+		final int maxIts = 10000;
 		final int nreps = 5;
 		final LPSolver rSolver = new RevisedSimplexSolver();
 		LPSoln<NativeMatrix> soln1 = null;
@@ -44,6 +44,11 @@ public class AssignmentSpeed {
 			final long wvTime = (endWV-startWV);
 			final long apTime = (endApache-startApache);
 			System.out.println("" + n + "\t" + wvTime + "\t" + apTime);
+		}
+		final int[] lres = Assignment.computeAssignment(c,maxIts);
+		if(!Assignment.checkValid(c,lres)) {
+			//System.out.println(new NativeMatrix(c));
+			throw new RuntimeException("bad solution");
 		}
 		final double cost1 = soln1.x.dot(prob.c);
 		double cost2 = 0.0;

@@ -19,6 +19,12 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 		this.cols = n;
 		u = new double[m][n];
 	}
+	
+	public NativeMatrix(final double[][] u) {
+		this.u = u;
+		this.rows = u.length;
+		this.cols = u.length;
+	}
 
 	@Override
 	public int cols() {
