@@ -6,7 +6,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.Vector;
+
 
 
 class ColtMatrix extends Matrix<ColtMatrix> {
@@ -54,19 +54,15 @@ class ColtMatrix extends Matrix<ColtMatrix> {
 		return new ColtMatrix(rows,cols,wantSparse);
 	}
 
-	@Override
-	public NativeVector newVector(final int rows) {
-		return new NativeVector(rows);
-	}
 	
 	@Override
-	public NativeVector solve(final Vector bIn, final boolean leastsq) {
-		if(bIn.size()!=rows()) {
+	public double[] solve(final double[] bIn, final boolean leastsq) {
+		if(bIn.length!=rows()) {
 			throw new IllegalArgumentException();
 		}
 		DoubleMatrix2D b = new DenseDoubleMatrix2D(rows(),1);
 		for(int i=0;i<rows();++i) {
-			b.set(i,0,bIn.get(i));
+			b.set(i,0,bIn[i]);
 		}
 		DoubleMatrix2D a = underlying;
 		if(leastsq) {
@@ -79,7 +75,7 @@ class ColtMatrix extends Matrix<ColtMatrix> {
 		for(int i=0;i<r.length;++i) {
 			r[i] = p.get(i,0);
 		}
-		return new NativeVector(r);
+		return r;
 	}
 
 	@Override

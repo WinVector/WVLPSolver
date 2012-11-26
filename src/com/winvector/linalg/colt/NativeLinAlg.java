@@ -10,11 +10,6 @@ public final class NativeLinAlg implements LinalgFactory<NativeMatrix> {
 	}
 	
 	public static final LinalgFactory<NativeMatrix> factory = new NativeLinAlg();
-
-	@Override
-	public NativeVector newVector(final int n) {
-		return new NativeVector(n);
-	}
 	
 	@Override
 	public NativeMatrix newMatrix(final int m, final int n, final boolean wantSparse) {

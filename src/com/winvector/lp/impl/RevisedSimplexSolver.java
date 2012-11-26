@@ -4,7 +4,6 @@ import java.util.BitSet;
 import java.util.Random;
 
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.Vector;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
@@ -51,18 +50,18 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		if (debug > 0) {
 			System.out.println("start: " + stringBasis(tab.basis));
 		}
-		final Vector cPrime;   // optional perturbation
-		final Vector bPrime;   // optional perturbation
+		final double[] cPrime;   // optional perturbation
+		final double[] bPrime;   // optional perturbation
 		if(perturb) {
 			// perturb c
-			cPrime = tab.prob.c.newVector(tab.prob.c.size());
-			for(int i=0;i<cPrime.size();++i) {
-				cPrime.set(i, rand.nextDouble());  // non-negative entries- don't convert problem to unbounded
+			cPrime = new double[tab.prob.c.length];
+			for(int i=0;i<cPrime.length;++i) {
+				cPrime[i] = rand.nextDouble();  // non-negative entries- don't convert problem to unbounded
 			}
 			// perturb b, but make sure initial basis is still feasible
-			final Vector tmp = tab.prob.c.newVector(tab.prob.c.size());
-			for(int i=0;i<tmp.size();++i) {
-				tmp.set(i, rand.nextDouble());
+			final double[] tmp = new double[tab.prob.c.length];
+			for(int i=0;i<tmp.length;++i) {
+				tmp[i] = rand.nextDouble();
 			}
 			bPrime = tab.prob.A.mult(tmp);
 		} else {
@@ -79,8 +78,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 				for(final int bi: tab.basis) {
 					curBasisIndicator.set(bi);
 				}
-				final Vector lambda = tab.leftBasisSoln(tab.prob.c);
-				final Vector lambdaPrime = perturb?tab.leftBasisSoln(cPrime):lambda;
+				final double[] lambda = tab.leftBasisSoln(tab.prob.c);
+				final double[] lambdaPrime = perturb?tab.leftBasisSoln(cPrime):lambda;
 				// find most negative entry of r, if any
 				// determines joining variable
 				double prevRi = Double.NaN;
@@ -114,12 +113,12 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 					return tab.basis();
 				}
 			}
-			final Vector preB = tab.basisSolveRight(tab.prob.b);
-			final Vector preBprime = perturb?tab.basisSolveRight(bPrime):preB;
+			final double[] preB = tab.basisSolveRight(tab.prob.b);
+			final double[] preBprime = perturb?tab.basisSolveRight(bPrime):preB;
 			if (checkAll) {
 				final Matrix<Z> checkMat = tab.prob.A.extractColumns(tab.basis); 
-				final Vector check = checkMat.mult(preB);
-				final double checkdsq = tab.prob.b.distSq(check);
+				final double[] check = checkMat.mult(preB);
+				final double checkdsq = Matrix.distSq(tab.prob.b,check);
 				if (checkdsq > tol*tol) {
 					/*
 					 * System.out.println("check: " + check);
@@ -146,8 +145,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 					throw new LPErrorException("bad intermediate basis");
 				}
 			}
-			final Vector u = tab.prob.A.extractColumn(enteringV);
-			final Vector v = tab.basisSolveRight(u);
+			final double[] u = tab.prob.A.extractColumn(enteringV);
+			final double[] v = tab.basisSolveRight(u);
 			int leavingI = findLeaving(leavingTol, preB, preBprime, v);
 			if(leavingI<0) {
 				leavingI = findLeaving(0.0, preB, preBprime, v);
@@ -177,8 +176,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	 * @param v
 	 * @return
 	 */
-	private <Z extends Matrix<Z>> int findLeaving(final double tol, final Vector preB, final Vector preBprime,
-			final Vector v) {
+	private <Z extends Matrix<Z>> int findLeaving(final double tol, final double[] preB, final double[] preBprime,
+			final double[] v) {
 		// find least ratio of xB[i] to v[i] where v[i]>0
 		// determines joining variable
 		//(degenerate when xB[i] = 0, could put anti-cycling code here)
@@ -190,37 +189,34 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		// separate record keeping for the xB[i] <=0 case so we can still see relative sizes of the vi
 		double bestZRat = Double.NaN;
 		int leavingZI = -1;
-		{
-			int i = -1;
-			while ((i = v.nextIndex(i)) >= 0) {
-				final double vi = v.get(i);
-				//System.out.println("l(" + basis[i] + ")= " + vi);
-				if (vi>tol) {
-					final double xBi = preB.get(i);
-					if (xBi>=-checkTol) {
-						if (xBi > 0) {
-							final double rat = xBi/vi;
-							if (Double.isNaN(bestRat)
-									|| (bestRat > rat)) {
-								bestRat = rat;
-								leavingI = i;
-							}
-						} else if((null!=preBprime)&&(preBprime.get(i)>0)) {
-							// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
-							final double prat = preBprime.get(i)/vi;
-							if (Double.isNaN(bestPRat)
-									|| (bestZRat>prat)) {
-								bestPRat = prat;
-								leavingPI = i;
-							}
-						} else {
-							// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
-							final double zrat = 1.0/vi;
-							if (Double.isNaN(bestZRat)
-									|| (bestZRat>zrat)) {
-								bestZRat = zrat;
-								leavingZI = i;
-							}
+		for(int i=0;i<v.length;++i) {
+			final double vi = v[i];
+			//System.out.println("l(" + basis[i] + ")= " + vi);
+			if (vi>tol) {
+				final double xBi = preB[i];
+				if (xBi>=-checkTol) {
+					if (xBi > 0) {
+						final double rat = xBi/vi;
+						if (Double.isNaN(bestRat)
+								|| (bestRat > rat)) {
+							bestRat = rat;
+							leavingI = i;
+						}
+					} else if((null!=preBprime)&&(preBprime[i]>0)) {
+						// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
+						final double prat = preBprime[i]/vi;
+						if (Double.isNaN(bestPRat)
+								|| (bestZRat>prat)) {
+							bestPRat = prat;
+							leavingPI = i;
+						}
+					} else {
+						// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
+						final double zrat = 1.0/vi;
+						if (Double.isNaN(bestZRat)
+								|| (bestZRat>zrat)) {
+							bestZRat = zrat;
+							leavingZI = i;
 						}
 					}
 				}

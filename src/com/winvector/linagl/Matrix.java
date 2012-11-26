@@ -22,32 +22,107 @@ public abstract class Matrix<T extends Matrix<T>> implements LinalgFactory<T> {
 	abstract public T transpose();
 
 	abstract public <Z extends T> T multMat(final Z o);
-	abstract public Vector solve(final Vector y, final boolean leastsq);
+	abstract public double[] solve(final double[] y, final boolean leastsq);
 	abstract public T inverse();
 
 
 
-	public Vector extractRow(final int ri) {
-		final Vector r = newVector(cols());
+	public double[] extractRow(final int ri) {
+		final double[] r = new double[cols()];
 		for(int i=0;i<cols();++i) {
 			final double e = get(ri, i);
-			if (e!=0) {
-				r.set(i, e);
-			}
+			r[i] = e;
+		}
+		return r;
+	}
+	
+	public static double[] extract(final double[] v, final int[] indices) {
+		final double[] r = new double[indices.length];
+		for(int i=0;i<indices.length;++i) {
+			r[i] = v[indices[i]];
 		}
 		return r;
 	}
 
+	public static boolean isZero(final double[] x) {
+		for(final double xi: x) {
+			if(Math.abs(xi)>0.0) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public static int nNonZero(final double[] x) {
+		int n = 0;
+		for(final double xi: x) {
+			if(Math.abs(xi)>0.0) {
+				++n;
+			}
+		}
+		return n;
+	}
+
+	public static double dot(final double[] x, final double[] y) {
+		double r = 0.0;
+		final int n = x.length;
+		for(int i=0;i<n;++i) {
+			r += x[i]*y[i];
+		}
+		return r;
+	}
+	
+	public static double distSq(final double[] x, final double[] y) {
+		double r = 0.0;
+		final int n = x.length;
+		for(int i=0;i<n;++i) {
+			final double diffi = x[i]-y[i];
+			r += diffi*diffi;
+		}
+		return r;
+	}
+	
+	public static String toString(final double[] x) {
+		final StringBuilder b = new StringBuilder();
+		b.append("{");
+		boolean first = true;
+		for(final double xi: x) {
+			if(!first) {
+				b.append(", ");
+			} else {
+				first = false;
+			}
+			b.append(""+xi);
+		}
+		b.append("}");
+		return b.toString();
+	}
+	
+	@Override
+	public String toString() {
+		final StringBuilder b = new StringBuilder();
+		b.append("[" + rows() + "][" + cols() + "]{\n");
+		for(int i=0;i<rows();++i) {
+			b.append(" ");
+			b.append(toString(extractRow(i)));
+			if(i<rows()-1) {
+				b.append(",");
+			}
+			b.append("\n");
+		}
+		b.append("}\n");
+		return b.toString();
+	}
+	
 	public void print(final PrintStream p) {
-		p.print('[');
+		p.print("{");
 		p.println();
 		for (int i = 0; i < rows(); ++i) {
-			final Vector ri = extractRow(i);
-			p.print(' ');
-			ri.print(p);
+			p.print(" ");
+			p.println(toString(extractRow(i)));
 			p.println();
 		}
-		p.print(']');
+		p.print("}");
 		p.println();
 	}
 
@@ -64,36 +139,32 @@ public abstract class Matrix<T extends Matrix<T>> implements LinalgFactory<T> {
 		return r;
 	}
 
-	public Vector mult(final Vector x) {
-		if(cols()!=x.size()) {
+	public double[] mult(final double[] x) {
+		if(cols()!=x.length) {
 			throw new IllegalArgumentException();
 		}
-		final Vector r = newVector(rows());
-		for (int i = 0; i < r.size(); ++i) {
+		final double[] r = new double[rows()];
+		for (int i = 0; i < r.length; ++i) {
 			double z = 0;
 			for(int k=0;k<cols();++k) {
-				z += x.get(k)*get(i,k);
+				z += x[k]*get(i,k);
 			}
-			if (z!=0) {
-				r.set(i, z);
-			}
+			r[i] = z;
 		}
 		return r;		
 	}
 
-	public Vector multLeft(final Vector b) {
-		if (rows() != b.size()) {
+	public double[] multLeft(final double[] b) {
+		if (rows() != b.length) {
 			throw new IllegalArgumentException();
 		}
-		final Vector r = newVector(cols());
-		for (int i = 0; i < r.size(); ++i) {
+		final double[] r = new double[cols()];
+		for (int i = 0; i < r.length; ++i) {
 			double z = 0;
 			for(int k=0;k<rows();++k) {
-				z += b.get(k)*get(k, i);
+				z += b[k]*get(k, i);
 			}
-			if (z!=0) {
-				r.set(i, z);
-			}
+			r[i] = z;
 		}
 		return r;
 	}
@@ -209,20 +280,18 @@ public abstract class Matrix<T extends Matrix<T>> implements LinalgFactory<T> {
 		return rowBasis(c,forcedRows,minVal);
 	}
 
-	public void setRow(final int ri, final Vector col) {
+	public void setRow(final int ri, final double[] col) {
 		for(int i=0;i<cols();++i) {
-			final double e = col.get(i);
+			final double e = col[i];
 			set(ri,i, e);
 		}
 	}
 
-	public Vector extractColumn(final int ci) {
-		final Vector r = newVector(rows());
+	public double[] extractColumn(final int ci) {
+		final double[] r = new double[rows()];
 		for(int i=0;i<rows();++i) {
 			final double e = get(i, ci);
-			if (e!=0) {
-				r.set(i, e);
-			}
+			r[i] = e;
 		}
 		return r;
 	}

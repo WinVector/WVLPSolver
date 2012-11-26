@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.Vector;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException.LPErrorException;
@@ -41,7 +40,7 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 	 *         (want x>=0)
 	 * @throws LPErrorException 
 	 */
-	public Vector basisSolveRight(final Vector y) throws LPErrorException {
+	public double[] basisSolveRight(final double[] y) throws LPErrorException {
 		if(null==BInv) {
 			try {
 				BInv = prob.A.extractColumns(basis).inverse();
@@ -60,7 +59,7 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 	 *         prob.A.extractColumns(basis) = y (otherwise)
 	 * @throws LPErrorException 
 	 */
-	public Vector basisSolveLeft(final Vector y) throws LPErrorException {
+	public double[] basisSolveLeft(final double[] y) throws LPErrorException {
 		if(null==BInv) {
 			try {
 				BInv = prob.A.extractColumns(basis).inverse();
@@ -98,21 +97,21 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 	}
 	
 
-	public Vector leftBasisSoln(final Vector c) throws LPErrorException {
-		final Vector cB = c.extract(basis);
-		final Vector lambda = basisSolveLeft(cB);
+	public double[] leftBasisSoln(final double[] c) throws LPErrorException {
+		final double[] cB = Matrix.extract(c,basis);
+		final double[] lambda = basisSolveLeft(cB);
 		return lambda;
 	}
 	
-	public double computeRI(final Vector lambda, final Vector c, final int vi) throws LPErrorException {
-		final double cFi = c.get(vi);
-		final Vector Fi = prob.A.extractColumn(vi);
-		final double lambdaFi = Fi.dot(lambda);
+	public double computeRI(final double[] lambda, final double[] c, final int vi) throws LPErrorException {
+		final double cFi = c[vi];
+		final double[] Fi = prob.A.extractColumn(vi);
+		final double lambdaFi = Matrix.dot(Fi,lambda);
 		final double ri = cFi - lambdaFi; 
 		return ri;
 	}
 
-	public void basisPivot(final int leavingI, final int enteringV, final Vector v) throws LPErrorException {
+	public void basisPivot(final int leavingI, final int enteringV, final double[] v) throws LPErrorException {
 		basis[leavingI] = enteringV;
 		++normalSteps;
 		if(normalSteps%(m+n+1)==0) {
@@ -120,10 +119,10 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 		}
 		if (BInv != null) {
 			// rank 1 update the inverse
-			final double vKInv = 1.0/v.get(leavingI);
+			final double vKInv = 1.0/v[leavingI];
 			for(int i=0;i<m;++i) {
 				if(leavingI!=i) {
-					final double vi = -v.get(i)*vKInv;
+					final double vi = -v[i]*vKInv;
 					for(int j=0;j<m;++j) {
 						BInv.set(i, j,BInv.get(i, j)+vi*BInv.get(leavingI,j));
 					}

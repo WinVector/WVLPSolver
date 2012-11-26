@@ -3,7 +3,6 @@ package com.winvector.lp.impl;
 import java.util.Arrays;
 
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.Vector;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException.LPErrorException;
 
@@ -80,19 +79,19 @@ final class SBasis implements Comparable<SBasis> {
 		return r;
 	}
 
-	public <Z extends Matrix<Z>> double value(final LPEQProb<Z> p, final Vector obj, double tol) {
+	public <Z extends Matrix<Z>> double value(final LPEQProb<Z> p, final double[] obj, double tol) {
 		try {
 			if((tol<=0)||Double.isInfinite(tol)||Double.isNaN(tol)) { 
 				tol = 0.0;
 			}
 			final Matrix<Z> B = p.A.extractColumns(d);
-			final Vector xB = B.solve(p.b, false);
-			final Vector check = B.mult(xB);
-			if (p.b.distSq(check) > (tol*tol) ) {
+			final double[] xB = B.solve(p.b, false);
+			final double[] check = B.mult(xB);
+			if (Matrix.distSq(p.b,check) > (tol*tol) ) {
 				throw new LPErrorException("could not solve basis");
 			}
-			final Vector cB = obj.extract(d);
-			double objVal = cB.dot(xB);
+			final double[] cB = Matrix.extract(obj,d);
+			double objVal = Matrix.dot(cB,xB);
 			return objVal;
 		} catch (Exception e) {
 			return Double.NaN;

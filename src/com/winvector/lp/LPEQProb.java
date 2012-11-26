@@ -5,7 +5,7 @@ import java.io.Serializable;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.Vector;
+
 
 /**
  * primal: min c.x: A x = b, x>=0 dual: max y.b: y A <= c y b = y A x <= c x (by
@@ -15,8 +15,8 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	public final Matrix<T> A;
-	public final Vector b;
-	public final Vector c;
+	public final double[] b;
+	public final double[] c;
 	
 
 	/**
@@ -29,7 +29,7 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException.LPMalformedException
 	 *             if parameters don't match defs
 	 */
-	public LPEQProb(final Matrix<T> A_in, final Vector b_in, final Vector c_in)
+	public LPEQProb(final Matrix<T> A_in, final double[] b_in, final double[] c_in)
 			throws LPException.LPMalformedException {
 		checkParams(A_in, b_in, c_in);
 		A = A_in;
@@ -47,10 +47,10 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException.LPMalformedException
 	 *             if parameters don't match defs
 	 */
-	public static <Z extends Matrix<Z>> void checkParams(Matrix<Z> A_, Vector b_, Vector c_)
+	public static <Z extends Matrix<Z>> void checkParams(Matrix<Z> A_, double[] b_, double[] c_)
 			throws LPException.LPMalformedException {
 		if ((A_ == null) || (b_ == null) || (c_ == null)
-				|| (A_.rows() != b_.size()) || (A_.cols() != c_.size())) {
+				|| (A_.rows() != b_.length) || (A_.cols() != c_.length)) {
 			String problem = "misformed problem";
 			if (A_ == null) {
 				problem = problem + " A_==null";
@@ -59,9 +59,9 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 				problem = problem + " b==null";
 			} else {
 				if (A_ != null) {
-					if (A_.rows() != b_.size()) {
+					if (A_.rows() != b_.length) {
 						problem = problem + " A_.rows()(" + A_.rows()
-								+ ")!=b.size()(" + b_.size() + ")";
+								+ ")!=b.length(" + b_.length + ")";
 					}
 				}
 			}
@@ -69,9 +69,9 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 				problem = problem + " c_==null";
 			} else {
 				if ((A_ != null) && (A_.rows() > 0)) {
-					if (A_.cols() != c_.size()) {
+					if (A_.cols() != c_.length) {
 						problem = problem + " A_.cols()(" + A_.cols()
-								+ ")!=c.size()(" + c_.size() + ")";
+								+ ")!=c.length(" + c_.length + ")";
 					}
 				}
 			}
@@ -85,10 +85,9 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 		p.println("x>=0");
 		A.print(p);
 		p.print(" * x = ");
-		b.print(p);
-		p.println();
+		p.println(Matrix.toString(b));
 		p.print("minimize x . ");
-		c.print(p);
+		p.println(Matrix.toString(c));
 		p.println();
 	}
 
@@ -108,26 +107,24 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException
 	 *             on bad data
 	 */
-	public static <Z extends Matrix<Z>> Vector soln(final Matrix<Z> A, final Vector b, final int[] basis, final double tol)
+	public static <Z extends Matrix<Z>> double[] soln(final Matrix<Z> A, final double[] b, final int[] basis, final double tol)
 			throws LPException {
 		if ((A == null) || (b == null) || (basis == null) || (A.rows() <= 0)
-				|| (A.rows() != b.size()) || (basis.length != A.rows())) {
+				|| (A.rows() != b.length) || (basis.length != A.rows())) {
 			throw new LPException.LPErrorException("bad call to soln()");
 		}
 		if (A.rows() > A.cols()) {
 			throw new LPException.LPErrorException("m>n in soln()");
 		}
 		final Matrix<Z> AP = A.extractColumns(basis);
-		final Vector xp = AP.solve(b, false);
-		final Vector x = b.newVector(A.cols());
+		final double[] xp = AP.solve(b, false);
+		final double[] x = new double[A.cols()];
 		if (xp == null) {
 			throw new LPException.LPErrorException("basis solution failed");
 		}
 		for (int i = 0; i < basis.length; ++i) {
-			final double xpi = xp.get(i);
-			if (xpi > 0) {
-				x.set(basis[i], xpi);
-			}
+			final double xpi = xp[i];
+			x[basis[i]] = xpi;
 		}
 		checkPrimFeas(A, b, x, tol);
 		return x;
@@ -145,14 +142,14 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException
 	 *             (if infeas ill-formed)
 	 */
-	public static <Z extends Matrix<Z>> void checkPrimFeas(final Matrix<Z> A, final Vector b, final Vector x,
+	public static <Z extends Matrix<Z>> void checkPrimFeas(final Matrix<Z> A, final double[] b, final double[] x,
 			double tol) throws LPException {
 		if ((A == null) || (b == null) || (x == null)) {
 			throw new LPException.LPInfeasibleException("null argument");
 		}
 		int m = A.rows();
 		int n = A.cols();
-		if ((b.size() != m) || (x.size() != n)) {
+		if ((b.length != m) || (x.length != n)) {
 			throw new LPException.LPInfeasibleException(
 					"wrong shaped vectors/matrix");
 		}
@@ -160,15 +157,15 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 			tol = 0.0;
 		}
 		for (int i = 0; i < n; ++i) {
-			double xi = x.get(i);
+			final double xi = x[i];
 			if (xi<-tol) {
 				throw new LPException.LPInfeasibleException("negative entry");
 			}
 		}
-		final Vector Ax = A.mult(x);
+		final double[] Ax = A.mult(x);
 		for (int i = 0; i < m; ++i) {
-			final double Axi = Ax.get(i);
-			final double bi = b.get(i);
+			final double Axi = Ax[i];
+			final double bi = b[i];
 			final double diffi = Math.abs(Axi-bi);
 			if (diffi>tol) {
 				throw new LPException.LPInfeasibleException(
@@ -190,23 +187,23 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException
 	 *             (if infeas ill-formed)
 	 */
-	public static <Z extends Matrix<Z>> void checkDualFeas(final Matrix<Z> A, final Vector c, final Vector y,
+	public static <Z extends Matrix<Z>> void checkDualFeas(final Matrix<Z> A, final double[] c, final double[] y,
 			double tol) throws LPException {
 		if ((A == null) || (c == null) || (y == null)) {
 			throw new LPException.LPInfeasibleException("null argument");
 		}
 		final int m = A.rows();
 		final int n = A.cols();
-		if ((c.size() != n) || (y.size() != m)) {
+		if ((c.length != n) || (y.length != m)) {
 			throw new LPException.LPInfeasibleException(
 					"wrong shaped vectors/matrix");
 		}
-		final Vector yA = A.multLeft(y);
+		final double[] yA = A.multLeft(y);
 		if ((tol <= 0.0)||Double.isNaN(tol)||Double.isInfinite(tol)) { 
 			tol = 0.0;
 		}
 		for (int i = 0; i < n; ++i) {
-			final double v = c.get(i) - yA.get(i);
+			final double v = c[i] - yA[i];
 			if (v<-tol) {
 				throw new LPException.LPInfeasibleException(
 						"inequality violated");
@@ -231,15 +228,15 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException
 	 *             (if infeas ill-formed, or y.b > c.x)
 	 */
-	public static <Z extends Matrix<Z>> void checkPrimDualFeas(final Matrix<Z> A, final Vector b, final Vector c,
-			final Vector x, final Vector y, double tol) throws LPException {
+	public static <Z extends Matrix<Z>> void checkPrimDualFeas(final Matrix<Z> A, final double[] b, final double[] c,
+			final double[] x, final double[] y, double tol) throws LPException {
 		if ((tol <= 0.0)||Double.isNaN(tol)||Double.isInfinite(tol)) { 
 			tol = 0.0;
 		}
 		checkPrimFeas(A, b, x, tol);
 		checkDualFeas(A, c, y, tol);
-		final double yb = y.dot(b);
-		final double cx = c.dot(x);
+		final double yb = Matrix.dot(y,b);
+		final double cx = Matrix.dot(c,x);
 		final double d = cx - yb;
 		if (d<-tol) {
 			// not possible by above checks, but helps us debug above checks
@@ -263,15 +260,15 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException
 	 *             (if infeas ill-formed, or y.b != c.x)
 	 */
-	public static <Z extends Matrix<Z>> void checkPrimDualOpt(final Matrix<Z> A, final Vector b, final Vector c, final Vector x,
-			final Vector y, double tol) throws LPException {
+	public static <Z extends Matrix<Z>> void checkPrimDualOpt(final Matrix<Z> A, final double[] b, final double[] c, final double[] x,
+			final double[] y, double tol) throws LPException {
 		if ((tol <= 0.0)||Double.isNaN(tol)||Double.isInfinite(tol)) { 
 			tol = 0.0;
 		}
 		checkPrimFeas(A, b, x, tol);
 		checkDualFeas(A, c, y, tol);
-		final double yb = y.dot(b);
-		final double cx = c.dot(x);
+		final double yb = Matrix.dot(y,b);
+		final double cx = Matrix.dot(c,x);
 		final double d = cx - yb;
 		if (d < -tol) {
 			// not possible by above checks, but helps us debug above checks
@@ -296,8 +293,8 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	LPEQProb<T> dual() throws LPException {
 		final int m = A.rows();
 		final int n = A.cols();
-		final Vector cp = b.newVector(2 * m + n);
-		final Matrix<T> AP = A.newMatrix(n, cp.size(),A.sparseRep());
+		final double[] cp = new double[2 * m + n];
+		final Matrix<T> AP = A.newMatrix(n, cp.length,A.sparseRep());
 		for (int i = 0; i < n; ++i) {
 			for (int j = 0; j < m; ++j) {
 				final double aji = A.get(j, i);
@@ -309,8 +306,8 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 			AP.set(i, i + 2 * m, 1.0);
 		}
 		for (int i = 0; i < m; ++i) {
-			cp.set(i, -b.get(i));
-			cp.set(i + m, b.get(i));
+			cp[i] = -b[i];
+			cp[i + m] = b[i];
 		}
 		return new LPEQProb<T>(AP, c, cp);
 	}
@@ -323,36 +320,35 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @param factory 
 	 * @return dual-optimal solution
 	 */
-	public Vector inspectForDual(final LPSoln<T> p, final double tol, final LinalgFactory<T> factory) throws LPException {
+	public double[] inspectForDual(final LPSoln<T> p, final double tol, final LinalgFactory<T> factory) throws LPException {
 		checkPrimFeas(A, b, p.x, tol);
 		// we now have a list of equality constraints to work with
 		try {
 			// least squares solve sub-system
 			final int[] rb = A.rowBasis(null,1.0e-5);
 			if ((rb == null) || (rb.length <= 0)) {
-				final Vector y = b.newVector(b.size());
+				final double[] y = new double[b.length];
 				checkPrimDualFeas(A, b, c, p.x, y, tol);
 				checkPrimDualOpt(A, b, c, p.x, y, tol);
 				return y;
 			}
 			final Matrix<T> eqmat = factory.newMatrix(p.basis.length+1, p.basis.length,A.sparseRep());
-			final Vector eqvec = factory.newVector(p.basis.length+1);
+			final double[] eqvec = new double[p.basis.length+1];
 			// put in obj-relation
-			eqmat.setRow(0,b.extract(rb));
-			eqvec.set(0,c.dot(p.x));
+			eqmat.setRow(0,Matrix.extract(b,rb));
+			eqvec[0] = Matrix.dot(c,p.x);
 			// put in all complementary slackness relns
 			// Schrijver p. 95
 			for (int bi = 0; bi < p.basis.length; ++bi) {
 				int i = p.basis[bi];
-				eqmat.setRow(bi+1,A.extractColumn(i).extract(rb));
-				eqvec.set(bi+1,c.get(i));
+				eqmat.setRow(bi+1,Matrix.extract(A.extractColumn(i),rb));
+				eqvec[bi+1] = c[i];
 			}
-			final Vector yr = eqmat.solve(eqvec, true);
-			final Vector y = b.newVector(b.size());
+			final double[] yr = eqmat.solve(eqvec, true);
+			final double[] y = new double[b.length];
 			if (yr != null) {
-				int j = -1;
-				while ((j = yr.nextIndex(j)) >= 0) {
-					y.set(rb[j], yr.get(j));
+				for(int j=0;j<yr.length;++j) {
+					y[rb[j]] = yr[j];
 				}
 			}
 			checkPrimDualFeas(A, b, c, p.x, y, tol);
@@ -378,9 +374,9 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 		int m = A.rows();
 		final LPEQProb<T> dual = dual();
 		final LPSoln<T> s = solver.solve(dual, basis_in, tol,maxRounds);
-		final Vector y = b.newVector(m);
+		final double[] y = new double[m];
 		for (int i = 0; i < m; ++i) {
-			y.set(i, s.x.get(i) - s.x.get(i + m));
+			y[i] = s.x[i] - s.x[i + m];
 		}
 		checkDualFeas(A, c, y, tol);
 		return new LPSoln<T>(y, s.basis);
@@ -397,7 +393,7 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	public LPSoln<T> solveDebugByInspect(final LPSolver solver, final double tol, final LinalgFactory<T> factory, final int maxRounds)
 			throws LPException {
 		final LPSoln<T> primSoln = solver.solve(this, null, 1.0e-6,maxRounds);
-		final Vector y2 = inspectForDual(primSoln, tol, factory);
+		final double[] y2 = inspectForDual(primSoln, tol, factory);
 		checkPrimDualOpt(A, b, c, primSoln.x, y2, tol);
 		//LPSoln dualSoln = solveDual(solver,null);
 		//checkPrimDualOpt(primSoln.x,dualSoln.x);
@@ -410,7 +406,7 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 			return A.cols();
 		}
 		if (c != null) {
-			return c.size();
+			return c.length;
 		}
 		return 0;
 	}
@@ -421,13 +417,13 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	}
 
 
-	public double primalValue(final Vector x) {
-		return c.dot(x);
+	public double primalValue(final double[] x) {
+		return Matrix.dot(c,x);
 	}
 
 
-	public double dualValue(final Vector y) {
-		return b.dot(y);
+	public double dualValue(final double[] y) {
+		return Matrix.dot(b,y);
 	}
 
 

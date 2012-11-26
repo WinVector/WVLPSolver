@@ -5,7 +5,7 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.Vector;
+
 
 public class NativeMatrix extends Matrix<NativeMatrix> {
 	private static final long serialVersionUID = 1L;
@@ -51,19 +51,15 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 		return new NativeMatrix(rows,cols,wantSparse);
 	}
 
+
 	@Override
-	public NativeVector newVector(final int rows) {
-		return new NativeVector(rows);
-	}
-	
-	@Override
-	public NativeVector solve(final Vector bIn, final boolean leastsq) {
-		if(bIn.size()!=rows()) {
+	public double[] solve(final double[] bIn, final boolean leastsq) {
+		if(bIn.length!=rows()) {
 			throw new IllegalArgumentException();
 		}
 		DoubleMatrix2D b = new DenseDoubleMatrix2D(rows(),1);
 		for(int i=0;i<rows();++i) {
-			b.set(i,0,bIn.get(i));
+			b.set(i,0,bIn[i]);
 		}
 		DoubleMatrix2D a = new DenseDoubleMatrix2D(u);
 		if(leastsq) {
@@ -76,7 +72,7 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 		for(int i=0;i<r.length;++i) {
 			r[i] = p.get(i,0);
 		}
-		return new NativeVector(r);
+		return r;
 	}
 
 	@Override
@@ -137,22 +133,6 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 	@Override
 	public boolean sparseRep() {
 		return false;
-	}
-	
-	@Override
-	public String toString() {
-		final StringBuilder b = new StringBuilder();
-		b.append("[" + rows + "][" + cols + "]{\n");
-		for(int i=0;i<rows;++i) {
-			b.append(" ");
-			b.append(NativeVector.toString(u[i]));
-			if(i<rows-1) {
-				b.append(",");
-			}
-			b.append("\n");
-		}
-		b.append("}\n");
-		return b.toString();
 	}
 }
 

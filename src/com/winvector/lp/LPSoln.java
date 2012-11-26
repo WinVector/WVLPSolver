@@ -3,15 +3,15 @@ package com.winvector.lp;
 import java.io.Serializable;
 
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.Vector;
+
 
 public final class LPSoln<T extends Matrix<T>> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	public final Vector x;
+	public final double[] x;
 	public final int[] basis;
 
-	public LPSoln(final Vector x_in, final int[] basis_in) {
+	public LPSoln(final double[] x_in, final int[] basis_in) {
 		x = x_in;
 		basis = basis_in;
 	}

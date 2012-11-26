@@ -6,7 +6,6 @@ import java.util.Set;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.Vector;
 import com.winvector.linalg.colt.NativeLinAlg;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
@@ -59,8 +58,8 @@ public final class Assignment {
 		final int nVars = n*n;
 		final double bigValue = (m+1)*(nVars+1)*(maxAbsVal+1.0);
 		final T a = factory.newMatrix(m, nVars, false);
-		final Vector b = factory.newVector(m);
-		final Vector c = factory.newVector(nVars);
+		final double[] b = new double[m];
+		final double[] c = new double[nVars];
 		{
 			int nextIndex = 0;
 			for(int i=0;i<n;++i) {
@@ -68,13 +67,13 @@ public final class Assignment {
 					final double cij = (!Double.isNaN(cost[i][j]))&&(!Double.isInfinite(cost[i][j]))?cost[i][j]:bigValue;
 					a.set(i,nextIndex,1.0);             // sum_i x_{i,j} = 1 for all j
 					a.set(n+j,nextIndex,1.0);           // sum_i x_{i,j} = 1 for all j
-					c.set(nextIndex,cij);
+					c[nextIndex] = cij;
 					++nextIndex;
 				}
 			}
 		}
 		for(int i=0;i<m;++i) {
-			b.set(i,1.0);
+			b[i] = 1.0;
 		}
 		final LPEQProb<T> prob = new LPEQProb<T>(a,b,c);
 		return prob;
@@ -97,7 +96,7 @@ public final class Assignment {
 				for(int j=0;j<n;++j) {
 					final double cij = cost[i][j];
 					if((!Double.isNaN(cij))&&(!Double.isInfinite(cij))) {
-						final double sv = soln1.x.get(nextIndex);
+						final double sv = soln1.x[nextIndex];
 						if(sv>=0.5) {
 							assignment[i] = j;
 						}						

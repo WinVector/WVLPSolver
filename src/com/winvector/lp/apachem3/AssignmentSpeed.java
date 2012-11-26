@@ -5,6 +5,7 @@ import java.util.Random;
 import org.apache.commons.math3.optimization.linear.SimplexSolver;
 
 import com.winvector.comb.Assignment;
+import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.NativeLinAlg;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
@@ -50,10 +51,10 @@ public class AssignmentSpeed {
 			//System.out.println(new NativeMatrix(c));
 			throw new RuntimeException("bad solution");
 		}
-		final double cost1 = soln1.x.dot(prob.c);
+		final double cost1 = Matrix.dot(soln1.x,prob.c);
 		double cost2 = 0.0;
-		for(int i=0;i<prob.c.size();++i) {
-			cost2 += soln2[i]*prob.c.get(i);
+		for(int i=0;i<prob.c.length;++i) {
+			cost2 += soln2[i]*prob.c[i];
 		}
 		if(Math.abs(cost1-cost2)>1.0e-3) {
 			throw new Exception("solution costs did not match");

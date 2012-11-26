@@ -17,7 +17,6 @@ import org.junit.Test;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.Vector;
 import com.winvector.linalg.colt.ColtLinAlg;
 import com.winvector.linalg.colt.NativeLinAlg;
 import com.winvector.lp.impl.RevisedSimplexSolver;
@@ -30,10 +29,10 @@ public final class TestLP  {
 	public <Z extends Matrix<Z>> void testLPSolverTrivial(final LinalgFactory<Z> factory) {
 		boolean caught1 = false;
 		try {
-			final Vector c = factory.newVector(1);
-			c.set(0, -1.0);
+			final double[] c = new double[1];
+			c[0] = -1.0;
 			final LPEQProb<Z> prob = new LPEQProb<Z>(factory.newMatrix(1, 1,false),
-					factory.newVector(1), c);
+					new double[1], c);
 			final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 			solver.solve(prob, null, 0.0,1000);
 		} catch (LPException.LPUnboundedException ue) {
@@ -45,10 +44,10 @@ public final class TestLP  {
 			assertTrue("didn't detect unbounded case",false);
 		}
 		try {
-			final Vector c = factory.newVector(1);
-			c.set(0, 1.0);
+			final double[] c = new double[1];
+			c[0] = 1.0;
 			final LPEQProb<Z> prob = new LPEQProb<Z>(factory.newMatrix(1, 1,false),
-					factory.newVector(1), c);
+					new double[1], c);
 			final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 			solver.solve(prob, null, 0.0,1000);
 		} catch (LPException le) {
@@ -60,12 +59,12 @@ public final class TestLP  {
 	public static <Z extends Matrix<Z>> LPEQProb<Z> exampleProblem(final LinalgFactory<Z> factory) throws LPException {
 		// p. 320 of Strang exercise 8.2.8
 		final Matrix<Z> m = factory.newMatrix(3,5,false);
-		final Vector b = factory.newVector(3);
-		final Vector c = factory.newVector(5);
-		m.set(0,0,1.0); m.set(0,1,1.0); m.set(0,2,-1.0); b.set(0,4.0);   // x1 + x2 - s1 = 4
-		m.set(1,0,1.0); m.set(1,1,3.0); m.set(1,3,-1.0); b.set(1,12.0);  // x1 + 3*x2 - s2 = 12
+		final double[] b = new double[3];
+		final double[] c = new double[5];
+		m.set(0,0,1.0); m.set(0,1,1.0); m.set(0,2,-1.0); b[0] = 4.0;   // x1 + x2 - s1 = 4
+		m.set(1,0,1.0); m.set(1,1,3.0); m.set(1,3,-1.0); b[1] = 12.0;  // x1 + 3*x2 - s2 = 12
 		m.set(2,0,1.0); m.set(2,1,-1.0); m.set(2,4,-1.0);                // x1 - x2 - s3 = 0
-		c.set(0,2.0); c.set(1,1.0);                                     // minimize 2*x1 + x2
+		c[0] = 2.0; c[1] = 1.0;                                     // minimize 2*x1 + x2
 		final LPEQProb<Z> prob = new LPEQProb<Z>(m,b,c);
 		return prob;
 	}
@@ -76,9 +75,9 @@ public final class TestLP  {
 		final double[] expect = {3.00000, 3.00000, 2.00000, 0.00000, 0.00000};
 		assertNotNull(soln1);
 		assertNotNull(soln1.x);
-		assertEquals(expect.length,soln1.x.size());
+		assertEquals(expect.length,soln1.x.length);
 		for(int i=0;i<expect.length;++i) {
-			assertTrue(Math.abs(soln1.x.get(i)-expect[i])<1.0e-3);
+			assertTrue(Math.abs(soln1.x[i]-expect[i])<1.0e-3);
 		}
 	}
 	

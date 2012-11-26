@@ -10,11 +10,6 @@ public final class ColtLinAlg implements LinalgFactory<ColtMatrix> {
 	}
 	
 	public static final LinalgFactory<ColtMatrix> factory = new ColtLinAlg();
-
-	@Override
-	public NativeVector newVector(final int n) {
-		return new NativeVector(n);
-	}
 	
 	@Override
 	public ColtMatrix newMatrix(final int m, final int n, final boolean wantSparse) {

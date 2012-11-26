@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.Vector;
 import com.winvector.linalg.colt.ColtLinAlg;
 import com.winvector.linalg.colt.NativeLinAlg;
 import com.winvector.lp.LPException;
@@ -23,8 +22,8 @@ public class TestLPImpl {
 		final RTableau<Z> tab = new RTableau<Z>(prob,new int[] {0,1,2});
 		final int leavingI = 0;
 		final int enteringI = 3;
-		final Vector u = tab.prob.A.extractColumn(enteringI);
-		final Vector v = tab.basisSolveRight(u);
+		final double[] u = tab.prob.A.extractColumn(enteringI);
+		final double[] v = tab.basisSolveRight(u);
 		final Z priorBInv = tab.BInv.copy();
 		tab.basisPivot(leavingI,enteringI,v);
 		final Z incBInv = tab.BInv.copy();
