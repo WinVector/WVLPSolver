@@ -277,12 +277,12 @@ abstract class LPSolverImpl implements LPSolver {
 	 */
 	private <T extends Matrix<T>> LPSoln solvePhase1(final Matrix<T> A, final double[] b, final double tol, final int maxRounds) 
 			throws LPException {
-		{
-			final LPSoln r = inspectForBasis(A, null, b);
-			if (r != null) {
-				return r;
-			}
-		}
+//		{
+//			final LPSoln r = inspectForBasis(A, null, b);
+//			if (r != null) {
+//				return r;
+//			}
+//		}
 		final int m = A.rows();
 		final int n = A.cols();
 		final double[] c = new double[n + 1];

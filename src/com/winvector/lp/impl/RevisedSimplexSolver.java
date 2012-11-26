@@ -25,7 +25,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public double leavingTol = 1.0e-5;
 	public double earlyLeavingTol = 1.0e-2;
 	public boolean perturb = false;               // perturb b and c by simulated infinitesimals to avoid degenerate cases
-	public boolean earlyR = true;                 // allow partial inspection for entering columns
+	public boolean earlyR = false;                 // allow partial inspection for entering columns
 	public Random rand = new Random(3252351L);
 
 	

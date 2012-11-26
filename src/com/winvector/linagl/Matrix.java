@@ -225,7 +225,7 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	}
 
 
-	public static <Z extends Matrix<Z>> int[] rowBasis(final Z c, final int[] forcedRows, final double minVal) {
+	private static <Z extends Matrix<Z>> int[] rowBasis(final Z c, final int[] forcedRows, final double minVal) {
 		final double minNormSq = minVal*minVal;
 		final Set<Integer> found = new HashSet<Integer>();
 		if(null!=forcedRows) {
