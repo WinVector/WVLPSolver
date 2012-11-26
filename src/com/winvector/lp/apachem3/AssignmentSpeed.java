@@ -26,6 +26,7 @@ public class AssignmentSpeed {
 			}
 		}
 		final LPEQProb<NativeMatrix> prob = Assignment.buildAssignmentProb(NativeMatrix.factory,c);
+		final LPEQProb<ColtMatrix> probSparse = Assignment.buildAssignmentProb(ColtMatrix.factory,c);
 		// solve
 		final int maxIts = 10000;
 		final int nreps = 1;
@@ -38,17 +39,26 @@ public class AssignmentSpeed {
 		LPSoln solnGLPK = null;
 		double[] solnAPM3 = null;
 		for(int rep=0;rep<nreps;++rep) {
-			final double wvTime;
+			final double wvDTime;
 			if(n<=75) {
-				final long startWV = System.currentTimeMillis();
+				final long startWVD = System.currentTimeMillis();
 				solnWV = rSolver.solve(prob,null,1.0e-5,maxIts);
-				final long endWV = System.currentTimeMillis();
-				wvTime = (endWV-startWV);
+				final long endWVD = System.currentTimeMillis();
+				wvDTime = endWVD-startWVD;
 			} else {
-				wvTime = Double.NaN;
+				wvDTime = Double.NaN;
+			}
+			final double wvSTime;
+			if(n<=75) {
+				final long startWVS = System.currentTimeMillis();
+				rSolver.solve(probSparse,null,1.0e-5,maxIts);
+				final long endWVS = System.currentTimeMillis();
+				wvSTime = endWVS-startWVS;
+			} else {
+				wvSTime = Double.NaN;
 			}
 			final double apTime;
-			if(n<=5) {
+			if(n<=45) {
 				final long startApache = System.currentTimeMillis();
 				solnAPM3 = m3Prob.solve(m3solver);
 				final long endApache = System.currentTimeMillis();
@@ -63,7 +73,7 @@ public class AssignmentSpeed {
 				final long endGLPK = System.currentTimeMillis();
 				glpkTime = (endGLPK-startGLPK);
 			}
-			System.out.println("" + n + "\t" + wvTime + "\t" + apTime + "\t" + glpkTime);
+			System.out.println("" + n + "\t" + wvDTime  + "\t" + wvSTime + "\t" + apTime + "\t" + glpkTime);
 		}
 		if(solnWV!=null) {
 			final int[] lres = Assignment.computeAssignment(c,maxIts);
@@ -91,7 +101,7 @@ public class AssignmentSpeed {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		System.out.println("" + "n" + "\t" + "wvTimeMS" + "\t" + "apm3TimeMS" + "\t" + "glpkTimeMS");
+		System.out.println("" + "assignmentSize" + "\t" + "wvDenseTimeMS" + "\t" + "wvSparseTimeMS" + "\t" + "apm3TimeMS" + "\t" + "glpkTimeMS");
 		for(int n=1;n<=100;++n) {
 			for(int rep=0;rep<3;++rep) {
 				runBoth(n);
