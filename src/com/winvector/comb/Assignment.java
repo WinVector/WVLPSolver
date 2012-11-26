@@ -57,7 +57,7 @@ public final class Assignment {
 		final int m = 2*n;
 		final int nVars = n*n;
 		final double bigValue = (m+1)*(nVars+1)*(maxAbsVal+1.0);
-		final T a = factory.newMatrix(m, nVars, false);
+		final T a = factory.newMatrix(m, nVars, true);
 		final double[] b = new double[m];
 		final double[] c = new double[nVars];
 		{

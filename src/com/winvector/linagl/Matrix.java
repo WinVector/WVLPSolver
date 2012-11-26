@@ -18,14 +18,36 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	abstract public double get(int j, int i);
 	abstract public void set(int i, int j, double d);
 
-	abstract public T copy();
-	abstract public T transpose();
-
 	abstract public <Z extends T> T multMat(final Z o);
 	abstract public double[] solve(final double[] y, final boolean leastsq);
 	abstract public T inverse();
+	
+	
+	public <Z extends Matrix<Z>> Z copy(final LinalgFactory<Z> factory, final boolean wantSparse) {
+		final Z r = factory.newMatrix(rows(),cols(),wantSparse);
+		for(int i=0;i<rows();++i) {
+			for(int j=0;j<cols();++j) {
+				final double vij = get(i,j);
+				if(vij!=0) {
+					r.set(i, j, vij);
+				}
+			}
+		}
+		return r;
+	}
 
-
+	public <Z extends Matrix<Z>> Z transpose(final LinalgFactory<Z> factory, final boolean wantSparse) {
+		final Z r = factory.newMatrix(cols(),rows(),wantSparse);
+		for(int i=0;i<rows();++i) {
+			for(int j=0;j<cols();++j) {
+				final double vij = get(i,j);
+				if(vij!=0) {
+					r.set(j, i, vij);
+				}
+			}
+		}
+		return r;
+	}
 
 	public double[] extractRow(final int ri) {
 		final double[] r = new double[cols()];
@@ -277,12 +299,12 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	}
 	
 	public int[] rowBasis(final int[] forcedRows, final double minVal) {
-		final T c = copy();
+		final T c = copy(factory(),sparseRep());
 		return rowBasis(c,forcedRows,minVal);
 	}
 	
 	public int[] colBasis(final int[] forcedRows, final double minVal) {
-		final T c = transpose();
+		final T c = transpose(factory(),sparseRep());
 		return rowBasis(c,forcedRows,minVal);
 	}
 

@@ -70,27 +70,6 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 		return r;
 	}
 
-	@Override
-	public NativeMatrix copy() {
-		final NativeMatrix r = new NativeMatrix(rows,cols,false);
-		for(int i=0;i<rows;++i) {
-			for(int j=0;j<cols;++j) {
-				r.u[i][j] = u[i][j];
-			}
-		}
-		return r;
-	}
-
-	@Override
-	public NativeMatrix transpose() {
-		final NativeMatrix r = new NativeMatrix(cols,rows,false);
-		for(int i=0;i<rows;++i) {
-			for(int j=0;j<cols;++j) {
-				r.u[j][i] = u[i][j];
-			}
-		}
-		return r;
-	}
 	
 	@Override
 	public NativeMatrix inverse() {

@@ -6,6 +6,7 @@ import org.apache.commons.math3.optimization.linear.SimplexSolver;
 
 import com.winvector.comb.Assignment;
 import com.winvector.linagl.Matrix;
+import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPSoln;
@@ -47,7 +48,7 @@ public class AssignmentSpeed {
 				wvTime = Double.NaN;
 			}
 			final double apTime;
-			if(n<=45) {
+			if(n<=5) {
 				final long startApache = System.currentTimeMillis();
 				solnAPM3 = m3Prob.solve(m3solver);
 				final long endApache = System.currentTimeMillis();
@@ -55,16 +56,18 @@ public class AssignmentSpeed {
 			} else {
 				apTime = Double.NaN;
 			}
-			final long startGLPK = System.currentTimeMillis();
-			solnGLPK = glpkSolver.solve(prob,null,1.0e-5,maxIts);	
-			final long endGLPK = System.currentTimeMillis();
-			final double glpkTime = (endGLPK-startGLPK);
+			final double glpkTime;
+			{
+				final long startGLPK = System.currentTimeMillis();
+				solnGLPK = glpkSolver.solve(prob,null,1.0e-5,maxIts);	
+				final long endGLPK = System.currentTimeMillis();
+				glpkTime = (endGLPK-startGLPK);
+			}
 			System.out.println("" + n + "\t" + wvTime + "\t" + apTime + "\t" + glpkTime);
 		}
 		if(solnWV!=null) {
 			final int[] lres = Assignment.computeAssignment(c,maxIts);
 			if(!Assignment.checkValid(c,lres)) {
-				//System.out.println(new NativeMatrix(c));
 				throw new RuntimeException("bad solution");
 			}
 			final double costWV = Matrix.dot(solnWV.x,prob.c);

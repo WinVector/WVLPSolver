@@ -23,9 +23,9 @@ public class TestLPImpl {
 		final int enteringI = 3;
 		final double[] u = tab.prob.A.extractColumn(enteringI);
 		final double[] v = tab.basisSolveRight(u);
-		final NativeMatrix priorBInv = tab.BInv.copy();
+		final NativeMatrix priorBInv = tab.BInv.copy(NativeMatrix.factory,false);
 		tab.basisPivot(leavingI,enteringI,v);
-		final NativeMatrix incBInv = tab.BInv.copy();
+		final NativeMatrix incBInv = tab.BInv.copy(NativeMatrix.factory,false);
 		{
 			double maxDiff = 0.0;
 			for(int i=0;i<priorBInv.rows();++i) {
@@ -36,7 +36,7 @@ public class TestLPImpl {
 			assertTrue(maxDiff>0.5);
 		}
 		tab.resetBasis(tab.basis); // force fresh b inverse calculation
-		final NativeMatrix batchBInv = tab.BInv.copy();
+		final NativeMatrix batchBInv = tab.BInv.copy(NativeMatrix.factory,false);
 		{
 			double maxDiff = 0.0;
 			for(int i=0;i<priorBInv.rows();++i) {

@@ -72,16 +72,6 @@ public class ColtMatrix extends Matrix<ColtMatrix> {
 		}
 		return r;
 	}
-
-	@Override
-	public ColtMatrix copy() {
-		return new ColtMatrix(underlying.copy(),wantSparse);
-	}
-
-	@Override
-	public ColtMatrix transpose() {
-		return new ColtMatrix(Algebra.ZERO.transpose(underlying).copy(),wantSparse);
-	}
 	
 	@Override
 	public String toString() {
