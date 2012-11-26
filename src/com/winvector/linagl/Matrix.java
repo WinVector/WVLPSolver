@@ -4,6 +4,8 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.BitSet;
 
+import com.winvector.linalg.colt.NativeMatrix;
+
 
 
 public abstract class Matrix<T extends Matrix<T>> implements Serializable {
@@ -200,51 +202,37 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 		return bdotb;
 	}
 	
-	/**
-	 * 
-	 * @param c
-	 * @param candidates can alter candidates (remove zero rows)
-	 * @return
-	 */
-	private static <Z extends Matrix<Z>> int largestNormRow(final Z c, final BitSet candidates, final double minNormSq) {
-		int bestProbe = -1;
-		double largestNormSq = Double.NEGATIVE_INFINITY;
-		for(int probe=candidates.nextSetBit(0); probe>=0; probe=candidates.nextSetBit(probe+1)) {
-			final double normSq = rowDotRow(c,probe,probe); 
-			if(normSq>minNormSq) {
-				if((bestProbe<0)||(normSq>largestNormSq)) {
-					bestProbe = probe;
-					largestNormSq = normSq;
-				}
-			} else {
-				candidates.clear(probe);
-			}
-		}
-		return bestProbe;
-	}
+
 	
-	private static <Z extends Matrix<Z>> void elimRow(final Z c, final int row) {
-		final double bdotb = rowDotRow(c,row,row);
-		if(bdotb>0) {
-			for(int elim=0;elim<c.rows();++elim) {
-				if(row!=elim) {
-					final double bdotx = rowDotRow(c,row,elim);
-					if(Math.abs(bdotx)>0) {
-						for(int i=0;i<c.cols();++i) {
-							c.set(elim,i,c.get(elim,i) - c.get(row,i)*bdotx/bdotb);
+	/**
+	 * elime all of elims from target
+	 * @param c
+	 * @param elims (target not in this set)
+	 * @param target
+	 */
+	private static <Z extends Matrix<Z>> void elimRows(final Z c, final BitSet elims, final int target) {
+		final double tdott = rowDotRow(c,target,target);
+		if(tdott>0) {
+			for(int ei=elims.nextSetBit(0); ei>=0; ei=elims.nextSetBit(ei+1)) {
+				if(ei!=target) {
+					final double edote = rowDotRow(c,ei,ei);
+					if(edote>0) {
+						final double edott = rowDotRow(c,ei,target);
+						if(Math.abs(edott)>0) {
+							final double scale = edott/edote;
+							for(int i=0;i<c.cols();++i) {
+								c.set(target,i,c.get(target,i) - c.get(ei,i)*scale);
+							}
 						}
 					}
-				}
-			}
-			for(int i=0;i<c.cols();++i) {
-				c.set(row,i,0.0);
+				}			
 			}
 		}
 	}
 
 
 	/**
-	 * destructie to c
+	 * destructive to c
 	 * @param c
 	 * @param forcedRows
 	 * @param minVal
@@ -252,44 +240,38 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	 */
 	private static <Z extends Matrix<Z>> int[] rowBasis(final Z c, final int[] forcedRows, final double minVal) {
 		final double minNormSq = minVal*minVal;
+		final BitSet checked = new BitSet(c.rows());
 		final BitSet found = new BitSet(c.rows());
+		final int nGoal = Math.min(c.cols(),c.rows());
+		int nFound = 0;
 		if(null!=forcedRows) {
-			final BitSet candidates = new BitSet(c.rows());
 			for(final int ri: forcedRows) {
-				candidates.set(ri);
-			}
-			while(!candidates.isEmpty()) {
-				final int want = largestNormRow(c,candidates,minNormSq);
-				if(want<0) {
-					break;
+				checked.set(ri);
+				elimRows(c,found,ri);
+				final double bdotb = rowDotRow(c,ri,ri);
+				if((bdotb>0)&&(bdotb>=minNormSq)) {
+					found.set(ri);
+					++nFound;
+					if(nFound>=nGoal) {
+						break;
+					}
 				}
-				found.set(want);
-				elimRow(c,want);
-				candidates.clear(want);
 			}
-			if(found.cardinality()!=forcedRows.length) {
+			if(nFound!=forcedRows.length) {
 				throw new IllegalArgumentException("candidate rows were not independent");
 			}
 		}
-		// extend basis to the rest of the rows
-		final BitSet candidates = new BitSet(c.rows());
-		for(int i=0;i<c.rows();++i) {
-			if(!found.get(i)) {
-				candidates.set(i);
+		for(int ri=0;(ri<c.rows())&&(nFound<nGoal);++ri) {
+			if(!checked.get(ri)) {
+				elimRows(c,found,ri);
+				final double bdotb = rowDotRow(c,ri,ri);
+				if((bdotb>0)&&(bdotb>=minNormSq)) {
+					found.set(ri);
+					++nFound;
+				}
 			}
 		}
-		int nfound = found.cardinality();
-		while((!candidates.isEmpty())&&(nfound<Math.min(c.rows(),c.cols()))) {
-			final int want = largestNormRow(c,candidates,minNormSq);
-			if(want<0) {
-				break; // exhausted possibilities
-			}
-			found.set(want);
-			elimRow(c,want);
-			candidates.clear(want);
-			++nfound;
-		}
-		final int[] r = new int[found.cardinality()];
+		final int[] r = new int[nFound];
 		int i = 0;
 		for(int fi=found.nextSetBit(0); fi>=0; fi=found.nextSetBit(fi+1)) {
 			r[i] = fi;
@@ -299,12 +281,12 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	}
 	
 	public int[] rowBasis(final int[] forcedRows, final double minVal) {
-		final T c = copy(factory(),sparseRep());
+		final NativeMatrix c = copy(NativeMatrix.factory,false);
 		return rowBasis(c,forcedRows,minVal);
 	}
 	
 	public int[] colBasis(final int[] forcedRows, final double minVal) {
-		final T c = transpose(factory(),sparseRep());
+		final NativeMatrix c = transpose(NativeMatrix.factory,false);
 		return rowBasis(c,forcedRows,minVal);
 	}
 
