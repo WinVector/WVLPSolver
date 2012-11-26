@@ -3,6 +3,7 @@ package com.winvector.linagl;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -186,11 +187,10 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	 * @param candidates can alter candidates (remove zero rows)
 	 * @return
 	 */
-	private static <Z extends Matrix<Z>> int largestNormRow(final Z c, final Set<Integer> candidates, final double minNormSq) {
+	private static <Z extends Matrix<Z>> int largestNormRow(final Z c, final BitSet candidates, final double minNormSq) {
 		int bestProbe = -1;
 		double largestNormSq = Double.NEGATIVE_INFINITY;
-		final Set<Integer> victims = new HashSet<Integer>(2*candidates.size()+5);
-		for(final Integer probe: candidates) {
+		for(int probe=candidates.nextSetBit(0); probe>=0; probe=candidates.nextSetBit(probe+1)) {
 			final double normSq = rowDotRow(c,probe,probe); 
 			if(normSq>minNormSq) {
 				if((bestProbe<0)||(normSq>largestNormSq)) {
@@ -198,10 +198,9 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 					largestNormSq = normSq;
 				}
 			} else {
-				victims.add(probe);
+				candidates.clear(probe);
 			}
 		}
-		candidates.removeAll(victims);
 		return bestProbe;
 	}
 	
@@ -225,32 +224,39 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	}
 
 
+	/**
+	 * destructie to c
+	 * @param c
+	 * @param forcedRows
+	 * @param minVal
+	 * @return
+	 */
 	private static <Z extends Matrix<Z>> int[] rowBasis(final Z c, final int[] forcedRows, final double minVal) {
 		final double minNormSq = minVal*minVal;
-		final Set<Integer> found = new HashSet<Integer>();
+		final BitSet found = new BitSet(c.rows());
 		if(null!=forcedRows) {
-			final Set<Integer> candidates = new HashSet<Integer>(2*forcedRows.length+5);
+			final BitSet candidates = new BitSet(c.rows());
 			for(final int ri: forcedRows) {
-				candidates.add(ri);
+				candidates.set(ri);
 			}
 			while(!candidates.isEmpty()) {
 				final int want = largestNormRow(c,candidates,minNormSq);
 				if(want<0) {
 					break;
 				}
-				found.add(want);
+				found.set(want);
 				elimRow(c,want);
-				candidates.remove(want);
+				candidates.clear(want);
 			}
-			if(found.size()!=forcedRows.length) {
+			if(found.cardinality()!=forcedRows.length) {
 				throw new IllegalArgumentException("candidate rows were not independent");
 			}
 		}
 		// extend basis to the rest of the rows
-		final Set<Integer> candidates = new HashSet<Integer>(2*c.rows()+5);
+		final BitSet candidates = new BitSet(c.rows());
 		for(int i=0;i<c.rows();++i) {
-			if(!found.contains(i)) {
-				candidates.add(i);
+			if(!found.get(i)) {
+				candidates.set(i);
 			}
 		}
 		while(!candidates.isEmpty()) {
@@ -258,17 +264,16 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 			if(want<0) {
 				break; // exhausted possibilities
 			}
-			found.add(want);
+			found.set(want);
 			elimRow(c,want);
-			candidates.remove(want);
+			candidates.clear(want);
 		}
-		final int[] r = new int[found.size()];
+		final int[] r = new int[found.cardinality()];
 		int i = 0;
-		for(final int fi: found) {
+		for(int fi=found.nextSetBit(0); fi>=0; fi=found.nextSetBit(fi+1)) {
 			r[i] = fi;
 			++i;
 		}
-		Arrays.sort(r);
 		return r;
 	}
 	
