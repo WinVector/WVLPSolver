@@ -3,6 +3,7 @@ package com.winvector.lp.impl;
 import java.util.Arrays;
 
 import com.winvector.linagl.Matrix;
+import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException.LPErrorException;
 
@@ -84,7 +85,7 @@ final class SBasis implements Comparable<SBasis> {
 			if((tol<=0)||Double.isInfinite(tol)||Double.isNaN(tol)) { 
 				tol = 0.0;
 			}
-			final Matrix<Z> B = p.A.extractColumns(d);
+			final Matrix<NativeMatrix> B = p.A.extractColumns(d,NativeMatrix.factory);
 			final double[] xB = B.solve(p.b, false);
 			final double[] check = B.mult(xB);
 			if (Matrix.distSq(p.b,check) > (tol*tol) ) {

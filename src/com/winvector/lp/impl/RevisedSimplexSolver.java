@@ -4,6 +4,7 @@ import java.util.BitSet;
 import java.util.Random;
 
 import com.winvector.linagl.Matrix;
+import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
@@ -116,7 +117,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			final double[] preB = tab.basisSolveRight(tab.prob.b);
 			final double[] preBprime = perturb?tab.basisSolveRight(bPrime):preB;
 			if (checkAll) {
-				final Matrix<Z> checkMat = tab.prob.A.extractColumns(tab.basis); 
+				final Matrix<NativeMatrix> checkMat = tab.prob.A.extractColumns(tab.basis,NativeMatrix.factory); 
 				final double[] check = checkMat.mult(preB);
 				final double checkdsq = Matrix.distSq(tab.prob.b,check);
 				if (checkdsq > tol*tol) {
@@ -249,7 +250,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	protected <T extends Matrix<T>> LPSoln<T> rawSolve(final LPEQProb<T> prob, final int[] basis0, double tol, final int maxRounds) 
+	protected <T extends Matrix<T>> LPSoln rawSolve(final LPEQProb<T> prob, final int[] basis0, double tol, final int maxRounds) 
 			throws LPException {
 		if ((tol<=0)||Double.isNaN(tol)||Double.isInfinite(tol)) {
 			tol = 0.0;
@@ -261,7 +262,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			return null;
 		}
 		try {
-			return new LPSoln<T>(LPEQProb.soln(prob.A, prob.b, rbasis, tol), rbasis);
+			return new LPSoln(LPEQProb.soln(prob.A, prob.b, rbasis, tol), rbasis);
 		} catch (LPException e) {
 			//		    System.out.println("{");
 			//		    for(int i=0;i<basis0.length;++i) {

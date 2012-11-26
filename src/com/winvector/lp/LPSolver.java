@@ -22,6 +22,6 @@ public interface LPSolver {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	<T extends Matrix<T>> LPSoln<T> solve(LPEQProb<T> prob, int[] basis_in, double tol, final int maxRounds)
+	<T extends Matrix<T>> LPSoln solve(LPEQProb<T> prob, int[] basis_in, double tol, final int maxRounds)
 			throws LPException;
 }

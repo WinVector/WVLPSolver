@@ -5,11 +5,12 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 
+import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 
 
 
-class ColtMatrix extends Matrix<ColtMatrix> {
+public class ColtMatrix extends Matrix<ColtMatrix> {
 	private static final long serialVersionUID = 1L;
 	
 	private final boolean wantSparse;
@@ -48,12 +49,6 @@ class ColtMatrix extends Matrix<ColtMatrix> {
 	public void set(final int row, final int col, final double v) {
 		underlying.set(row,col,v);
 	}
-
-	@Override
-	public ColtMatrix newMatrix(final int rows, final int cols, final boolean wantSparse) {
-		return new ColtMatrix(rows,cols,wantSparse);
-	}
-
 	
 	@Override
 	public double[] solve(final double[] bIn, final boolean leastsq) {
@@ -109,5 +104,19 @@ class ColtMatrix extends Matrix<ColtMatrix> {
 	@Override
 	public boolean sparseRep() {
 		return wantSparse;
+	}
+	
+	public static final LinalgFactory<ColtMatrix> factory = new LinalgFactory<ColtMatrix>() {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public ColtMatrix newMatrix(int m, int n, boolean wantSparse) {
+			return new ColtMatrix(m,n,wantSparse);
+		}
+	};
+	
+	@Override
+	public LinalgFactory<ColtMatrix> factory() {
+		return factory;
 	}
 }

@@ -8,7 +8,7 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import com.winvector.linalg.colt.NativeLinAlg;
+import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.apachem3.M3Solver;
 
 public class TestAssignment {
@@ -50,7 +50,7 @@ public class TestAssignment {
 			final boolean valid = Assignment.checkValid(c,assignment);
 			assertTrue(valid);
 			final double solnCost = Assignment.cost(c,assignment);
-			final int[] check = Assignment.computeAssignment(c, NativeLinAlg.factory, new M3Solver(), 1000);
+			final int[] check = Assignment.computeAssignment(c, NativeMatrix.factory, new M3Solver(), 1000);
 			final double checkCost = Assignment.cost(c,check);
 			assertTrue(Math.abs(solnCost-checkCost)<1.0e-3);
 		}

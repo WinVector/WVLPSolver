@@ -3,8 +3,8 @@ package com.winvector.lp;
 import java.io.PrintStream;
 import java.io.Serializable;
 
-import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
+import com.winvector.linalg.colt.NativeMatrix;
 
 
 /**
@@ -116,7 +116,7 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 		if (A.rows() > A.cols()) {
 			throw new LPException.LPErrorException("m>n in soln()");
 		}
-		final Matrix<Z> AP = A.extractColumns(basis);
+		final Matrix<NativeMatrix> AP = A.extractColumns(basis,NativeMatrix.factory);
 		final double[] xp = AP.solve(b, false);
 		final double[] x = new double[A.cols()];
 		if (xp == null) {
@@ -290,11 +290,11 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * -tran(A) I) ( y+ ) = c, ( y- ) ( s ) min (-b b 0).(y+ y- s), (y+ y- s) >=
 	 * 0 sg(c) is a diagonal matrix with sg(c)_i,i = 1 if c_i>=0, -1 otherwise
 	 */
-	LPEQProb<T> dual() throws LPException {
+	 private LPEQProb<T> dual() throws LPException {
 		final int m = A.rows();
 		final int n = A.cols();
 		final double[] cp = new double[2 * m + n];
-		final Matrix<T> AP = A.newMatrix(n, cp.length,A.sparseRep());
+		final Matrix<T> AP = A.factory().newMatrix(n, cp.length,A.sparseRep());
 		for (int i = 0; i < n; ++i) {
 			for (int j = 0; j < m; ++j) {
 				final double aji = A.get(j, i);
@@ -320,7 +320,7 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @param factory 
 	 * @return dual-optimal solution
 	 */
-	public double[] inspectForDual(final LPSoln<T> p, final double tol, final LinalgFactory<T> factory) throws LPException {
+	public double[] inspectForDual(final LPSoln p, final double tol) throws LPException {
 		checkPrimFeas(A, b, p.x, tol);
 		// we now have a list of equality constraints to work with
 		try {
@@ -332,7 +332,7 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 				checkPrimDualOpt(A, b, c, p.x, y, tol);
 				return y;
 			}
-			final Matrix<T> eqmat = factory.newMatrix(p.basis.length+1, p.basis.length,A.sparseRep());
+			final Matrix<NativeMatrix> eqmat = NativeMatrix.factory.newMatrix(p.basis.length+1, p.basis.length,A.sparseRep());
 			final double[] eqvec = new double[p.basis.length+1];
 			// put in obj-relation
 			eqmat.setRow(0,Matrix.extract(b,rb));
@@ -369,17 +369,17 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	public LPSoln<T> solveDual(final LPSolver solver, final int[] basis_in, final double tol, final int maxRounds)
+	public LPSoln solveDual(final LPSolver solver, final int[] basis_in, final double tol, final int maxRounds)
 			throws LPException {
 		int m = A.rows();
 		final LPEQProb<T> dual = dual();
-		final LPSoln<T> s = solver.solve(dual, basis_in, tol,maxRounds);
+		final LPSoln s = solver.solve(dual, basis_in, tol,maxRounds);
 		final double[] y = new double[m];
 		for (int i = 0; i < m; ++i) {
 			y[i] = s.x[i] - s.x[i + m];
 		}
 		checkDualFeas(A, c, y, tol);
-		return new LPSoln<T>(y, s.basis);
+		return new LPSoln(y, s.basis);
 	}
 
 	/**
@@ -390,10 +390,10 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	public LPSoln<T> solveDebugByInspect(final LPSolver solver, final double tol, final LinalgFactory<T> factory, final int maxRounds)
+	public LPSoln solveDebugByInspect(final LPSolver solver, final double tol, final int maxRounds)
 			throws LPException {
-		final LPSoln<T> primSoln = solver.solve(this, null, 1.0e-6,maxRounds);
-		final double[] y2 = inspectForDual(primSoln, tol, factory);
+		final LPSoln primSoln = solver.solve(this, null, 1.0e-6,maxRounds);
+		final double[] y2 = inspectForDual(primSoln, tol);
 		checkPrimDualOpt(A, b, c, primSoln.x, y2, tol);
 		//LPSoln dualSoln = solveDual(solver,null);
 		//checkPrimDualOpt(primSoln.x,dualSoln.x);
@@ -435,9 +435,9 @@ public final class LPEQProb<T extends Matrix<T>> implements Serializable {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	public LPSoln<T> solveDebug(final LPSolver solver, final double tol, final int maxRounds) throws LPException {
-		final LPSoln<T> primSoln = solver.solve(this, null, tol,maxRounds);
-		final LPSoln<T> dualSoln = solveDual(solver, null, tol,maxRounds);
+	public LPSoln solveDebug(final LPSolver solver, final double tol, final int maxRounds) throws LPException {
+		final LPSoln primSoln = solver.solve(this, null, tol,maxRounds);
+		final LPSoln dualSoln = solveDual(solver, null, tol,maxRounds);
 		checkPrimDualOpt(A, b, c, primSoln.x, dualSoln.x, tol);
 		return primSoln;
 	}

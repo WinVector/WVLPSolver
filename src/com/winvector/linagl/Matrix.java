@@ -1,19 +1,21 @@
 package com.winvector.linagl;
 
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 
 
-public abstract class Matrix<T extends Matrix<T>> implements LinalgFactory<T> {
+public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 
 	abstract public int cols();
 	abstract public int rows();
 	abstract public boolean sparseRep();
+	abstract public LinalgFactory<T> factory();
 
 	abstract public double get(int j, int i);
 	abstract public void set(int i, int j, double d);
@@ -126,8 +128,8 @@ public abstract class Matrix<T extends Matrix<T>> implements LinalgFactory<T> {
 		p.println();
 	}
 
-	public T extractColumns(final int[] basis) {
-		final T r = newMatrix(rows(), basis.length, false);
+	public <Z extends Matrix<Z>> Z extractColumns(final int[] basis, final LinalgFactory<Z> zfactory) {
+		final Z r = zfactory.newMatrix(rows(), basis.length, false);
 		for (int col = 0; col < basis.length; ++col) {
 			for (int row = 0; row < rows(); ++row) {
 				final double e = get(row, basis[col]);
@@ -296,8 +298,8 @@ public abstract class Matrix<T extends Matrix<T>> implements LinalgFactory<T> {
 		return r;
 	}
 
-	public T extractRows(final int[] rowset) {
-		final T r = newMatrix(rowset.length,cols(),sparseRep());
+	public <Z extends Matrix<Z>> Z extractRows(final int[] rowset, final LinalgFactory<Z> zfactory) {
+		final Z r = zfactory.newMatrix(rowset.length,cols(),sparseRep());
 		for (int row = 0; row < rowset.length; ++row) {
 			for (int col = 0; col < cols(); ++col) {
 				final double e = get(rowset[row],col);
@@ -305,14 +307,6 @@ public abstract class Matrix<T extends Matrix<T>> implements LinalgFactory<T> {
 					r.set(row, col, e);
 				}
 			}
-		}
-		return r;
-	}
-		
-	public T identityMatrix(final int m, boolean wantSparse) {
-		final T r = newMatrix(m,m,wantSparse);
-		for(int i=0;i<m;++i) {
-			r.set(i, i, 1.0);
 		}
 		return r;
 	}

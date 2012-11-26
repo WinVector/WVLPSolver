@@ -17,8 +17,8 @@ import org.junit.Test;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.linalg.colt.ColtLinAlg;
-import com.winvector.linalg.colt.NativeLinAlg;
+import com.winvector.linalg.colt.ColtMatrix;
+import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.impl.RevisedSimplexSolver;
 
 /**
@@ -71,7 +71,7 @@ public final class TestLP  {
 	
 	public <Z extends Matrix<Z>> void testLPExample(final LinalgFactory<Z> factory) throws LPException {
 		final LPEQProb<Z> prob = exampleProblem(factory);
-		final LPSoln<Z> soln1 = prob.solveDebugByInspect(new RevisedSimplexSolver(), 1.0e-6,factory,1000);
+		final LPSoln soln1 = prob.solveDebugByInspect(new RevisedSimplexSolver(), 1.0e-6,1000);
 		final double[] expect = {3.00000, 3.00000, 2.00000, 0.00000, 0.00000};
 		assertNotNull(soln1);
 		assertNotNull(soln1.x);
@@ -86,8 +86,8 @@ public final class TestLP  {
 	@Test
 	public <Z extends Matrix<Z>> void testLPSolverTrivial() throws LPException {
 		final ArrayList<LinalgFactory<?>> factories = new ArrayList<LinalgFactory<?>>();
-		factories.add(NativeLinAlg.factory);
-		factories.add(ColtLinAlg.factory);
+		factories.add(NativeMatrix.factory);
+		factories.add(ColtMatrix.factory);
 		for(final LinalgFactory<?> f: factories) {
 			testLPSolverTrivial(f);
 			testLPExample(f);

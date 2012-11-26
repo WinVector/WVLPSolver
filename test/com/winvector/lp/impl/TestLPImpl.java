@@ -1,18 +1,17 @@
 package com.winvector.lp.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 
 import org.junit.Test;
 
-
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.linalg.colt.ColtLinAlg;
-import com.winvector.linalg.colt.NativeLinAlg;
-import com.winvector.lp.LPException;
+import com.winvector.linalg.colt.ColtMatrix;
+import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
+import com.winvector.lp.LPException;
 import com.winvector.lp.TestLP;
 
 
@@ -24,9 +23,9 @@ public class TestLPImpl {
 		final int enteringI = 3;
 		final double[] u = tab.prob.A.extractColumn(enteringI);
 		final double[] v = tab.basisSolveRight(u);
-		final Z priorBInv = tab.BInv.copy();
+		final NativeMatrix priorBInv = tab.BInv.copy();
 		tab.basisPivot(leavingI,enteringI,v);
-		final Z incBInv = tab.BInv.copy();
+		final NativeMatrix incBInv = tab.BInv.copy();
 		{
 			double maxDiff = 0.0;
 			for(int i=0;i<priorBInv.rows();++i) {
@@ -37,7 +36,7 @@ public class TestLPImpl {
 			assertTrue(maxDiff>0.5);
 		}
 		tab.resetBasis(tab.basis); // force fresh b inverse calculation
-		final Z batchBInv = tab.BInv.copy();
+		final NativeMatrix batchBInv = tab.BInv.copy();
 		{
 			double maxDiff = 0.0;
 			for(int i=0;i<priorBInv.rows();++i) {
@@ -53,8 +52,8 @@ public class TestLPImpl {
 	@Test
 	public <Z extends Matrix<Z>> void testLPSolverImpl() throws LPException {
 		final ArrayList<LinalgFactory<?>> factories = new ArrayList<LinalgFactory<?>>();
-		factories.add(NativeLinAlg.factory);
-		factories.add(ColtLinAlg.factory);
+		factories.add(NativeMatrix.factory);
+		factories.add(ColtMatrix.factory);
 		for(final LinalgFactory<?> f: factories) {
 			testRank1Update(f);
 		}

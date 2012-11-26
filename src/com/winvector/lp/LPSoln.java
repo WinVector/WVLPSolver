@@ -2,10 +2,8 @@ package com.winvector.lp;
 
 import java.io.Serializable;
 
-import com.winvector.linagl.Matrix;
 
-
-public final class LPSoln<T extends Matrix<T>> implements Serializable {
+public final class LPSoln implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	public final double[] x;

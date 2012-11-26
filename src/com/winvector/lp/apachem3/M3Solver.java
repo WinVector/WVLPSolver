@@ -58,7 +58,7 @@ public final class M3Solver implements LPSolver {
 	
 
 	@Override
-	public <T extends Matrix<T>> LPSoln<T> solve(final LPEQProb<T> prob, final int[] basis_in, final double tol,
+	public <T extends Matrix<T>> LPSoln solve(final LPEQProb<T> prob, final int[] basis_in, final double tol,
 			final int maxRounds) throws LPException {
 		final M3Prob m3Prob = convertProbToM3(prob);
 		final SimplexSolver m3solver = new SimplexSolver();
@@ -68,7 +68,7 @@ public final class M3Solver implements LPSolver {
 		for(int i=0;i<s.length;++i) {
 			solnVec[i] = s[i];
 		}
-		final LPSoln<T> r = new LPSoln<T>(solnVec,null);
+		final LPSoln r = new LPSoln(solnVec,null);
 		return r;
 	}
 

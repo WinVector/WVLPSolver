@@ -4,6 +4,7 @@ import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 
+import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 
 
@@ -45,12 +46,6 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 	public void set(final int row, final int col, final double v) {
 		u[row][col] = v;
 	}
-
-	@Override
-	public NativeMatrix newMatrix(final int rows, final int cols, final boolean wantSparse) {
-		return new NativeMatrix(rows,cols,wantSparse);
-	}
-
 
 	@Override
 	public double[] solve(final double[] bIn, final boolean leastsq) {
@@ -133,6 +128,20 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 	@Override
 	public boolean sparseRep() {
 		return false;
+	}
+
+	public static final LinalgFactory<NativeMatrix> factory = new LinalgFactory<NativeMatrix>() {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public NativeMatrix newMatrix(int m, int n, boolean wantSparse) {
+			return new NativeMatrix(m,n,wantSparse);
+		}
+	};
+	
+	@Override
+	public LinalgFactory<NativeMatrix> factory() {
+		return factory;
 	}
 }
 

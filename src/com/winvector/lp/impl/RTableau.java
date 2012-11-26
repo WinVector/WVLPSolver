@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 import com.winvector.linagl.Matrix;
+import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException.LPErrorException;
@@ -26,7 +27,7 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 
 	public final int[] basis;
 	
-	public Z BInv = null;
+	public NativeMatrix BInv = null;
 
 	public int normalSteps = 0;
 
@@ -43,7 +44,7 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 	public double[] basisSolveRight(final double[] y) throws LPErrorException {
 		if(null==BInv) {
 			try {
-				BInv = prob.A.extractColumns(basis).inverse();
+				BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert basis");
 			}
@@ -62,7 +63,7 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 	public double[] basisSolveLeft(final double[] y) throws LPErrorException {
 		if(null==BInv) {
 			try {
-				BInv = prob.A.extractColumns(basis).inverse();
+				BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert basis");
 			}
@@ -90,7 +91,7 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 			basis[i] = basis_in[i];
 		}
 		try {
-			BInv = prob.A.extractColumns(basis).inverse();
+			BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
 		} catch (Exception e) {
 			throw new LPErrorException("couldn't invert initial basis");
 		}
@@ -133,7 +134,7 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 			}
 		} else {
 			try {
-				BInv = prob.A.extractColumns(basis).inverse();
+				BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert intermediate basis");
 			}
@@ -156,7 +157,7 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 			basis[i] = d[i];
 		}
 		try {
-			BInv = prob.A.extractColumns(basis).inverse();
+			BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
 		} catch (Exception e) {
 			throw new LPErrorException("couldn't invert reset basis");
 		}

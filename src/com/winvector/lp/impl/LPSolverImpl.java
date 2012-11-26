@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.winvector.linagl.Matrix;
+import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
@@ -140,13 +141,13 @@ abstract class LPSolverImpl implements LPSolver {
 	 *            (optional) n-vector
 	 * @return basic solution to A x = b x>=0 or null (from basis)
 	 */
-	private static <Z extends Matrix<Z>> LPSoln<Z> tryBasis(final Matrix<Z> A, final int[] basis, final double[] b) {
+	private static <Z extends Matrix<Z>> LPSoln tryBasis(final Matrix<Z> A, final int[] basis, final double[] b) {
 		if ((basis == null) || (basis.length != A.rows())) {
 			return null;
 		}
 		double[] x = null;
 		try {
-			Matrix<Z> AP = A.extractColumns(basis);
+			final Matrix<NativeMatrix> AP = A.extractColumns(basis,NativeMatrix.factory);
 			x = AP.solve(b, false);
 		} catch (Exception e) {
 		}
@@ -158,7 +159,7 @@ abstract class LPSolverImpl implements LPSolver {
 				return null;
 			}
 		}
-		return new LPSoln<Z>(x, basis);
+		return new LPSoln(x, basis);
 	}
 
 	/**
@@ -170,9 +171,9 @@ abstract class LPSolverImpl implements LPSolver {
 	 *            (optional) n-vector
 	 * @return basic solution to A x = b x>=0
 	 */
-	private <Z extends Matrix<Z>> LPSoln<Z> basisFromVector(final Matrix<Z> A, final double[] hint, final double[] b) {
+	private <Z extends Matrix<Z>> LPSoln basisFromVector(final Matrix<Z> A, final double[] hint, final double[] b) {
 		if (A.cols() <= 0) {
-			return new LPSoln<Z>(new double[0], new int[0]);
+			return new LPSoln(new double[0], new int[0]);
 		}
 		int[] cb = null;
 		if (hint != null) {
@@ -195,7 +196,7 @@ abstract class LPSolverImpl implements LPSolver {
 			cb = new int[0];
 		}
 		final int[] gb = A.colBasis(cb,minBasisEpsilon);
-		final LPSoln<Z> r = tryBasis(A, gb, b);
+		final LPSoln r = tryBasis(A, gb, b);
 		return r;
 	}
 
@@ -208,8 +209,8 @@ abstract class LPSolverImpl implements LPSolver {
 	 *            (optional) n-vector
 	 * @return basic solution to A x = b x>=0
 	 */
-	private <Z extends Matrix<Z>> LPSoln<Z> inspectForBasis(final Matrix<Z> A, final double[] hint, final double[] b) {
-		LPSoln<Z> r = basisFromVector(A, hint, b);
+	private <Z extends Matrix<Z>> LPSoln inspectForBasis(final Matrix<Z> A, final double[] hint, final double[] b) {
+		LPSoln r = basisFromVector(A, hint, b);
 		if (r != null) {
 			return r;
 		}
@@ -257,7 +258,7 @@ abstract class LPSolverImpl implements LPSolver {
 	 *             (if infeas or unbounded) no need to check feasibility of
 	 *             input or output (check by wrapper)
 	 */
-	protected abstract <T extends Matrix<T>> LPSoln<T> rawSolve(LPEQProb<T> prob, int[] basis0,
+	protected abstract <T extends Matrix<T>> LPSoln rawSolve(LPEQProb<T> prob, int[] basis0,
 			final double tol, final int maxRounds) throws LPException;
 
 	/**
@@ -274,10 +275,10 @@ abstract class LPSolverImpl implements LPSolver {
 	 * 
 	 * phase 1: min 1.s (A b) (x) = b, x,s>=0 (s) start with x = 0, s = 1.
 	 */
-	private <T extends Matrix<T>> LPSoln<T> solvePhase1(final Matrix<T> A, final double[] b, final double tol, final int maxRounds) 
+	private <T extends Matrix<T>> LPSoln solvePhase1(final Matrix<T> A, final double[] b, final double tol, final int maxRounds) 
 			throws LPException {
 		{
-			final LPSoln<T> r = inspectForBasis(A, null, b);
+			final LPSoln r = inspectForBasis(A, null, b);
 			if (r != null) {
 				return r;
 			}
@@ -285,7 +286,7 @@ abstract class LPSolverImpl implements LPSolver {
 		final int m = A.rows();
 		final int n = A.cols();
 		final double[] c = new double[n + 1];
-		final Matrix<T> AP = A.newMatrix(m, c.length,A.sparseRep());
+		final Matrix<T> AP = A.factory().newMatrix(m, c.length,A.sparseRep());
 		for (int i = 0; i < m; ++i) {
 			for(int j=0;j<n;++j) {
 				final double aij = A.get(i, j);
@@ -309,7 +310,7 @@ abstract class LPSolverImpl implements LPSolver {
 			throw new LPErrorException("bad basis0");
 		}
 		//p1prob.soln(basis0,tol); // force check that initial basis is good
-		LPSoln<T> soln = rawSolve(p1prob, basis0, tol, maxRounds);
+		LPSoln soln = rawSolve(p1prob, basis0, tol, maxRounds);
 		if ((soln == null) || (soln.basis == null)
 				|| (soln.basis.length != basis0.length) || (soln.x == null)
 				|| (soln.x.length != c.length)) {
@@ -357,8 +358,8 @@ abstract class LPSolverImpl implements LPSolver {
 			for (int i = 0; i < rowset.length; ++i) {
 				rowset[i] = i;
 			}
-			final int[] nb = A.extractRows(rowset).colBasis(sb,minBasisEpsilon);
-			soln = new LPSoln<T>(soln.x, nb);
+			final int[] nb = A.extractRows(rowset,NativeMatrix.factory).colBasis(sb,minBasisEpsilon);
+			soln = new LPSoln(soln.x, nb);
 			// re-check basis facts
 			if ((soln.basis == null) || (soln.basis.length != basis0.length)) {
 				throw new LPException.LPErrorException(
@@ -391,7 +392,7 @@ abstract class LPSolverImpl implements LPSolver {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	public <T extends Matrix<T>> LPSoln<T> solve(LPEQProb<T> prob, final int[] basis_in, final double tol,final int maxRounds)
+	public <T extends Matrix<T>> LPSoln solve(LPEQProb<T> prob, final int[] basis_in, final double tol,final int maxRounds)
 			throws LPException {
 		if (verbose > 0) {
 			System.out.println("solve:");
@@ -420,11 +421,11 @@ abstract class LPSolverImpl implements LPSolver {
 			for (int i = 0; i < b.length; ++i) {
 				b[i] = i;
 			}
-			return new LPSoln<T>(x, b);
+			return new LPSoln(x, b);
 		}
 		// select out irredundant rows
 		if (rb.length != prob.A.rows()) {
-			final Matrix<T> nA = prob.A.extractRows(rb);
+			final Matrix<T> nA = prob.A.extractRows(rb,prob.A.factory());
 			final double[] nb = Matrix.extract(prob.b,rb);
 			prob = new LPEQProb<T>(nA, nb, prob.c);
 		}
@@ -443,7 +444,7 @@ abstract class LPSolverImpl implements LPSolver {
 			for (int i = 0; i < b.length; ++i) {
 				b[i] = i;
 			}
-			return new LPSoln<T>(x, b);
+			return new LPSoln(x, b);
 		}
 		int[] basis0 = null;
 		if ((basis_in != null) && (basis_in.length == prob.A.rows())) {
@@ -466,7 +467,7 @@ abstract class LPSolverImpl implements LPSolver {
 			if (verbose > 0) {
 				System.out.println("phase1");
 			}
-			final LPSoln<T> phase1Soln = solvePhase1(prob.A, prob.b, tol,maxRounds);
+			final LPSoln phase1Soln = solvePhase1(prob.A, prob.b, tol,maxRounds);
 			if (phase1Soln != null) {
 				basis0 = phase1Soln.basis;
 			}
@@ -478,7 +479,7 @@ abstract class LPSolverImpl implements LPSolver {
 			// no objective function, any basis will do
 			return tryBasis(prob.A, basis0, prob.b);
 		}
-		final LPSoln<T> soln = rawSolve(prob, basis0, tol,maxRounds);
+		final LPSoln soln = rawSolve(prob, basis0, tol,maxRounds);
 		if ((soln == null) || (soln.x == null) || (soln.basis == null)
 				|| (soln.basis.length != basis0.length)) {
 			throw new LPException.LPErrorException(
