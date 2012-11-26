@@ -1,4 +1,4 @@
-package com.winvector.lp.apachem3;
+package com.winvector.lp.impl;
 
 import static org.junit.Assert.*;
 
