@@ -11,6 +11,7 @@ import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.LPSolver;
 import com.winvector.lp.apachem3.M3Solver.M3Prob;
+import com.winvector.lp.glpk.GLPKSolver;
 import com.winvector.lp.impl.RevisedSimplexSolver;
 
 public class AssignmentSpeed {
@@ -26,44 +27,70 @@ public class AssignmentSpeed {
 		final LPEQProb<NativeMatrix> prob = Assignment.buildAssignmentProb(NativeMatrix.factory,c);
 		// solve
 		final int maxIts = 10000;
-		final int nreps = 5;
+		final int nreps = 1;
 		final LPSolver rSolver = new RevisedSimplexSolver();
-		LPSoln soln1 = null;
-		// apache library
 		final M3Prob m3Prob = M3Solver.convertProbToM3(prob);
 		final SimplexSolver m3solver = new SimplexSolver();
+		final GLPKSolver glpkSolver = new GLPKSolver();
 		m3solver.setMaxIterations(maxIts);
-		double[] soln2 = null;
+		LPSoln solnWV = null;
+		LPSoln solnGLPK = null;
+		double[] solnAPM3 = null;
 		for(int rep=0;rep<nreps;++rep) {
-			final long startWV = System.currentTimeMillis();
-			soln1 = rSolver.solve(prob,null,1.0e-5,maxIts);
-			final long endWV = System.currentTimeMillis();
-			final long startApache = System.currentTimeMillis();
-			soln2 = m3Prob.solve(m3solver);
-			final long endApache = System.currentTimeMillis();
-			final long wvTime = (endWV-startWV);
-			final long apTime = (endApache-startApache);
-			System.out.println("" + n + "\t" + wvTime + "\t" + apTime);
+			final double wvTime;
+			if(n<=75) {
+				final long startWV = System.currentTimeMillis();
+				solnWV = rSolver.solve(prob,null,1.0e-5,maxIts);
+				final long endWV = System.currentTimeMillis();
+				wvTime = (endWV-startWV);
+			} else {
+				wvTime = Double.NaN;
+			}
+			final double apTime;
+			if(n<=45) {
+				final long startApache = System.currentTimeMillis();
+				solnAPM3 = m3Prob.solve(m3solver);
+				final long endApache = System.currentTimeMillis();
+				apTime = endApache-startApache;
+			} else {
+				apTime = Double.NaN;
+			}
+			final long startGLPK = System.currentTimeMillis();
+			solnGLPK = glpkSolver.solve(prob,null,1.0e-5,maxIts);	
+			final long endGLPK = System.currentTimeMillis();
+			final double glpkTime = (endGLPK-startGLPK);
+			System.out.println("" + n + "\t" + wvTime + "\t" + apTime + "\t" + glpkTime);
 		}
-		final int[] lres = Assignment.computeAssignment(c,maxIts);
-		if(!Assignment.checkValid(c,lres)) {
-			//System.out.println(new NativeMatrix(c));
-			throw new RuntimeException("bad solution");
-		}
-		final double cost1 = Matrix.dot(soln1.x,prob.c);
-		double cost2 = 0.0;
-		for(int i=0;i<prob.c.length;++i) {
-			cost2 += soln2[i]*prob.c[i];
-		}
-		if(Math.abs(cost1-cost2)>1.0e-3) {
-			throw new Exception("solution costs did not match");
+		if(solnWV!=null) {
+			final int[] lres = Assignment.computeAssignment(c,maxIts);
+			if(!Assignment.checkValid(c,lres)) {
+				//System.out.println(new NativeMatrix(c));
+				throw new RuntimeException("bad solution");
+			}
+			final double costWV = Matrix.dot(solnWV.x,prob.c);
+			double costGLPK = 0.0;
+			for(int i=0;i<prob.c.length;++i) {
+				costGLPK += solnGLPK.x[i]*prob.c[i];
+			}
+			if(Math.abs(costWV-costGLPK)>1.0e-3) {
+				throw new Exception("solution costs did not match");
+			}
+			if(null!=solnAPM3) {
+				double costAPM3 = 0.0;
+				for(int i=0;i<prob.c.length;++i) {
+					costAPM3 += solnAPM3[i]*prob.c[i];
+				}
+				if(Math.abs(costWV-costAPM3)>1.0e-3) {
+					throw new Exception("solution costs did not match");
+				}
+			}
 		}
 	}
 	
 	public static void main(String[] args) throws Exception {
-		System.out.println("" + "n" + "\t" + "wvTimeMS" + "\t" + "apm3TimeMS");
-		for(int n=1;n<=40;++n) {
-			for(int rep=0;rep<5;++rep) {
+		System.out.println("" + "n" + "\t" + "wvTimeMS" + "\t" + "apm3TimeMS" + "\t" + "glpkTimeMS");
+		for(int n=1;n<=100;++n) {
+			for(int rep=0;rep<3;++rep) {
 				runBoth(n);
 			}
 		}
