@@ -2,10 +2,7 @@ package com.winvector.linagl;
 
 import java.io.PrintStream;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.BitSet;
-import java.util.HashSet;
-import java.util.Set;
 
 
 
@@ -259,7 +256,8 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 				candidates.set(i);
 			}
 		}
-		while(!candidates.isEmpty()) {
+		int nfound = found.cardinality();
+		while((!candidates.isEmpty())&&(nfound<Math.min(c.rows(),c.cols()))) {
 			final int want = largestNormRow(c,candidates,minNormSq);
 			if(want<0) {
 				break; // exhausted possibilities
@@ -267,6 +265,7 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 			found.set(want);
 			elimRow(c,want);
 			candidates.clear(want);
+			++nfound;
 		}
 		final int[] r = new int[found.cardinality()];
 		int i = 0;
