@@ -59,7 +59,7 @@ public class AssignmentSpeed {
 		final Map<String,LPSolver> solvers = new TreeMap<String,LPSolver>();
 		solvers.put("lp_solve",new LP_solve());
 		solvers.put("ApacheM3Simplex",new M3Solver());
-		solvers.put("WVLPSovler",new RevisedSimplexSolver());
+		solvers.put("WVLPSolver",new RevisedSimplexSolver());
 		solvers.put("GLPK",new GLPKSolver());
 		System.out.print("assignmentSize");
 		for(final String name: solvers.keySet()) {

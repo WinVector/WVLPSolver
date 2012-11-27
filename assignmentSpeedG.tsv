@@ -1,4 +1,4 @@
-geomDimension	ApacheM3Simplex	GLPK	WVLPSovler	lp_solve
+geomDimension	ApacheM3Simplex	GLPK	WVLPSolver	lp_solve
 5	141	130	79	78
 5	17	47	28	280
 5	23	56	15	62

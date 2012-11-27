@@ -1,4 +1,4 @@
-assignmentSize	ApacheM3Simplex	GLPK	WVLPSovler	lp_solve
+assignmentSize	ApacheM3Simplex	GLPK	WVLPSolver	lp_solve
 5	128	123	47	21
 5	14	22	5	25
 5	6	27	10	22
