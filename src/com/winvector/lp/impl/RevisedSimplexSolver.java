@@ -25,8 +25,9 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public double enteringTol = 1.0e-5;
 	public double earlyEnterTol = 0.1;
 	public double leavingTol = 1.0e-5;
-	public boolean perturb = false;               // perturb b and c by simulated infinitesimals to avoid degenerate cases
-	public boolean earlyR = false;                 // allow partial inspection for entering columns
+	public boolean perturbB = false;               // perturb b by simulated infinitesimals to avoid degenerate cases
+	public boolean perturbC = true;               // perturb c by simulated infinitesimals to avoid degenerate cases
+	public boolean earlyR = true;                 // allow partial inspection for entering columns
 	public Random rand = new Random(3252351L);
 
 	
@@ -54,12 +55,16 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		}
 		final double[] cPrime;   // optional perturbation
 		final double[] bPrime;   // optional perturbation
-		if(perturb) {
+		if(perturbC) {
 			// perturb c
 			cPrime = new double[tab.prob.c.length];
 			for(int i=0;i<cPrime.length;++i) {
 				cPrime[i] = rand.nextDouble();  // non-negative entries- don't convert problem to unbounded
 			}
+		} else {
+			cPrime = null;
+		}
+		if(perturbB) {
 			// perturb b, but make sure initial basis is still feasible
 			final double[] tmp = new double[tab.prob.c.length];
 			for(int i=0;i<tmp.length;++i) {
@@ -67,7 +72,6 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			}
 			bPrime = tab.prob.A.mult(tmp);
 		} else {
-			cPrime = null;
 			bPrime = null;
 		}
 		final int nvars = tab.prob.A.cols();
@@ -81,7 +85,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 					curBasisIndicator.set(bi);
 				}
 				final double[] lambda = tab.leftBasisSoln(tab.prob.c);
-				final double[] lambdaPrime = perturb?tab.leftBasisSoln(cPrime):lambda;
+				final double[] lambdaPrime = perturbC?tab.leftBasisSoln(cPrime):lambda;
 				// find most negative entry of r, if any
 				// determines joining variable
 				double prevRi = Double.NaN;
@@ -92,7 +96,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 					final int v = (null!=perm)?perm[ii]:ii;
 					if(!curBasisIndicator.get(v)) {
 						final double ri = tab.computeRI(lambda, tab.prob.c, v);
-						final double rpi = perturb?tab.computeRI(lambdaPrime,cPrime,v):ri;
+						final double rpi = perturbC?tab.computeRI(lambdaPrime,cPrime,v):ri;
 						if ((ri < -enteringTol) || ((ri < 0) && (rpi < -enteringTol))) {
 							if ((enteringV < 0)
 									|| (ri < prevRi)
@@ -116,34 +120,12 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 				}
 			}
 			final double[] preB = tab.basisSolveRight(tab.prob.b);
-			final double[] preBprime = perturb?tab.basisSolveRight(bPrime):preB;
+			final double[] preBprime = perturbB?tab.basisSolveRight(bPrime):preB;
 			if (checkAll) {
 				final Matrix<NativeMatrix> checkMat = tab.prob.A.extractColumns(tab.basis,NativeMatrix.factory); 
 				final double[] check = checkMat.mult(preB);
 				final double checkdsq = Matrix.distSq(tab.prob.b,check);
 				if (checkdsq > tol*tol) {
-					/*
-					 * System.out.println("check: " + check);
-					 * System.out.println("could not solve: "); Matrix amat =
-					 * prob.A.extractColumns(basis);
-					 * //amat.print(System.out); Matrix qmat = new
-					 * DenseMatrix(QElement.qzero,amat.rows(),amat.cols());
-					 * double nativeDen =
-					 * amat.zeroElement().newElement(120); double half =
-					 * amat.zeroElement().newElement(Factory.newQ(1,2));
-					 * ZElement qden = nativeDen.intValue(); for(int i=0;i
-					 * <amat.rows();++i) { for(int j=0;j <amat.cols();++j) {
-					 * ZElement iv =
-					 * amat.get(i,j).mult(nativeDen).add(half).floor();
-					 * if(!iv.isZero()) { System.out.println(" {" + i + "," +
-					 * j + "," + iv + "," + qden + "},");
-					 * qmat.set(i,j,Factory.newQ(iv,qden)); } } }
-					 * //qmat.print(System.out); System.out.println("orig: " +
-					 * prob.b); Matrix inv = qmat.inverse();
-					 * System.out.println("qinvertable: " + (inv!=null));
-					 * inv = amat.inverse();
-					 * System.out.println("dinvertible: " + (inv!=null));
-					 */
 					throw new LPErrorException("bad intermediate basis");
 				}
 			}
@@ -193,14 +175,14 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			//System.out.println("l(" + basis[i] + ")= " + vi);
 			if (vi>leavingTol) {
 				final double xBi = preB[i];
-				if (xBi>leavingTol) {
+				if (xBi>=-leavingTol) {
 					final double rat = xBi/vi;
 					if (Double.isNaN(bestRat)
 							|| (bestRat > rat)) {
 						bestRat = rat;
 						leavingI = i;
 					}
-				} else if((null!=preBprime)&&(preBprime[i]>leavingTol)) {
+				} else if((null!=preBprime)&&(preBprime[i]>=-leavingTol)) {
 					// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
 					final double prat = preBprime[i]/vi;
 					if (Double.isNaN(bestPRat)
@@ -219,14 +201,14 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 				}
 			}
 		}
-		if(leavingZI>=0) {
-			return leavingZI;
+		if(leavingI>=0) {
+			return leavingI;
 		}
 		if(leavingPI>=0) {
 			return leavingPI;
 		}
-		if(leavingI>=0) {
-			return leavingI;
+		if(leavingZI>=0) {
+			return leavingZI;
 		}
 		return -1;
 	}
