@@ -1,7 +1,6 @@
 package com.winvector.lp.impl;
 
 import java.util.BitSet;
-import java.util.LinkedList;
 import java.util.Random;
 
 import com.winvector.linagl.Matrix;
@@ -68,6 +67,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			{
 				//prob.soln(basis,tol);
 				//System.out.println("basis good");
+				inspectionOrder.startPass();
 				curBasisIndicator.clear();
 				for(final int bi: tab.basis) {
 					curBasisIndicator.set(bi);

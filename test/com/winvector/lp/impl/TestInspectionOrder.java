@@ -12,9 +12,11 @@ public class TestInspectionOrder {
 	public void testShift() {
 		final Random rand = new Random(3626L);
 		final InspectionOrder io = new InspectionOrder(5,rand);
+		io.startPass();
 		io.take();
 		io.take();
 		io.moveToEnd(3);
+		io.startPass();
 		for(int i=0;i<4;++i) {
 			assertTrue(io.take()!=3);
 		}
