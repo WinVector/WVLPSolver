@@ -110,7 +110,7 @@ public class AssignmentSpeed2 {
 	
 	public static void main(String[] args) throws Exception {
 		System.out.println("" + "problemSize" + "\t" + "wvDenseTimeMS" + "\t" + "glpkTimeMS");
-		for(int n=5;n<=200;n+=10) {
+		for(int n=10;n<=100;n+=10) {
 			for(int rep=0;rep<3;++rep) {
 				runBoth(n);
 			}
