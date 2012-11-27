@@ -1,99 +1,87 @@
 package com.winvector.comb;
 
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
-
-import org.apache.commons.math3.optimization.linear.SimplexSolver;
+import java.util.Set;
+import java.util.TreeMap;
 
 import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
+import com.winvector.lp.LPException;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.LPSolver;
 import com.winvector.lp.apachem3.M3Solver;
-import com.winvector.lp.apachem3.M3Solver.M3Prob;
 import com.winvector.lp.glpk.GLPKSolver;
 import com.winvector.lp.impl.RevisedSimplexSolver;
+import com.winvector.lp.lp_solve.LP_solve;
 
 public class AssignmentSpeed {
 
-	private static void runBoth(final int n) throws Exception {
-		final Random rand = new Random(235135L);
-		final double[][] c = new double[n][n];
-		for(int i=0;i<n;++i) {
-			for(int j=0;j<n;++j) {
-				c[i][j] = rand.nextDouble();
-			}
-		}
-		final LPEQProb<NativeMatrix> prob = Assignment.buildAssignmentProb(NativeMatrix.factory,c);
-		// solve
-		final int maxIts = 10000;
-		final int nreps = 1;
-		final LPSolver rSolver = new RevisedSimplexSolver();
-		final M3Prob m3Prob = M3Solver.convertProbToM3(prob);
-		final SimplexSolver m3solver = new SimplexSolver();
-		final GLPKSolver glpkSolver = new GLPKSolver();
-		m3solver.setMaxIterations(maxIts);
-		LPSoln solnWV = null;
-		LPSoln solnGLPK = null;
-		double[] solnAPM3 = null;
-		for(int rep=0;rep<nreps;++rep) {
-			final double wvDTime;
-			if(n<=80) {
-				final long startWVD = System.currentTimeMillis();
-				solnWV = rSolver.solve(prob,null,1.0e-5,maxIts);
-				final long endWVD = System.currentTimeMillis();
-				wvDTime = endWVD-startWVD;
-			} else {
-				wvDTime = Double.NaN;
-			}
-			final double apTime;
-			if(n<=45) {
-				final long startApache = System.currentTimeMillis();
-				solnAPM3 = m3Prob.solve(m3solver);
-				final long endApache = System.currentTimeMillis();
-				apTime = endApache-startApache;
-			} else {
-				apTime = Double.NaN;
-			}
-			final double glpkTime;
-			{
-				final long startGLPK = System.currentTimeMillis();
-				solnGLPK = glpkSolver.solve(prob,null,1.0e-5,maxIts);	
-				final long endGLPK = System.currentTimeMillis();
-				glpkTime = (endGLPK-startGLPK);
-			}
-			System.out.println("" + n + "\t" + wvDTime + "\t" + apTime + "\t" + glpkTime);
-		}
-		if(solnWV!=null) {
-			final int[] lres = Assignment.computeAssignment(c,maxIts);
-			if(!Assignment.checkValid(c,lres)) {
-				throw new RuntimeException("bad solution");
-			}
-			final double costWV = Matrix.dot(solnWV.x,prob.c);
-			double costGLPK = 0.0;
-			for(int i=0;i<prob.c.length;++i) {
-				costGLPK += solnGLPK.x[i]*prob.c[i];
-			}
-			if(Math.abs(costWV-costGLPK)>1.0e-3) {
-				throw new Exception("solution costs did not match");
-			}
-			if(null!=solnAPM3) {
-				double costAPM3 = 0.0;
-				for(int i=0;i<prob.c.length;++i) {
-					costAPM3 += solnAPM3[i]*prob.c[i];
+	/**
+	 * can remove solvers once they are slow
+	 * @param prob
+	 * @param solvers
+	 * @return
+	 * @throws LPException
+	 */
+	public static <T extends Matrix<T>> Map<String,Long> runSet(final LPEQProb<T> prob, Map<String,LPSolver> solvers) throws LPException {
+		final Map<String,Long> res = new TreeMap<String,Long>();
+		final Set<String> zaps = new HashSet<String>();
+		for(final Map.Entry<String,LPSolver> me: solvers.entrySet()) {
+			final String name = me.getKey();
+			final LPSolver solver = me.getValue();
+			if(null!=solver) {
+				final long startMS = System.currentTimeMillis();
+				final LPSoln soln = solver.solve(prob,null,1.0e-5,100000);
+				final long endMS = System.currentTimeMillis();
+				final long durationMS = endMS-startMS;
+				if(soln.basis!=null) {
+					final double[] dual = prob.inspectForDual(soln,1.0e-3);
+					LPEQProb.checkPrimDualOpt(prob.A, prob.b, prob.c, soln.x, dual, 1.0e-3);
 				}
-				if(Math.abs(costWV-costAPM3)>1.0e-3) {
-					throw new Exception("solution costs did not match");
+				if(durationMS>=5000) {
+					zaps.add(name);
 				}
+				res.put(name,durationMS);
 			}
 		}
+		for(final String zap: zaps) {
+			solvers.put(zap,null);
+		}
+		return res;
 	}
 	
+
 	public static void main(String[] args) throws Exception {
-		System.out.println("" + "assignmentSize" + "\t" + "wvDenseTimeMS" + "\t" + "apm3TimeMS" + "\t" + "glpkTimeMS");
+		final Random rand = new Random(235135L);
+		final Map<String,LPSolver> solvers = new TreeMap<String,LPSolver>();
+		solvers.put("lp_solve",new LP_solve());
+		solvers.put("ApacheM3Simplex",new M3Solver());
+		solvers.put("WVLPSovler",new RevisedSimplexSolver());
+		solvers.put("GLPK",new GLPKSolver());
+		System.out.print("assignmentSize");
+		for(final String name: solvers.keySet()) {
+			System.out.print("\t" + name);
+		}
+		System.out.println();
 		for(int n=5;n<=80;n+=5) {
 			for(int rep=0;rep<3;++rep) {
-				runBoth(n);
+				final double[][] c = new double[n][n];
+				for(int i=0;i<n;++i) {
+					for(int j=0;j<n;++j) {
+						c[i][j] = rand.nextDouble();
+					}
+				}
+				final LPEQProb<NativeMatrix> prob = Assignment.buildAssignmentProb(NativeMatrix.factory,c);
+				final Map<String,Long> durations = runSet(prob,solvers);
+				System.out.print(n);
+				for(final String name: solvers.keySet()) {
+					final Long val = durations.get(name);
+					System.out.print("\t" + ((val!=null)?val:"NaN"));
+				}
+				System.out.println();
 			}
 		}
 	}

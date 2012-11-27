@@ -1,17 +1,20 @@
 package com.winvector.comb;
 
+import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 
 import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
-import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPMalformedException;
-import com.winvector.lp.LPSoln;
+import com.winvector.lp.LPSolver;
+import com.winvector.lp.apachem3.M3Solver;
 import com.winvector.lp.glpk.GLPKSolver;
 import com.winvector.lp.impl.RevisedSimplexSolver;
+import com.winvector.lp.lp_solve.LP_solve;
 
-public class AssignmentSpeed2 {
+public class GeomSpeed {
 
 
 	/**
@@ -65,54 +68,30 @@ public class AssignmentSpeed2 {
 		return new LPEQProb<NativeMatrix>(a,b,c);
 	}
 	
-	private static void runBoth(final int n) throws LPException {
-		final Random rand = new Random(235135L);
-		final LPEQProb<NativeMatrix> prob = randGeomProb(n,6*n+4,rand);
-		// solve
-		final int maxIts = 100000;
-		final int nreps = 1;
-		final RevisedSimplexSolver rSolver = new RevisedSimplexSolver();
-		final GLPKSolver glpkSolver = new GLPKSolver();
-		for(int rep=0;rep<nreps;++rep) {
-			final double wvDTime;
-			final LPSoln solnWV;
-			final double[] dualWV;
-			try {
-				final long startWVD = System.currentTimeMillis();
-				solnWV = rSolver.solve(prob,null,1.0e-5,maxIts);
-				final long endWVD = System.currentTimeMillis();
-				wvDTime = endWVD-startWVD;
-				dualWV = prob.inspectForDual(solnWV, 1.0e-5);
-				LPEQProb.checkPrimDualOpt(prob.A, prob.b, prob.c, solnWV.x, dualWV, 1.0e-4); // throws if not both feasible and optimal
-			} catch (LPException ex) {
-				System.out.println("problem with wv");
-				GLPKSolver.printCPLEX(prob, System.out);
-				throw ex;
-			}
-			final double glpkTime;
-			final LPSoln solnGLPK;
-			try {
-				final long startGLPK = System.currentTimeMillis();
-				solnGLPK = glpkSolver.solve(prob,null,1.0e-5,maxIts);	
-				final long endGLPK = System.currentTimeMillis();
-				glpkTime = (endGLPK-startGLPK);
-			} catch (LPException ex) {
-				System.out.println("problem with glpk");
-				GLPKSolver.printCPLEX(prob, System.out);
-				System.out.println("WV soln:");
-				System.out.println("primal: " + solnWV);
-				System.out.println("dual: " + Matrix.toString(dualWV));
-				throw ex;
-			}
-			System.out.println("" + n + "\t" + wvDTime + "\t" + glpkTime);
-		}
-	}
+
 	
 	public static void main(String[] args) throws Exception {
-		System.out.println("" + "problemSize" + "\t" + "wvDenseTimeMS" + "\t" + "glpkTimeMS");
-		for(int n=10;n<=100;n+=10) {
+		final Random rand = new Random(235135L);
+		final Map<String,LPSolver> solvers = new TreeMap<String,LPSolver>();
+		solvers.put("lp_solve",new LP_solve());
+		solvers.put("ApacheM3Simplex",new M3Solver());
+		solvers.put("WVLPSovler",new RevisedSimplexSolver());
+		solvers.put("GLPK",new GLPKSolver());
+		System.out.print("geomDimension");
+		for(final String name: solvers.keySet()) {
+			System.out.print("\t" + name);
+		}
+		System.out.println();
+		for(int n=5;n<=80;n+=5) {
 			for(int rep=0;rep<3;++rep) {
-				runBoth(n);
+				final LPEQProb<NativeMatrix> prob = randGeomProb(n,6*n+4, rand); 
+				final Map<String,Long> durations = AssignmentSpeed.runSet(prob,solvers);
+				System.out.print(n);
+				for(final String name: solvers.keySet()) {
+					final Long val = durations.get(name);
+					System.out.print("\t" + ((val!=null)?val:"NaN"));
+				}
+				System.out.println();
 			}
 		}
 	}

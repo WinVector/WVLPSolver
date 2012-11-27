@@ -28,8 +28,8 @@ public class GLPKSolver implements LPSolver {
 	 * @param p
 	 */
 	public static <T extends Matrix<T>> void printCPLEX(final LPEQProb<T> prob, final PrintStream p) {
-		final NumberFormat vnf = new DecimalFormat("0000000");
-		final NumberFormat vvf = new DecimalFormat("#.########E0");
+		final NumberFormat vnf = new DecimalFormat("00000");
+		final NumberFormat vvf = new DecimalFormat("#.######E0");
 		p.println("\\* WVLPSovler com.winvector.lp.LPEQProb see: http://www.win-vector.com/blog/2012/11/yet-another-java-linear-programming-library/ *\\");
 		p.println();
 		p.println("Minimize");
