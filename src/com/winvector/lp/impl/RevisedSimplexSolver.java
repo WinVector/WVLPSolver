@@ -75,12 +75,13 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			bPrime = null;
 		}
 		final int nvars = tab.prob.A.cols();
+		final BitSet curBasisIndicator = new BitSet(nvars);
 		while (tab.normalSteps<=maxRounds) {
 			int enteringV = -1;
 			{
 				//prob.soln(basis,tol);
 				//System.out.println("basis good");
-				final BitSet curBasisIndicator = new BitSet(nvars);
+				curBasisIndicator.clear();
 				for(final int bi: tab.basis) {
 					curBasisIndicator.set(bi);
 				}

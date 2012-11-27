@@ -106,8 +106,11 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 	
 	public double computeRI(final double[] lambda, final double[] c, final int vi) throws LPErrorException {
 		final double cFi = c[vi];
-		final double[] Fi = prob.A.extractColumn(vi);
-		final double lambdaFi = Matrix.dot(Fi,lambda);
+		double lambdaFi = 0.0;
+		final int n = lambda.length;
+		for(int i=0;i<n;++i) {
+			lambdaFi += prob.A.get(i, vi)*lambda[i];
+		}
 		final double ri = cFi - lambdaFi; 
 		return ri;
 	}
