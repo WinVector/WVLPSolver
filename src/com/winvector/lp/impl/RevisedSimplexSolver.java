@@ -22,8 +22,9 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public int debug = 0;
 	public boolean checkAll = false;
 	public double checkTol = 1.0e-8;
+	public double enteringTol = 1.0e-5;
+	public double earlyEnterTol = 0.1;
 	public double leavingTol = 1.0e-5;
-	public double earlyLeavingTol = 1.0e-2;
 	public boolean perturb = false;               // perturb b and c by simulated infinitesimals to avoid degenerate cases
 	public boolean earlyR = false;                 // allow partial inspection for entering columns
 	public Random rand = new Random(3252351L);
@@ -92,14 +93,14 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 					if(!curBasisIndicator.get(v)) {
 						final double ri = tab.computeRI(lambda, tab.prob.c, v);
 						final double rpi = perturb?tab.computeRI(lambdaPrime,cPrime,v):ri;
-						if ((ri < -leavingTol) || ((ri <= 0) && (rpi < -leavingTol))) {
+						if ((ri < -enteringTol) || ((ri < 0) && (rpi < -enteringTol))) {
 							if ((enteringV < 0)
 									|| (ri < prevRi)
 									|| ((ri <= prevRi) && (rpi < prevRPi)) ) {
 								enteringV = v;
 								prevRi = ri;
 								prevRPi = rpi;
-								if(earlyR && (ri<-earlyLeavingTol)) {
+								if(earlyR && (ri<-earlyEnterTol)) {
 									break rsearch;
 								}
 							}
@@ -147,11 +148,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 				}
 			}
 			final double[] u = tab.prob.A.extractColumn(enteringV);
-			final double[] v = tab.basisSolveRight(u);
-			int leavingI = findLeaving(leavingTol, preB, preBprime, v);
-			if(leavingI<0) {
-				leavingI = findLeaving(0.0, preB, preBprime, v);
-			}
+			final double[] binvu = tab.basisSolveRight(u);
+			int leavingI = findLeaving(preB, preBprime, binvu);
 			if (debug > 0) {
 				System.out.print(" leavingI: " + leavingI);
 				if (leavingI >= 0) {
@@ -164,21 +162,21 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 						"problem unbounded");
 			}
 			// perform the swap
-			tab.basisPivot(leavingI,enteringV,v);
+			tab.basisPivot(leavingI,enteringV,binvu);
 			//System.out.println("leave: " + basis[leavingI]);
 		}
 		throw new LPTooManyStepsException("max steps>" + maxRounds);
 	}
 
 	/**
-	 * 
+	 * the idea is the preB and preBprime should be non-negative, being solutions from another basis
 	 * @param tol >=0
 	 * @param preB
-	 * @param v
+	 * @param binvu
 	 * @return
 	 */
-	private <Z extends Matrix<Z>> int findLeaving(final double tol, final double[] preB, final double[] preBprime,
-			final double[] v) {
+	private <Z extends Matrix<Z>> int findLeaving(final double[] preB, final double[] preBprime,
+			final double[] binvu) {
 		// find least ratio of xB[i] to v[i] where v[i]>0
 		// determines joining variable
 		//(degenerate when xB[i] = 0, could put anti-cycling code here)
@@ -190,35 +188,33 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		// separate record keeping for the xB[i] <=0 case so we can still see relative sizes of the vi
 		double bestZRat = Double.NaN;
 		int leavingZI = -1;
-		for(int i=0;i<v.length;++i) {
-			final double vi = v[i];
+		for(int i=0;i<binvu.length;++i) {
+			final double vi = binvu[i];
 			//System.out.println("l(" + basis[i] + ")= " + vi);
-			if (vi>tol) {
+			if (vi>leavingTol) {
 				final double xBi = preB[i];
-				if (xBi>=-checkTol) {
-					if (xBi > 0) {
-						final double rat = xBi/vi;
-						if (Double.isNaN(bestRat)
-								|| (bestRat > rat)) {
-							bestRat = rat;
-							leavingI = i;
-						}
-					} else if((null!=preBprime)&&(preBprime[i]>0)) {
-						// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
-						final double prat = preBprime[i]/vi;
-						if (Double.isNaN(bestPRat)
-								|| (bestZRat>prat)) {
-							bestPRat = prat;
-							leavingPI = i;
-						}
-					} else {
-						// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
-						final double zrat = 1.0/vi;
-						if (Double.isNaN(bestZRat)
-								|| (bestZRat>zrat)) {
-							bestZRat = zrat;
-							leavingZI = i;
-						}
+				if (xBi>leavingTol) {
+					final double rat = xBi/vi;
+					if (Double.isNaN(bestRat)
+							|| (bestRat > rat)) {
+						bestRat = rat;
+						leavingI = i;
+					}
+				} else if((null!=preBprime)&&(preBprime[i]>leavingTol)) {
+					// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
+					final double prat = preBprime[i]/vi;
+					if (Double.isNaN(bestPRat)
+							|| (bestZRat>prat)) {
+						bestPRat = prat;
+						leavingPI = i;
+					}
+				} else {
+					// treat xBi==0 as epsilon, this is where we could have degeneracies and cycle
+					final double zrat = 1.0/vi;
+					if (Double.isNaN(bestZRat)
+							|| (bestZRat>zrat)) {
+						bestZRat = zrat;
+						leavingZI = i;
 					}
 				}
 			}
