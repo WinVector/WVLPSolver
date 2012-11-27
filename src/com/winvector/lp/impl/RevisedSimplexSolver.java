@@ -1,6 +1,7 @@
 package com.winvector.lp.impl;
 
 import java.util.BitSet;
+import java.util.LinkedList;
 import java.util.Random;
 
 import com.winvector.linagl.Matrix;
@@ -23,30 +24,14 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public boolean checkAll = false;
 	public double checkTol = 1.0e-8;
 	public double enteringTol = 1.0e-5;
-	public double earlyEnterTol = 1.0e-3;
+	public double earlyEnterTol = 1.0e-2;
 	public double leavingTol = 1.0e-5;
 	public boolean perturbB = false;               // perturb b by simulated infinitesimals to avoid degenerate cases
 	public boolean perturbC = true;               // perturb c by simulated infinitesimals to avoid degenerate cases
-	public boolean earlyR = false;                 // allow partial inspection for entering columns
+	public boolean earlyR = true;                 // allow partial inspection for entering columns
 	public Random rand = new Random(3252351L);
 
 	
-	private static int[] perm(final Random rand, final int n) {
-		final int[] perm = new int[n];
-		for(int i=0;i<n;++i) {
-			perm[i] = i;
-		}
-		for(int i=0;i<n-1;++i) {
-			final int j = i + rand.nextInt(n-i);
-			if(j>i) {
-				final int vi = perm[i];
-				final int vj = perm[j];
-				perm[i] = vj;
-				perm[j] = vi;
-			}
-		}
-		return perm;
-	}
 
 	
 	private <Z extends Matrix<Z>> int[] runSimplex(final RTableau<Z> tab, final double tol, final int maxRounds) throws LPException {
@@ -75,7 +60,9 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			bPrime = null;
 		}
 		final int nvars = tab.prob.A.cols();
+		final int ncond = tab.prob.A.rows();
 		final BitSet curBasisIndicator = new BitSet(nvars);
+		final InspectionOrder inspectionOrder = new InspectionOrder(nvars,rand);
 		while (tab.normalSteps<=maxRounds) {
 			int enteringV = -1;
 			{
@@ -91,10 +78,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 				// determines joining variable
 				double prevRi = Double.NaN;
 				double prevRPi = Double.NaN;
-				final int[] perm = earlyR?perm(rand,nvars):null;
-				rsearch:
 				for(int ii=0;ii<nvars;++ii) {
-					final int v = (null!=perm)?perm[ii]:ii;
+					final int v = inspectionOrder.take();
 					if(!curBasisIndicator.get(v)) {
 						final double ri = tab.computeRI(lambda, tab.prob.c, v);
 						final double rpi = perturbC?tab.computeRI(lambdaPrime,cPrime,v):ri;
@@ -105,11 +90,11 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 								enteringV = v;
 								prevRi = ri;
 								prevRPi = rpi;
-								if(earlyR && (ri<-earlyEnterTol)) {
-									break rsearch;
-								}
 							}
 						}
+					}
+					if(earlyR && (prevRi<-earlyEnterTol) && (ii>2*ncond+5)) {
+						break;
 					}
 				}
 				if (debug > 0) {
@@ -145,6 +130,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 						"problem unbounded");
 			}
 			// perform the swap
+			inspectionOrder.moveToEnd(tab.basis[leavingI]);
 			tab.basisPivot(leavingI,enteringV,binvu);
 			//System.out.println("leave: " + basis[leavingI]);
 		}
