@@ -23,11 +23,11 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public boolean checkAll = false;
 	public double checkTol = 1.0e-8;
 	public double enteringTol = 1.0e-5;
-	public double earlyEnterTol = 0.1;
+	public double earlyEnterTol = 1.0e-3;
 	public double leavingTol = 1.0e-5;
 	public boolean perturbB = false;               // perturb b by simulated infinitesimals to avoid degenerate cases
 	public boolean perturbC = true;               // perturb c by simulated infinitesimals to avoid degenerate cases
-	public boolean earlyR = true;                 // allow partial inspection for entering columns
+	public boolean earlyR = false;                 // allow partial inspection for entering columns
 	public Random rand = new Random(3252351L);
 
 	
