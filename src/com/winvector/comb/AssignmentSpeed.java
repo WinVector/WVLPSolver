@@ -1,16 +1,16 @@
-package com.winvector.lp.apachem3;
+package com.winvector.comb;
 
 import java.util.Random;
 
 import org.apache.commons.math3.optimization.linear.SimplexSolver;
 
-import com.winvector.comb.Assignment;
 import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.LPSolver;
+import com.winvector.lp.apachem3.M3Solver;
 import com.winvector.lp.apachem3.M3Solver.M3Prob;
 import com.winvector.lp.glpk.GLPKSolver;
 import com.winvector.lp.impl.RevisedSimplexSolver;

@@ -2,6 +2,8 @@ package com.winvector.lp;
 
 import java.io.Serializable;
 
+import com.winvector.linagl.Matrix;
+
 
 public final class LPSoln implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -17,7 +19,7 @@ public final class LPSoln implements Serializable {
 	public String toString() {
 		final StringBuilder b = new StringBuilder();
 		if (x != null) {
-			b.append(x);
+			b.append(Matrix.toString(x));
 		}
 		if (basis != null) {
 			b.append(" (");

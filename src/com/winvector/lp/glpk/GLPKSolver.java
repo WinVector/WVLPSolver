@@ -29,7 +29,7 @@ public class GLPKSolver implements LPSolver {
 	 */
 	public static <T extends Matrix<T>> void printCPLEX(final LPEQProb<T> prob, final PrintStream p) {
 		final NumberFormat vnf = new DecimalFormat("0000000");
-		final NumberFormat vvf = new DecimalFormat();
+		final NumberFormat vvf = new DecimalFormat("#.########E0");
 		p.println("\\* WVLPSovler com.winvector.lp.LPEQProb see: http://www.win-vector.com/blog/2012/11/yet-another-java-linear-programming-library/ *\\");
 		p.println();
 		p.println("Minimize");
@@ -39,12 +39,17 @@ public class GLPKSolver implements LPSolver {
 			for(int j=0;j<prob.c.length;++j) {
 				final double cj = prob.c[j];
 				if(Math.abs(cj)!=0) {
+					final String valCStr = vvf.format(cj);
 					if(!first) {
-						p.print(" + ");
+						if(valCStr.charAt(0)!='-') {
+							p.print(" +");
+						} else {
+							p.print(" ");
+						}
 					} else {
 						first = false;
 					}
-					p.print(vvf.format(cj) + " " + "x" + vnf.format(j));
+					p.print(valCStr + " " + "x" + vnf.format(j));
 				}
 			}
 		}
@@ -82,11 +87,11 @@ public class GLPKSolver implements LPSolver {
 			}
 		}
 		p.println();
-//		p.println("Bounds");
-//		for(int j=0;j<prob.c.length;++j) {
-//			p.println("\t0 <= x" + vnf.format(j));
-//		}
-//		p.println();
+		p.println("Bounds");
+		for(int j=0;j<prob.c.length;++j) {
+			p.println("\t0 <= x" + vnf.format(j));
+		}
+		p.println();
 		p.println("End");
 		p.println();
 		p.println("\\* eof *\\");
