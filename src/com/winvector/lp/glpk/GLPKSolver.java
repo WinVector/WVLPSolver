@@ -125,7 +125,7 @@ public class GLPKSolver implements LPSolver {
 			final double[] v = new double[prob.c.length];
 			for(int i=0;i<v.length;++i) {
 				final String vline = lnr.readLine();
-				v[i] = Double.parseDouble(vline.split(" ")[1]);
+				v[i] = Double.parseDouble(vline.split("\\s+")[1]);
 			}
 			tempFI.delete();
 			tempFS.delete();

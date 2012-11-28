@@ -10,6 +10,7 @@ import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
+import com.winvector.lp.LPException.LPErrorException;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.LPSolver;
 import com.winvector.lp.apachem3.M3Solver;
@@ -31,19 +32,35 @@ public class AssignmentSpeed {
 		for(final Map.Entry<String,LPSolver> me: solvers.entrySet()) {
 			final String name = me.getKey();
 			final LPSolver solver = me.getValue();
+			double sawValue = Double.NaN;
 			if(null!=solver) {
+				LPSoln soln = null;
 				final long startMS = System.currentTimeMillis();
-				final LPSoln soln = solver.solve(prob,null,1.0e-5,100000);
+				try {
+					soln = solver.solve(prob,null,1.0e-5,100000);
+				} catch (LPException e) {
+				}
 				final long endMS = System.currentTimeMillis();
 				final long durationMS = endMS-startMS;
-				if(soln.basis!=null) {
-					final double[] dual = prob.inspectForDual(soln,1.0e-3);
-					LPEQProb.checkPrimDualOpt(prob.A, prob.b, prob.c, soln.x, dual, 1.0e-3);
+				if(null!=soln) {
+					LPEQProb.checkPrimFeas(prob.A, prob.b, soln.x, 1.0e-3);
+					final double value = Matrix.dot(soln.x,prob.c);
+					if(!Double.isNaN(sawValue)) {
+						if(Math.abs(value-sawValue)>1.0e-3) {
+							throw new LPErrorException("solution costs did not match");
+						}
+					} else {
+						sawValue = value;
+					}
+					if(soln.basis!=null) {
+						final double[] dual = prob.inspectForDual(soln,1.0e-3);
+						LPEQProb.checkPrimDualOpt(prob.A, prob.b, prob.c, soln.x, dual, 1.0e-3);
+					}
+					res.put(name,durationMS);
 				}
-				if(durationMS>=5000) {
+				if((null==soln)||(durationMS>=5000)) {
 					zaps.add(name);
 				}
-				res.put(name,durationMS);
 			}
 		}
 		for(final String zap: zaps) {

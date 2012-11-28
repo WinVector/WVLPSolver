@@ -5,3 +5,4 @@
 bin
 .Rhistory
 /lp_solve
+gurobi.log
