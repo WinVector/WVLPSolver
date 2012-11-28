@@ -15,7 +15,6 @@ import com.winvector.lp.LPSolver;
 import com.winvector.lp.apachem3.M3Solver;
 import com.winvector.lp.glpk.GLPKSolver;
 import com.winvector.lp.impl.RevisedSimplexSolver;
-import com.winvector.lp.lp_solve.LP_solve;
 
 public class AssignmentSpeed {
 
@@ -57,7 +56,6 @@ public class AssignmentSpeed {
 	public static void main(String[] args) throws Exception {
 		final Random rand = new Random(235135L);
 		final Map<String,LPSolver> solvers = new TreeMap<String,LPSolver>();
-		solvers.put("lp_solve",new LP_solve());
 		solvers.put("ApacheM3Simplex",new M3Solver());
 		solvers.put("WVLPSolver",new RevisedSimplexSolver());
 		solvers.put("GLPK",new GLPKSolver());

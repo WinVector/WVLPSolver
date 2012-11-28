@@ -1,0 +1,287 @@
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:28 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb8712544484231011476.lp
+Reading time = 0.00 seconds
+(null): 10 rows, 25 columns, 50 nonzeros
+Optimize a model with 10 rows, 25 columns and 50 nonzeros
+Presolve time: 0.00s
+Presolved: 10 rows, 25 columns, 50 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    6.9660149e-01   2.000000e+00   0.000000e+00      0s
+       3    1.1072262e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 3 iterations and 0.00 seconds
+Optimal objective  1.107226192e+00
+
+Wrote result file '/var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkSoln8673412428711531607.sol'
+
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:28 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb4677171518691489259.lp
+Reading time = 0.00 seconds
+(null): 10 rows, 25 columns, 50 nonzeros
+Optimize a model with 10 rows, 25 columns and 50 nonzeros
+Presolve time: 0.00s
+Presolved: 10 rows, 25 columns, 50 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    6.2395961e-01   2.000000e+00   0.000000e+00      0s
+       2    7.9381191e-01   0.000000e+00   0.000000e+00      0s
+
+Solved in 2 iterations and 0.00 seconds
+Optimal objective  7.938119100e-01
+
+Wrote result file '/var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkSoln1999207183716793171.sol'
+
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:28 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb918405745132397265.lp
+Reading time = 0.00 seconds
+(null): 10 rows, 25 columns, 50 nonzeros
+Optimize a model with 10 rows, 25 columns and 50 nonzeros
+Presolve time: 0.00s
+Presolved: 10 rows, 25 columns, 50 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.5630069e+00   2.000000e+00   0.000000e+00      0s
+       1    1.5736400e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 1 iterations and 0.00 seconds
+Optimal objective  1.573639950e+00
+
+Wrote result file '/var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkSoln1846075415294137349.sol'
+
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:29 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb4306294255535875531.lp
+Reading time = 0.00 seconds
+(null): 20 rows, 100 columns, 200 nonzeros
+Optimize a model with 20 rows, 100 columns and 200 nonzeros
+Presolve time: 0.00s
+Presolved: 20 rows, 100 columns, 200 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.0670835e+00   1.000000e+01   0.000000e+00      0s
+       7    1.8601785e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 7 iterations and 0.00 seconds
+Optimal objective  1.860178508e+00
+
+Wrote result file '/var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkSoln2565900677485860831.sol'
+
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:29 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb9111100961853759724.lp
+Reading time = 0.00 seconds
+(null): 20 rows, 100 columns, 200 nonzeros
+Optimize a model with 20 rows, 100 columns and 200 nonzeros
+Presolve time: 0.01s
+Presolved: 20 rows, 100 columns, 200 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    6.4012009e-01   6.000000e+00   0.000000e+00      0s
+       3    1.0557094e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 3 iterations and 0.01 seconds
+Optimal objective  1.055709358e+00
+
+Wrote result file '/var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkSoln671776276274814514.sol'
+
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:29 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb6563836731375165257.lp
+Reading time = 0.00 seconds
+(null): 20 rows, 100 columns, 200 nonzeros
+Optimize a model with 20 rows, 100 columns and 200 nonzeros
+Presolve time: 0.00s
+Presolved: 20 rows, 100 columns, 200 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    4.9178221e-01   8.000000e+00   0.000000e+00      0s
+       6    1.0201460e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 6 iterations and 0.00 seconds
+Optimal objective  1.020146021e+00
+
+Wrote result file '/var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkSoln1741190709159972318.sol'
+
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:30 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb1001791075601679623.lp
+Reading time = 0.00 seconds
+(null): 30 rows, 225 columns, 450 nonzeros
+Optimize a model with 30 rows, 225 columns and 450 nonzeros
+Presolve time: 0.00s
+Presolved: 30 rows, 225 columns, 450 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.1862002e+00   1.400000e+01   0.000000e+00      0s
+      11    1.6507216e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 11 iterations and 0.00 seconds
+Optimal objective  1.650721568e+00
+
+Wrote result file '/var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkSoln6969510613461443097.sol'
+
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:30 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb8311855550595178957.lp
+Reading time = 0.00 seconds
+(null): 30 rows, 225 columns, 450 nonzeros
+Optimize a model with 30 rows, 225 columns and 450 nonzeros
+Presolve time: 0.00s
+Presolved: 30 rows, 225 columns, 450 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.4030976e+00   6.000000e+00   0.000000e+00      0s
+      11    1.9847626e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 11 iterations and 0.00 seconds
+Optimal objective  1.984762565e+00
+
+Wrote result file '/var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkSoln4068469818553949586.sol'
+
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:30 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb3657617028494196055.lp
+Reading time = 0.00 seconds
+(null): 30 rows, 225 columns, 450 nonzeros
+Optimize a model with 30 rows, 225 columns and 450 nonzeros
+Presolve time: 0.00s
+Presolved: 30 rows, 225 columns, 450 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.4748514e+00   8.000000e+00   0.000000e+00      0s
+      11    1.9350171e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 11 iterations and 0.00 seconds
+Optimal objective  1.935017120e+00
+
+Wrote result file '/var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkSoln8352048508755012666.sol'
+
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:31 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb8252032464988292569.lp
+Reading time = 0.00 seconds
+(null): 40 rows, 400 columns, 800 nonzeros
+Optimize a model with 40 rows, 400 columns and 800 nonzeros
+Presolve time: 0.00s
+Presolved: 40 rows, 400 columns, 800 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    6.6206212e-01   1.600000e+01   0.000000e+00      0s
+      19    1.3650656e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 19 iterations and 0.00 seconds
+Optimal objective  1.365065640e+00
+
+Wrote result file '/var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkSoln8557833471569170114.sol'
+
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:31 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb1401140863246423614.lp
+Reading time = 0.00 seconds
+(null): 40 rows, 400 columns, 800 nonzeros
+Optimize a model with 40 rows, 400 columns and 800 nonzeros
+Presolve time: 0.00s
+Presolved: 40 rows, 400 columns, 800 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.1197005e+00   1.800000e+01   0.000000e+00      0s
+      25    1.8667236e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 25 iterations and 0.00 seconds
+Optimal objective  1.866723600e+00
+
+Wrote result file '/var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkSoln2181319320934108912.sol'
+
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:32 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb5610344637381970196.lp
+Reading time = 0.00 seconds
+(null): 40 rows, 400 columns, 800 nonzeros
+Optimize a model with 40 rows, 400 columns and 800 nonzeros
+Presolve time: 0.00s
+Presolved: 40 rows, 400 columns, 800 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    9.2073522e-01   1.800000e+01   0.000000e+00      0s
+      20    1.4308139e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 20 iterations and 0.00 seconds
+Optimal objective  1.430813860e+00
+
+Wrote result file '/var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkSoln1840523225784850952.sol'
+
+
+Gurobi 5.0.2 (mac64) logging started Wed Nov 28 13:16:32 2012
+
+
+Gurobi Optimizer version 5.0.2 build 10636 (mac64)
+Copyright (c) 2012, Gurobi Optimization, Inc.
+
+Read LP format model from file /var/folders/62/q44nj1wj2vq2qz0d_gljt3y80000gn/T/glpkProb1491238187440541587.lp
+Reading time = 0.00 seconds
+(null): 50 rows, 625 columns, 1250 nonzeros
+ERROR: Model too large for current Gurobi license
