@@ -38,7 +38,21 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		final int nvars = tab.prob.A.cols();
 		final int ncond = tab.prob.A.rows();
 		final BitSet curBasisIndicator = new BitSet(nvars);
-		final InspectionOrder inspectionOrder = new InspectionOrder(nvars,rand);
+		final BitSet uselessCols = new BitSet(nvars);
+		for(int j=0;j<nvars;++j) {
+			boolean useless = true;
+			for(int i=0;(i<ncond) && (useless);++i) {
+				final double aij = tab.prob.A.get(i, j);
+				if(Math.abs(aij)>checkTol) {
+					useless = false;
+				}
+			}
+			if(useless) {
+				uselessCols.set(j);
+			}
+		}
+		//System.out.println("nuseless: " + uselessCols.cardinality());
+		final InspectionOrder inspectionOrder = new InspectionOrder(nvars,rand,uselessCols);
 		final double[] bRatPtr = new double[1];
 		double[] c = tab.prob.c;
 		double[] b = tab.prob.b;

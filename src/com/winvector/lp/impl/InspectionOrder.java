@@ -1,6 +1,7 @@
 package com.winvector.lp.impl;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -66,31 +67,16 @@ public final class InspectionOrder {
 	private final Random rand;
 	private final ArrayList<InspectionRow> rows;
 	private final SortedSet<InspectionRow> available = new TreeSet<InspectionRow>();
-	
-	public static int[] perm(final Random rand, final int n) {
-		final int[] perm = new int[n];
-		for(int i=0;i<n;++i) {
-			perm[i] = i;
-		}
-		for(int i=0;i<n-1;++i) {
-			final int j = i + rand.nextInt(n-i);
-			if(j>i) {
-				final int vi = perm[i];
-				final int vj = perm[j];
-				perm[i] = vj;
-				perm[j] = vi;
-			}
-		}
-		return perm;
-	}
 
 	
-	public InspectionOrder(final int n, final Random rand) {
+	public InspectionOrder(final int n, final Random rand, final BitSet skips) {
 		this.rand = rand;
 		rows = new ArrayList<InspectionRow>(n);
 		for(int i=0;i<n;++i) {
-			final InspectionRow r = new InspectionRow(i,rand.nextLong());
-			rows.add(r);
+			if((null==skips)||(!skips.get(i))) {
+				final InspectionRow r = new InspectionRow(i,rand.nextLong());
+				rows.add(r);
+			}
 		}
 	}
 	

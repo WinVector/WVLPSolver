@@ -17,7 +17,7 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	abstract public boolean sparseRep();
 	abstract public LinalgFactory<T> factory();
 
-	abstract public double get(int j, int i);
+	abstract public double get(int i, int j);
 	abstract public void set(int i, int j, double d);
 
 	abstract public <Z extends T> T multMat(final Z o);
