@@ -21,9 +21,11 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public double checkTol = 1.0e-8;
 	public double enteringTol = 1.0e-5;
 	public double leavingTol = 1.0e-7;
-	public boolean earlyR = true;                 // allow partial inspection for entering columns
-	public boolean earlyLeavingCalc = false;       // value and sort steps early
-	public boolean earlyLeavingExit = false;       // allow early inspection exit on valuation calc
+	public boolean perturbC = true;
+	public boolean perturbB = true;
+	public boolean earlyR = false;                 // allow partial inspection for entering columns
+	public boolean earlyLeavingCalc = true;       // value and sort steps early
+	public boolean earlyLeavingExit = true;       // allow early inspection exit on valuation calc
 	public Random rand = new Random(3252351L);
 
 	
@@ -38,6 +40,25 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		final BitSet curBasisIndicator = new BitSet(nvars);
 		final InspectionOrder inspectionOrder = new InspectionOrder(nvars,rand);
 		final double[] bRatPtr = new double[1];
+		double[] c = tab.prob.c;
+		double[] b = tab.prob.b;
+		if(perturbC) {
+			c = new double[tab.prob.c.length];
+			for(int i=0;i<c.length;++i) {
+				c[i] = tab.prob.c[i] + 1.0e-7*rand.nextDouble();
+			}
+		}
+		if(perturbB) {
+			b = new double[tab.prob.b.length];
+			final double[] x = new double[tab.prob.c.length];
+			for(int i=0;i<x.length;++i) {
+				x[i] = 1.0e-7*rand.nextDouble();
+			}
+			final double[] p = tab.prob.A.mult(x);
+			for(int i=0;i<b.length;++i) {
+				b[i] = tab.prob.b[i] + p[i];
+			}
+		}
 		while (tab.normalSteps<=maxRounds) {
 			int enteringV = -1;
 			//prob.soln(basis,tol);
@@ -47,8 +68,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			for(final int bi: tab.basis) {
 				curBasisIndicator.set(bi);
 			}
-			final double[] lambda = tab.leftBasisSoln(tab.prob.c);
-			final double[] preB = tab.basisSolveRight(tab.prob.b);
+			final double[] lambda = tab.leftBasisSoln(c);
+			final double[] preB = tab.basisSolveRight(b);
 			// find most negative entry of r, if any
 			// determines joining variable
 			double bestRi = Double.NaN;
@@ -60,7 +81,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			for(int ii=0;ii<nvars;++ii) {
 				final int v = inspectionOrder.take();
 				if(!curBasisIndicator.get(v)) {
-					final double ri = tab.computeRI(lambda, tab.prob.c, v);
+					final double ri = tab.computeRI(lambda, c, v);
 					if(ri < -enteringTol) {
 						if((enteringV < 0)||(ri < bestRi)) {
 							enteringV = v;
