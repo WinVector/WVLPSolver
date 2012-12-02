@@ -52,7 +52,9 @@ public class TestAssignment {
 			final double solnCost = Assignment.cost(c,assignment);
 			final int[] check = Assignment.computeAssignment(c, NativeMatrix.factory, new M3Solver(), 1000);
 			final double checkCost = Assignment.cost(c,check);
-			assertTrue(Math.abs(solnCost-checkCost)<1.0e-3);
+			final double relAbsDiff = Math.abs(solnCost-checkCost)/Math.max(1.0,Math.abs(checkCost));
+			//System.out.println("\t" + solnCost + "\t" + checkCost + "\t" + relAbsDiff);
+			assertTrue(relAbsDiff<1.0e-2);
 		}
 	}
 }
