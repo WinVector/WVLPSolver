@@ -20,11 +20,10 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public int debug = 0;
 	public double checkTol = 1.0e-8;
 	public double enteringTol = 1.0e-5;
-	public double earlyEnterTol = 1.0e-2;
-	public double leavingTol = 1.0e-5;
-	public boolean perturbC = true;               // perturb c by simulated infinitesimals to avoid degenerate cases
+	public double leavingTol = 1.0e-7;
 	public boolean earlyR = true;                 // allow partial inspection for entering columns
-	public boolean earlyLeavingCalc = true;       // look for leaving early
+	public boolean earlyLeavingCalc = false;       // value and sort steps early
+	public boolean earlyLeavingExit = false;       // allow early inspection exit on valuation calc
 	public Random rand = new Random(3252351L);
 
 	
@@ -34,20 +33,11 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		if (debug > 0) {
 			System.out.println("start: " + stringBasis(tab.basis));
 		}
-		final double[] cPrime;   // optional perturbation
-		if(perturbC) {
-			// perturb c
-			cPrime = new double[tab.prob.c.length];
-			for(int i=0;i<cPrime.length;++i) {
-				cPrime[i] = rand.nextDouble();  // non-negative entries- don't convert problem to unbounded
-			}
-		} else {
-			cPrime = null;
-		}
 		final int nvars = tab.prob.A.cols();
 		final int ncond = tab.prob.A.rows();
 		final BitSet curBasisIndicator = new BitSet(nvars);
 		final InspectionOrder inspectionOrder = new InspectionOrder(nvars,rand);
+		final double[] bRatPtr = new double[1];
 		while (tab.normalSteps<=maxRounds) {
 			int enteringV = -1;
 			//prob.soln(basis,tol);
@@ -58,49 +48,74 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 				curBasisIndicator.set(bi);
 			}
 			final double[] lambda = tab.leftBasisSoln(tab.prob.c);
-			final double[] lambdaPrime = perturbC?tab.leftBasisSoln(cPrime):lambda;
 			final double[] preB = tab.basisSolveRight(tab.prob.b);
 			// find most negative entry of r, if any
 			// determines joining variable
-			double prevRi = Double.NaN;
-			double prevRPi = Double.NaN;
+			double bestRi = Double.NaN;
+			double bestStepValue = Double.NaN;
+			int leavingI = -1;
+			int matchingEnterV = -1;
+			double[] bestBinvu = null;
+			inspectionLoop:
 			for(int ii=0;ii<nvars;++ii) {
 				final int v = inspectionOrder.take();
 				if(!curBasisIndicator.get(v)) {
 					final double ri = tab.computeRI(lambda, tab.prob.c, v);
-					final double rpi = perturbC?tab.computeRI(lambdaPrime,cPrime,v):ri;
-					if ((ri < -enteringTol) || ((ri < 0) && (rpi < -enteringTol))) {
-						if ((enteringV < 0)
-								|| (ri < prevRi)
-								|| ((ri <= prevRi) && (rpi < prevRPi)) ) {
+					if(ri < -enteringTol) {
+						if((enteringV < 0)||(ri < bestRi)) {
 							enteringV = v;
-							prevRi = ri;
-							prevRPi = rpi;
+							bestRi = ri;
+							if(earlyR && bestRi<0) {
+								break inspectionLoop;
+							}
 						}
-//						if(earlyLeavingCalc) {
-//							final double[] u = tab.prob.A.extractColumn(enteringV);
-//							final double[] binvu = tab.basisSolveRight(u);
-//							int leavingI = findLeaving(preB, preBprime, binvu);
-//							if(leavingI>=0) {
-//								final double stepValue = Math.abs(ri)*
-//							}
-//						}
+						if(earlyLeavingCalc) {
+							final double[] u = tab.prob.A.extractColumn(enteringV);
+							final double[] binvu = tab.basisSolveRight(u);
+							int leavingIndex = findLeaving(preB,binvu,bRatPtr);
+							if((leavingIndex>=0)&&(bRatPtr[0]>0)) {
+								final double stepValue = -ri*bRatPtr[0];
+								if(stepValue>=0) {
+									if((leavingI<0)||(stepValue>bestStepValue)) {
+										leavingI = leavingIndex;
+										matchingEnterV = v;
+										bestStepValue = stepValue;
+										bestBinvu = binvu;
+										if(earlyLeavingExit && (bestStepValue>0)) {
+											break inspectionLoop;
+										}
+									}
+								}
+							}
+						}
 					}
 				}
-				if(earlyR && (prevRi<-earlyEnterTol) && (ii>2*ncond+5)) {
+				if(earlyR && (enteringV>=0) && (ii>2*ncond+5)) {
+					break;
+				}
+				if(earlyLeavingExit && (leavingI>=0) && (ii>2*ncond+5)) {
 					break;
 				}
 			}
 			if (debug > 0) {
-				System.out.println(" enteringV: " + enteringV + "\t" + prevRi + "\t" + prevRPi);
+				System.out.println(" enteringV: " + enteringV + "\t" + bestRi);
+			}
+			if(leavingI>=0) {
+				enteringV = matchingEnterV;
 			}
 			if (enteringV < 0) {
 				// no entry, at optimum
 				return tab.basis();
 			}
-			final double[] u = tab.prob.A.extractColumn(enteringV);
-			final double[] binvu = tab.basisSolveRight(u);
-			int leavingI = findLeaving(preB,binvu);
+			if(leavingI<0) {
+				final double[] u = tab.prob.A.extractColumn(enteringV);
+				final double[] binvu = tab.basisSolveRight(u);
+				leavingI = findLeaving(preB,binvu,bRatPtr);
+				if(leavingI>=0) {
+					bestBinvu = binvu;
+					bestStepValue = -bestRi*bRatPtr[0];
+				}
+			}
 			if (debug > 0) {
 				System.out.print(" leavingI: " + leavingI);
 				if (leavingI >= 0) {
@@ -114,7 +129,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			}
 			// perform the swap
 			inspectionOrder.moveToEnd(tab.basis[leavingI]);
-			tab.basisPivot(leavingI,enteringV,binvu);
+			tab.basisPivot(leavingI,enteringV,bestBinvu);
 			//System.out.println("leave: " + basis[leavingI]);
 		}
 		throw new LPTooManyStepsException("max steps>" + maxRounds);
@@ -127,31 +142,29 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	 * @param binvu
 	 * @return
 	 */
-	private <Z extends Matrix<Z>> int findLeaving(final double[] preB, final double[] binvu) {
+	private <Z extends Matrix<Z>> int findLeaving(final double[] preB, final double[] binvu, final double[] bestRatPointer) {
 		// find least ratio of xB[i] to v[i] where v[i]>0
 		// determines joining variable
 		//(degenerate when xB[i] = 0, could put anti-cycling code here)
-		double bestRat = Double.NaN;
+		double determiningRat = Double.NaN;
 		int leavingI = -1;
 		for(int i=0;i<binvu.length;++i) {
 			final double vi = binvu[i];
 			//System.out.println("l(" + basis[i] + ")= " + vi);
 			if (vi>leavingTol) {
 				final double xBi = preB[i];
-				if (xBi>=-leavingTol) {
-					final double rat = Math.max(leavingTol,xBi)/vi;
-					if (Double.isNaN(bestRat)
-							|| (bestRat > rat)) {
-						bestRat = rat;
-						leavingI = i;
-					}
+				final double rat = Math.max(0.0,xBi)/vi;
+				if (Double.isNaN(determiningRat)
+					|| (determiningRat > rat)) {
+					determiningRat = rat;
+					leavingI = i;
 				}
 			}
 		}
-		if(leavingI>=0) {
-			return leavingI;
+		if(null!=bestRatPointer) {
+			bestRatPointer[0] = determiningRat;
 		}
-		return -1;
+		return leavingI;
 	}
 
 	/**
