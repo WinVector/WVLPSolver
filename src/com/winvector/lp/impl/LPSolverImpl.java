@@ -450,12 +450,12 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		// re-scale
 		for(int i=0;i<prob.A.rows();++i) {
-			double sumAbs = 0.0;
+			double sumAbs = Math.abs(prob.b[i]);
 			for(int j=0;j<prob.A.cols();++j) {
 				sumAbs += Math.abs(prob.A.get(i, j));
 			}
 			if(sumAbs>0) {
-				final double scale = prob.A.cols()/sumAbs;
+				final double scale = (prob.A.cols()+1.0)/sumAbs;
 				for(int j=0;j<prob.A.cols();++j) {
 					final double aij = prob.A.get(i, j);
 					if(aij!=0) {
