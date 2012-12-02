@@ -392,42 +392,44 @@ abstract class LPSolverImpl implements LPSolver {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	public <T extends Matrix<T>> LPSoln solve(LPEQProb<T> prob, final int[] basis_in, final double tol,final int maxRounds)
+	public <T extends Matrix<T>> LPSoln solve(final LPEQProb<T> origProb, final int[] basis_in, final double tol,final int maxRounds)
 			throws LPException {
 		if (verbose > 0) {
 			System.out.println("solve:");
 			if (verbose > 1) {
-				prob.print();
+				origProb.print();
 			}
 		}
-		final LPEQProb<T> origProb = prob;
 		// get rid of degenerate cases
 		//System.out.println("start rb1");
-		final int[] rb = prob.A.rowBasis(null,minBasisEpsilon);
+		final int[] rb = origProb.A.rowBasis(null,minBasisEpsilon);
 		if ((rb == null) || (rb.length <= 0)) {
 			//solving 0 x = b
-			if (!Matrix.isZero(prob.b)) {
+			if (!Matrix.isZero(origProb.b)) {
 				throw new LPException.LPInfeasibleException(
 						"linear relaxation incosistent");
 			}
-			for (int i = 0; i < prob.c.length; ++i) {
-				if (prob.c[i] < 0) {
+			for (int i = 0; i < origProb.c.length; ++i) {
+				if (origProb.c[i] < 0) {
 					throw new LPException.LPUnboundedException(
 							"unbounded minimum solving 0 x = 0");
 				}
 			}
-			final double[] x = new double[prob.A.cols()];
+			final double[] x = new double[origProb.A.cols()];
 			int[] b = new int[x.length];
 			for (int i = 0; i < b.length; ++i) {
 				b[i] = i;
 			}
 			return new LPSoln(x, b);
 		}
+		final LPEQProb<T> prob;
 		// select out irredundant rows
-		if (rb.length != prob.A.rows()) {
-			final Matrix<T> nA = prob.A.extractRows(rb,prob.A.factory());
-			final double[] nb = Matrix.extract(prob.b,rb);
-			prob = new LPEQProb<T>(nA, nb, prob.c);
+		if (rb.length != origProb.A.rows()) {
+			final Matrix<T> nA = origProb.A.extractRows(rb,origProb.A.factory());
+			final double[] nb = Matrix.extract(origProb.b,rb);
+			prob = new LPEQProb<T>(nA, nb, origProb.c.clone());
+		} else {
+			prob = new LPEQProb<T>(origProb.A.copy(origProb.A.factory(),false), origProb.b.clone(), origProb.c.clone());
 		}
 		// deal with square system
 		if (prob.A.rows() >= prob.A.cols()) {
@@ -446,6 +448,36 @@ abstract class LPSolverImpl implements LPSolver {
 			}
 			return new LPSoln(x, b);
 		}
+		// re-scale
+		for(int i=0;i<prob.A.rows();++i) {
+			double sumAbs = 0.0;
+			for(int j=0;j<prob.A.cols();++j) {
+				sumAbs += Math.abs(prob.A.get(i, j));
+			}
+			if(sumAbs>0) {
+				final double scale = prob.A.cols()/sumAbs;
+				for(int j=0;j<prob.A.cols();++j) {
+					final double aij = prob.A.get(i, j);
+					if(aij!=0) {
+						prob.A.set(i,j,aij*scale);
+					}
+				}
+				prob.b[i] *= scale;
+			}
+		}
+		{
+			double sumAbs = 0.0;
+			for(int j=0;j<prob.c.length;++j) {
+				sumAbs += Math.abs(prob.c[j]);
+			}
+			if(sumAbs>0) {
+				final double scale = prob.c.length/sumAbs;
+				for(int j=0;j<prob.c.length;++j) {
+					prob.c[j] *= scale;
+				}
+			}
+		}
+		// work on basis
 		int[] basis0 = null;
 		if ((basis_in != null) && (basis_in.length == prob.A.rows())) {
 			try {
