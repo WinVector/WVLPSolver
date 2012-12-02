@@ -114,8 +114,10 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 		final double ri = cFi - lambdaFi; 
 		return ri;
 	}
+	
 
-	public void basisPivot(final int leavingI, final int enteringV, final double[] v) throws LPErrorException {
+
+	public void basisPivot(final int leavingI, final int enteringV, final double[] binvu) throws LPErrorException {
 		basis[leavingI] = enteringV;
 		++normalSteps;
 		if(normalSteps%(m+n+1)==0) {
@@ -123,10 +125,10 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 		}
 		if (BInv != null) {
 			// rank 1 update the inverse
-			final double vKInv = 1.0/v[leavingI];
+			final double vKInv = 1.0/binvu[leavingI];
 			for(int i=0;i<m;++i) {
 				if(leavingI!=i) {
-					final double vi = -v[i]*vKInv;
+					final double vi = -binvu[i]*vKInv;
 					for(int j=0;j<m;++j) {
 						BInv.set(i, j,BInv.get(i, j)+vi*BInv.get(leavingI,j));
 					}
