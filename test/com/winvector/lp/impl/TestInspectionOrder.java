@@ -15,11 +15,6 @@ public class TestInspectionOrder {
 		io.startPass();
 		io.take();
 		io.take();
-		io.moveToEnd(3);
 		io.startPass();
-		for(int i=0;i<4;++i) {
-			assertTrue(io.take()!=3);
-		}
-		assertTrue(io.take()==3);
 	}
 }

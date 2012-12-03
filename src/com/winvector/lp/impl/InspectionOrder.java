@@ -12,7 +12,6 @@ public final class InspectionOrder {
 		public final int index;
 		public long randMark;
 		public int nTakes = 0;
-		public int nLasts = 0;
 		
 		public InspectionRow(final int index, final long randMark) {
 			this.index = index;
@@ -21,14 +20,7 @@ public final class InspectionOrder {
 
 		@Override
 		public int compareTo(final InspectionRow o) {
-			// compare first on nLasts
-			if(nLasts!=o.nLasts) {
-				if(nLasts<=o.nLasts) {
-					return -1;
-				} else {
-					return 1;
-				}
-			}
+			// compare first on nTakes
 			if(nTakes!=o.nTakes) {
 				if(nTakes<=o.nTakes) {
 					return -1;
@@ -65,17 +57,20 @@ public final class InspectionOrder {
 	}
 	
 	private final Random rand;
-	private final ArrayList<InspectionRow> rows;
+	private final InspectionRow[] idToRow;
+	private final ArrayList<InspectionRow> allRows;
 	private final SortedSet<InspectionRow> available = new TreeSet<InspectionRow>();
 
 	
 	public InspectionOrder(final int n, final Random rand, final BitSet skips) {
 		this.rand = rand;
-		rows = new ArrayList<InspectionRow>(n);
+		allRows = new ArrayList<InspectionRow>(n);
+		idToRow = new InspectionRow[n];
 		for(int i=0;i<n;++i) {
 			if((null==skips)||(!skips.get(i))) {
 				final InspectionRow r = new InspectionRow(i,rand.nextLong());
-				rows.add(r);
+				allRows.add(r);
+				idToRow[i] = r;
 			}
 		}
 	}
@@ -91,12 +86,6 @@ public final class InspectionOrder {
 		return r.index;
 	}
 
-	public void moveToEnd(final int v) {
-		final InspectionRow r = rows.get(v);
-		available.remove(r);
-		r.nLasts += 1;
-	}
-	
 	@Override
 	public String toString() {
 		final StringBuilder b = new StringBuilder();
@@ -115,9 +104,9 @@ public final class InspectionOrder {
 
 	public void startPass() {
 		available.clear();
-		for(final InspectionRow r: rows) {
+		for(final InspectionRow r: allRows) {
 			r.randMark = rand.nextLong();
 		}
-		available.addAll(rows);
+		available.addAll(allRows);
 	}
 }
