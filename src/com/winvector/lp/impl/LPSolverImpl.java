@@ -449,12 +449,13 @@ abstract class LPSolverImpl implements LPSolver {
 			return new LPSoln(x, b);
 		}
 		// re-scale
+		final double scaleRange = 10.0;
 		for(int i=0;i<prob.A.rows();++i) {
 			double sumAbs = Math.abs(prob.b[i]);
 			for(int j=0;j<prob.A.cols();++j) {
 				sumAbs += Math.abs(prob.A.get(i, j));
 			}
-			if(sumAbs>0) {
+			if((sumAbs>0)&&((sumAbs>=scaleRange*(prob.A.cols()+1.0))||(sumAbs<=(prob.A.cols()+1.0)/scaleRange))) {
 				final double scale = (prob.A.cols()+1.0)/sumAbs;
 				for(int j=0;j<prob.A.cols();++j) {
 					final double aij = prob.A.get(i, j);
@@ -470,7 +471,7 @@ abstract class LPSolverImpl implements LPSolver {
 			for(int j=0;j<prob.c.length;++j) {
 				sumAbs += Math.abs(prob.c[j]);
 			}
-			if(sumAbs>0) {
+			if((sumAbs>0)&&((sumAbs>=scaleRange*prob.c.length)||(sumAbs<=prob.c.length/scaleRange))) {
 				final double scale = prob.c.length/sumAbs;
 				for(int j=0;j<prob.c.length;++j) {
 					prob.c[j] *= scale;

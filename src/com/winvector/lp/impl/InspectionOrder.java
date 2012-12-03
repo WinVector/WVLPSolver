@@ -80,11 +80,14 @@ public final class InspectionOrder {
 		}
 	}
 	
+	public boolean hasNext() {
+		return !available.isEmpty();
+	}
+	
 	public int take() {
 		final InspectionRow r = available.first();
 		available.remove(r);
 		r.nTakes += 1;
-		r.randMark = rand.nextLong();
 		return r.index;
 	}
 
@@ -92,7 +95,6 @@ public final class InspectionOrder {
 		final InspectionRow r = rows.get(v);
 		available.remove(r);
 		r.nLasts += 1;
-		r.randMark = rand.nextLong();
 	}
 	
 	@Override
@@ -113,6 +115,9 @@ public final class InspectionOrder {
 
 	public void startPass() {
 		available.clear();
+		for(final InspectionRow r: rows) {
+			r.randMark = rand.nextLong();
+		}
 		available.addAll(rows);
 	}
 }
