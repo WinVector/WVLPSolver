@@ -1,7 +1,9 @@
-package com.winvector.lp;
+package com.winvector.sparse;
 
 import java.io.Serializable;
 import java.util.Arrays;
+
+import com.winvector.linagl.Matrix;
 
 /**
  * immutable vector
@@ -12,8 +14,8 @@ public final class SparseVec implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	public final int dim;
-	public final int[] indices;
-	public final double[] values;
+	final int[] indices;
+	final double[] values;
 	
 	public SparseVec(final double[] x) {
 		dim = x.length;
@@ -36,27 +38,30 @@ public final class SparseVec implements Serializable {
 		}
 	}
 	
-	private SparseVec(final int dim, final int pop) {
-		this.dim = dim;
-		indices = new int[pop];
-		values = new double[pop];
+	public double dot(final double[] x) {
+		if(x.length!=dim) {
+			throw new IllegalArgumentException();
+		}
+		double d = 0.0;
+		for(int ii=0;ii<indices.length;++ii) {
+			d += values[ii]*x[indices[ii]];
+		}
+		return d;
 	}
 	
-	public SparseVec copy() {
-		final SparseVec v = new SparseVec(dim,indices.length);
-		for(int ii=0;ii<indices.length;++ii) {
-			v.indices[ii] = indices[ii];
-			v.values[ii] = values[ii];
+	public static <T extends Matrix<T>> double[] mult(final T m, final SparseVec x) {
+		if(m.cols()!=x.dim) {
+			throw new IllegalArgumentException();
 		}
-		return v;
-	}
-	
-	public double[] denseCopy() {
-		final double[] x = new double[dim];
-		for(int ii=0;ii<indices.length;++ii) {
-			x[ii] = values[ii];
+		final double[] r = new double[m.rows()];
+		for (int i = 0; i < r.length; ++i) {
+			double z = 0;
+			for(int kk=0;kk<x.indices.length;++kk) {
+				z += x.values[kk]*m.get(i,x.indices[kk]);
+			}
+			r[i] = z;
 		}
-		return x;
+		return r;		
 	}
 	
 	/**
@@ -64,7 +69,7 @@ public final class SparseVec implements Serializable {
 	 * @param i
 	 * @return
 	 */
-	public double get(final int i) {
+	double get(final int i) {
 		if((i<0)||(i>=dim)) {
 			throw new ArrayIndexOutOfBoundsException(""+i);
 		}

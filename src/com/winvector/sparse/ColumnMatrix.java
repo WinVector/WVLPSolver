@@ -1,4 +1,4 @@
-package com.winvector.lp;
+package com.winvector.sparse;
 
 import java.io.PrintStream;
 import java.io.Serializable;
@@ -7,6 +7,11 @@ import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
 
+/**
+ * immutable sparse matrix
+ * @author johnmount
+ *
+ */
 public final class ColumnMatrix implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -138,11 +143,6 @@ public final class ColumnMatrix implements Serializable {
 		return m;
 	}
 
-	public ColumnMatrix extractRows(final int[] rb) {
-		// TODO better implementation
-		return new ColumnMatrix(matrixCopy().extractRows(rb,ColtMatrix.factory));
-	}
-
 	public ColumnMatrix addColumn(final double[] b) {
 		if(b.length!=rows) {
 			throw new IllegalArgumentException();
@@ -153,5 +153,10 @@ public final class ColumnMatrix implements Serializable {
 		}
 		r.columns[cols] = new SparseVec(b);
 		return r;
+	}
+	
+	public ColumnMatrix extractRows(final int[] rb) {
+		// TODO better implementation
+		return new ColumnMatrix(matrixCopy().extractRows(rb,ColtMatrix.factory));
 	}
 }

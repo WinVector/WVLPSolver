@@ -11,7 +11,7 @@ import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPTooManyStepsException;
 import com.winvector.lp.LPSoln;
-import com.winvector.lp.SparseVec;
+import com.winvector.sparse.SparseVec;
 
 /**
  * basic primal revised simplex method

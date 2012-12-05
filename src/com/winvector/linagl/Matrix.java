@@ -5,7 +5,6 @@ import java.io.Serializable;
 import java.util.BitSet;
 
 import com.winvector.linalg.colt.NativeMatrix;
-import com.winvector.lp.SparseVec;
 
 
 
@@ -179,20 +178,6 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 		return r;		
 	}
 	
-	public double[] mult(final SparseVec x) {
-		if(cols()!=x.dim) {
-			throw new IllegalArgumentException();
-		}
-		final double[] r = new double[rows()];
-		for (int i = 0; i < r.length; ++i) {
-			double z = 0;
-			for(int kk=0;kk<x.indices.length;++kk) {
-				z += x.values[kk]*get(i,x.indices[kk]);
-			}
-			r[i] = z;
-		}
-		return r;		
-	}
 
 	public double[] multLeft(final double[] b) {
 		if (rows() != b.length) {

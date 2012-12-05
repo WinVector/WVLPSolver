@@ -6,12 +6,12 @@ import java.util.Set;
 
 import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.NativeMatrix;
-import com.winvector.lp.ColumnMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.LPSolver;
+import com.winvector.sparse.ColumnMatrix;
 
 /**
  * primal: min c.x: A x = b, x>=0 dual: max y.b: y A <= c y b = y A x <= c x (by

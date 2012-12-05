@@ -6,6 +6,7 @@ import java.io.Serializable;
 import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
+import com.winvector.sparse.ColumnMatrix;
 
 
 /**

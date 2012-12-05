@@ -20,6 +20,7 @@ import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.impl.RevisedSimplexSolver;
+import com.winvector.sparse.ColumnMatrix;
 
 /**
  * Junit tests. run with java junit.swingui.TestRunner

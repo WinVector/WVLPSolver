@@ -8,7 +8,7 @@ import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
-import com.winvector.lp.SparseVec;
+import com.winvector.sparse.SparseVec;
 
 /**
  * not a traditional Tableau as we are not implementing the row operations that update the Tableau.
@@ -72,7 +72,7 @@ final class RTableau implements Serializable {
 				throw new LPErrorException("couldn't invert basis");
 			}
 		}
-		return BInv.mult(y);
+		return SparseVec.mult(BInv,y);
 	}
 
 	/**
@@ -129,11 +129,12 @@ final class RTableau implements Serializable {
 	
 	public double computeRI(final double[] lambda, final double[] c, final int vi) throws LPErrorException {
 		final double cFi = c[vi];
-		double lambdaFi = 0.0;
-		final int n = lambda.length;
-		for(int i=0;i<n;++i) {
-			lambdaFi += prob.A.get(i, vi)*lambda[i];
-		}
+//		double lambdaFi = 0.0;
+//		final int n = lambda.length;
+//		for(int i=0;i<n;++i) {
+//			lambdaFi += prob.A.get(i, vi)*lambda[i];
+//		}
+		final double lambdaFi = prob.A.extractColumn(vi).dot(lambda);
 		final double ri = cFi - lambdaFi; 
 		return ri;
 	}
