@@ -26,7 +26,7 @@ public class AssignmentSpeed {
 	 * @return
 	 * @throws LPException
 	 */
-	public static <T extends Matrix<T>> Map<String,Long> runSet(final LPEQProb<T> prob, Map<String,LPSolver> solvers) throws LPException {
+	public static Map<String,Long> runSet(final LPEQProb prob, Map<String,LPSolver> solvers) throws LPException {
 		final Map<String,Long> res = new TreeMap<String,Long>();
 		final Set<String> zaps = new HashSet<String>();
 		for(final Map.Entry<String,LPSolver> me: solvers.entrySet()) {
@@ -89,7 +89,7 @@ public class AssignmentSpeed {
 						c[i][j] = rand.nextDouble();
 					}
 				}
-				final LPEQProb<NativeMatrix> prob = Assignment.buildAssignmentProb(NativeMatrix.factory,c);
+				final LPEQProb prob = Assignment.buildAssignmentProb(NativeMatrix.factory,c);
 				final Map<String,Long> durations = runSet(prob,solvers);
 				System.out.print(n);
 				for(final String name: solvers.keySet()) {

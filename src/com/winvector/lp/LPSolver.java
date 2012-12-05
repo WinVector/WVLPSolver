@@ -1,6 +1,5 @@
 package com.winvector.lp;
 
-import com.winvector.linagl.Matrix;
 
 
 /**
@@ -22,6 +21,6 @@ public interface LPSolver {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	<T extends Matrix<T>> LPSoln solve(LPEQProb<T> prob, int[] basis_in, double tol, final int maxRounds)
+	LPSoln solve(LPEQProb prob, int[] basis_in, double tol, final int maxRounds)
 			throws LPException;
 }

@@ -12,16 +12,17 @@ import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
+import com.winvector.lp.SparseVec;
 import com.winvector.lp.TestLP;
 
 
 public class TestLPImpl {
 	public <Z extends Matrix<Z>> void testRank1Update(final LinalgFactory<Z> factory) throws LPException {
-		final LPEQProb<Z> prob = TestLP.exampleProblem(factory);
-		final RTableau<Z> tab = new RTableau<Z>(prob,new int[] {0,1,2});
+		final LPEQProb prob = TestLP.exampleProblem(factory);
+		final RTableau tab = new RTableau(prob,new int[] {0,1,2});
 		final int leavingI = 0;
 		final int enteringI = 3;
-		final double[] u = tab.prob.A.extractColumn(enteringI);
+		final SparseVec u = tab.prob.A.extractColumn(enteringI);
 		final double[] v = tab.basisSolveRight(u);
 		final NativeMatrix priorBInv = tab.BInv.copy(NativeMatrix.factory,false);
 		tab.basisPivot(leavingI,enteringI,v);

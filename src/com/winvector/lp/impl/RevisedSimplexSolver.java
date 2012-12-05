@@ -11,6 +11,7 @@ import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPTooManyStepsException;
 import com.winvector.lp.LPSoln;
+import com.winvector.lp.SparseVec;
 
 /**
  * basic primal revised simplex method
@@ -34,12 +35,12 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	
 
 	
-	private <Z extends Matrix<Z>> int[] runSimplex(final RTableau<Z> tab, final double tol, final int maxRounds) throws LPException {
+	private int[] runSimplex(final RTableau tab, final double tol, final int maxRounds) throws LPException {
 		if (debug > 0) {
 			System.out.println("start: " + stringBasis(tab.basis));
 		}
-		final int nvars = tab.prob.A.cols();
-		final int ncond = tab.prob.A.rows();
+		final int nvars = tab.prob.A.cols;
+		final int ncond = tab.prob.A.rows;
 		final BitSet curBasisIndicator = new BitSet(nvars);
 		for(final int bi: tab.basis) {
 			curBasisIndicator.set(bi);
@@ -129,6 +130,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			double[] bestBinvu = null;
 			inspectionLoop:
 			while(inspectionOrder.hasNext()) {
+				++tab.inspections;
 				final int v = inspectionOrder.take();
 				if(!curBasisIndicator.get(v)) {
 					final double ri = tab.computeRI(lambda, c, v);
@@ -141,7 +143,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 							}
 						}
 						if(earlyLeavingCalc) {
-							final double[] u = tab.prob.A.extractColumn(rEnteringV);
+							final SparseVec u = tab.prob.A.extractColumn(rEnteringV);
 							final double[] binvu = tab.basisSolveRight(u);
 							int leavingIndex = findLeaving(preB,binvu,bRatPtr);
 							if((leavingIndex>=0)&&(bRatPtr[0]>=0)) {
@@ -172,7 +174,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			} else {
 				enteringV = rEnteringV;
 				if(enteringV>=0) {
-					final double[] u = tab.prob.A.extractColumn(enteringV);
+					final SparseVec u = tab.prob.A.extractColumn(enteringV);
 					final double[] binvu = tab.basisSolveRight(u);
 					leavingI = findLeaving(preB,binvu,bRatPtr);
 					if(leavingI>=0) {
@@ -250,14 +252,16 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	protected <T extends Matrix<T>> LPSoln rawSolve(final LPEQProb<T> prob, final int[] basis0, double tol, final int maxRounds) 
+	protected LPSoln rawSolve(final LPEQProb prob, final int[] basis0, double tol, final int maxRounds) 
 			throws LPException {
 		if ((tol<=0)||Double.isNaN(tol)||Double.isInfinite(tol)) {
 			tol = 0.0;
 		}
-		final RTableau<T> t = new RTableau<T>(prob, basis0);
+		final RTableau t = new RTableau(prob, basis0);
 		final int[] rbasis = runSimplex(t,tol,maxRounds);
 		//System.out.println("steps: " + t.normalSteps);
+		//System.out.println("" + "nvars" + "\t" + "ncond" + "\t" + "steps" + "\t" + "inspections");
+		//System.out.println("" + prob.nvars() + "\t" + prob.b.length + "\t" + t.normalSteps + "\t" + t.inspections);
 		if (rbasis == null) {
 			return null;
 		}

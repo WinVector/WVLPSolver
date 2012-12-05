@@ -9,9 +9,8 @@ import org.apache.commons.math3.optimization.linear.LinearObjectiveFunction;
 import org.apache.commons.math3.optimization.linear.Relationship;
 import org.apache.commons.math3.optimization.linear.SimplexSolver;
 
-import com.winvector.linagl.Matrix;
-import com.winvector.lp.LPException;
 import com.winvector.lp.LPEQProb;
+import com.winvector.lp.LPException;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.LPSolver;
 
@@ -36,10 +35,10 @@ public final class M3Solver implements LPSolver {
 		}
 	}
 
-	public static <Z extends Matrix<Z>> M3Prob convertProbToM3(final LPEQProb<Z> p) {
+	public static M3Prob convertProbToM3(final LPEQProb p) {
 		M3Prob r = new M3Prob();
-		final int m = p.A.rows();
-		final int n = p.A.cols();
+		final int m = p.A.rows;
+		final int n = p.A.cols;
 		for(int i=0;i<m;++i) {
 			final double[] coef = new double[n];
 			for(int j=0;j<n;++j) {
@@ -58,7 +57,7 @@ public final class M3Solver implements LPSolver {
 	
 
 	@Override
-	public <T extends Matrix<T>> LPSoln solve(final LPEQProb<T> prob, final int[] basis_in, final double tol,
+	public LPSoln solve(final LPEQProb prob, final int[] basis_in, final double tol,
 			final int maxRounds) throws LPException {
 		final M3Prob m3Prob = convertProbToM3(prob);
 		final SimplexSolver m3solver = new SimplexSolver();

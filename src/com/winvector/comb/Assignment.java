@@ -7,6 +7,7 @@ import java.util.Set;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.NativeMatrix;
+import com.winvector.lp.ColumnMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPMalformedException;
@@ -32,7 +33,7 @@ public final class Assignment {
 	 * @return minimal cost total assignment, or null if there is no complete matching
 	 * @throws LPMalformedException 
 	 */
-	public static <T extends Matrix<T>> LPEQProb<T> buildAssignmentProb(final LinalgFactory<T> factory, final double[][] cost) throws LPMalformedException {
+	public static <T extends Matrix<T>> LPEQProb buildAssignmentProb(final LinalgFactory<T> factory, final double[][] cost) throws LPMalformedException {
 		final int n = cost.length;
 		final double maxAbsVal;
 		{
@@ -75,7 +76,7 @@ public final class Assignment {
 		for(int i=0;i<m;++i) {
 			b[i] = 1.0;
 		}
-		final LPEQProb<T> prob = new LPEQProb<T>(a,b,c);
+		final LPEQProb prob = new LPEQProb(new ColumnMatrix(a),b,c);
 		return prob;
 	}
 	
@@ -88,7 +89,7 @@ public final class Assignment {
 			return null;
 		}
 		try {
-			final LPEQProb<T> prob = buildAssignmentProb(factory,cost);
+			final LPEQProb prob = buildAssignmentProb(factory,cost);
 			final LPSoln soln1 = solver.solve(prob, null, 1.0e-6,maxIts);
 			final int[] assignment = new int[n];
 			int nextIndex = 0;

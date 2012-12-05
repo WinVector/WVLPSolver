@@ -8,7 +8,6 @@ import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import com.winvector.linagl.Matrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
@@ -27,7 +26,7 @@ public class GLPKSolver implements LPSolver {
 	 * print out in CPLEX problem format
 	 * @param p
 	 */
-	public static <T extends Matrix<T>> void printCPLEX(final LPEQProb<T> prob, final PrintStream p) {
+	public static void printCPLEX(final LPEQProb prob, final PrintStream p) {
 		final NumberFormat vnf = new DecimalFormat("00000");
 		final NumberFormat vvf = new DecimalFormat("#.######E0");
 		p.println("\\* WVLPSovler com.winvector.lp.LPEQProb see: http://www.win-vector.com/blog/2012/11/yet-another-java-linear-programming-library/ *\\");
@@ -98,7 +97,7 @@ public class GLPKSolver implements LPSolver {
 	}
 
 	@Override
-	public <T extends Matrix<T>> LPSoln solve(final LPEQProb<T> prob, final int[] basis_in,
+	public LPSoln solve(final LPEQProb prob, final int[] basis_in,
 			final double tol, final int maxRounds) throws LPException {
 		try {
 			final File tempFI = File.createTempFile("glpkProb",".txt");

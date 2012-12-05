@@ -5,9 +5,10 @@ import java.util.Arrays;
 
 import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.NativeMatrix;
-import com.winvector.lp.LPException;
 import com.winvector.lp.LPEQProb;
+import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
+import com.winvector.lp.SparseVec;
 
 /**
  * not a traditional Tableau as we are not implementing the row operations that update the Tableau.
@@ -16,10 +17,10 @@ import com.winvector.lp.LPException.LPErrorException;
  * @author johnmount
  *
  */
-final class RTableau<Z extends Matrix<Z>> implements Serializable {
+final class RTableau implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	public final LPEQProb<Z> prob;
+	public final LPEQProb prob;
 
 	public final int m;
 
@@ -29,7 +30,9 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 	
 	public NativeMatrix BInv = null;
 
+	// run counters
 	public int normalSteps = 0;
+	public int inspections = 0;
 
 
 	/**
@@ -42,6 +45,26 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveRight(final double[] y) throws LPErrorException {
+		if(null==BInv) {
+			try {
+				BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
+			} catch (Exception e) {
+				throw new LPErrorException("couldn't invert basis");
+			}
+		}
+		return BInv.mult(y);
+	}
+
+	/**
+	 * try to use inverse to solve (if present)
+	 * 
+	 * @param y
+	 * @return x s.t. x = BInv y (if BInv!=null) 
+	 *         prob.A.extractColumns(basis) x = y (otherwise)
+	 *         (want x>=0)
+	 * @throws LPErrorException 
+	 */
+	public double[] basisSolveRight(final SparseVec y) throws LPErrorException {
 		if(null==BInv) {
 			try {
 				BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
@@ -81,11 +104,11 @@ final class RTableau<Z extends Matrix<Z>> implements Serializable {
 	 * @param basis
 	 *            m-vector that is a valid starting basis
 	 */
-	public RTableau(final LPEQProb<Z> prob_in, final int[] basis_in) throws LPException {
+	public RTableau(final LPEQProb prob_in, final int[] basis_in) throws LPException {
 		prob = prob_in;
 		//RevisedSimplexSolver.checkParams(prob.A, prob.b, prob.c, basis_in);
-		m = prob.A.rows();
-		n = prob.A.cols();
+		m = prob.A.rows;
+		n = prob.A.cols;
 		basis = new int[basis_in.length];
 		for (int i = 0; i < basis.length; ++i) {
 			basis[i] = basis_in[i];

@@ -80,7 +80,7 @@ final class SBasis implements Comparable<SBasis> {
 		return r;
 	}
 
-	public <Z extends Matrix<Z>> double value(final LPEQProb<Z> p, final double[] obj, double tol) {
+	public double value(final LPEQProb p, final double[] obj, double tol) {
 		try {
 			if((tol<=0)||Double.isInfinite(tol)||Double.isNaN(tol)) { 
 				tol = 0.0;

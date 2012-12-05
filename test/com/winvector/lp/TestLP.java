@@ -31,7 +31,7 @@ public final class TestLP  {
 		try {
 			final double[] c = new double[1];
 			c[0] = -1.0;
-			final LPEQProb<Z> prob = new LPEQProb<Z>(factory.newMatrix(1, 1,false),
+			final LPEQProb prob = new LPEQProb(new ColumnMatrix(factory.newMatrix(1, 1,false)),
 					new double[1], c);
 			final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 			solver.solve(prob, null, 0.0,1000);
@@ -46,7 +46,7 @@ public final class TestLP  {
 		try {
 			final double[] c = new double[1];
 			c[0] = 1.0;
-			final LPEQProb<Z> prob = new LPEQProb<Z>(factory.newMatrix(1, 1,false),
+			final LPEQProb prob = new LPEQProb(new ColumnMatrix(factory.newMatrix(1, 1,false)),
 					new double[1], c);
 			final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 			solver.solve(prob, null, 0.0,1000);
@@ -56,7 +56,7 @@ public final class TestLP  {
 		
 	}
 	
-	public static <Z extends Matrix<Z>> LPEQProb<Z> exampleProblem(final LinalgFactory<Z> factory) throws LPException {
+	public static <Z extends Matrix<Z>> LPEQProb exampleProblem(final LinalgFactory<Z> factory) throws LPException {
 		// p. 320 of Strang exercise 8.2.8
 		final Matrix<Z> m = factory.newMatrix(3,5,false);
 		final double[] b = new double[3];
@@ -65,12 +65,12 @@ public final class TestLP  {
 		m.set(1,0,1.0); m.set(1,1,3.0); m.set(1,3,-1.0); b[1] = 12.0;  // x1 + 3*x2 - s2 = 12
 		m.set(2,0,1.0); m.set(2,1,-1.0); m.set(2,4,-1.0);                // x1 - x2 - s3 = 0
 		c[0] = 2.0; c[1] = 1.0;                                     // minimize 2*x1 + x2
-		final LPEQProb<Z> prob = new LPEQProb<Z>(m,b,c);
+		final LPEQProb prob = new LPEQProb(new ColumnMatrix(m),b,c);
 		return prob;
 	}
 	
 	public <Z extends Matrix<Z>> void testLPExample(final LinalgFactory<Z> factory) throws LPException {
-		final LPEQProb<Z> prob = exampleProblem(factory);
+		final LPEQProb prob = exampleProblem(factory);
 		final LPSoln soln1 = prob.solveDebugByInspect(new RevisedSimplexSolver(), 1.0e-6,1000);
 		final double[] expect = {3.00000, 3.00000, 2.00000, 0.00000, 0.00000};
 		assertNotNull(soln1);
