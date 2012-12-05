@@ -411,7 +411,7 @@ abstract class LPSolverImpl implements LPSolver {
 			}
 			return new LPSoln(x, b);
 		}
-		final LPEQProb prob;
+		LPEQProb prob;
 		// select out irredundant rows
 		if (rb.length != origProb.A.rows) {
 			final ColumnMatrix nA = origProb.A.extractRows(rb);
@@ -437,37 +437,34 @@ abstract class LPSolverImpl implements LPSolver {
 			}
 			return new LPSoln(x, b);
 		}
-		// TODO: think of rescaling
-//		// re-scale
-//		final double scaleRange = 10.0;
-//		for(int i=0;i<prob.A.rows;++i) {
-//			double sumAbs = Math.abs(prob.b[i]);
-//			for(int j=0;j<prob.A.cols;++j) {
-//				sumAbs += Math.abs(prob.A.get(i, j));
-//			}
-//			if((sumAbs>0)&&((sumAbs>=scaleRange*(prob.A.cols+1.0))||(sumAbs<=(prob.A.cols+1.0)/scaleRange))) {
-//				final double scale = (prob.A.cols+1.0)/sumAbs;
-//				for(int j=0;j<prob.A.cols;++j) {
-//					final double aij = prob.A.get(i, j);
-//					if(aij!=0) {
-//						prob.A.set(i,j,aij*scale);
-//					}
-//				}
-//				prob.b[i] *= scale;
-//			}
-//		}
-//		{
-//			double sumAbs = 0.0;
-//			for(int j=0;j<prob.c.length;++j) {
-//				sumAbs += Math.abs(prob.c[j]);
-//			}
-//			if((sumAbs>0)&&((sumAbs>=scaleRange*prob.c.length)||(sumAbs<=prob.c.length/scaleRange))) {
-//				final double scale = prob.c.length/sumAbs;
-//				for(int j=0;j<prob.c.length;++j) {
-//					prob.c[j] *= scale;
-//				}
-//			}
-//		}
+		// re-scale
+		final double scaleRange = 10.0;
+		{
+			final double[] rowTots = prob.A.sumAbsRowValues();
+			final double[] scale = new double[rowTots.length];
+			for(int i=0;i<prob.b.length;++i) {
+				final double sumAbs = rowTots[i] + Math.abs(prob.b[i]);
+				if((sumAbs>0)&&((sumAbs>=scaleRange*(prob.A.cols+1.0))||(sumAbs<=(prob.A.cols+1.0)/scaleRange))) {
+					scale[i] = (prob.A.cols+1.0)/sumAbs;
+				} else {
+					scale[i] = 1.0;
+				}
+				prob.b[i] *= scale[i];
+			}
+			prob = new LPEQProb(prob.A.rescaleRows(scale), prob.b, prob.c);
+		}
+		{
+			double sumAbs = 0.0;
+			for(int j=0;j<prob.c.length;++j) {
+				sumAbs += Math.abs(prob.c[j]);
+			}
+			if((sumAbs>0)&&((sumAbs>=scaleRange*prob.c.length)||(sumAbs<=prob.c.length/scaleRange))) {
+				final double scale = prob.c.length/sumAbs;
+				for(int j=0;j<prob.c.length;++j) {
+					prob.c[j] *= scale;
+				}
+			}
+		}
 		// work on basis
 		int[] basis0 = null;
 		if ((basis_in != null) && (basis_in.length == prob.A.rows)) {

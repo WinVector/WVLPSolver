@@ -38,6 +38,21 @@ public final class SparseVec implements Serializable {
 		}
 	}
 	
+	SparseVec(final SparseVec o, final double[] scale) {
+		dim = o.dim;
+		indices = new int[o.indices.length];
+		values = new double[indices.length];
+		for(int ii=0;ii<indices.length;++ii) {
+			final int i = o.indices[ii];
+			indices[ii] = i;
+			if(null==scale) {
+				values[ii] = o.values[ii];
+			} else {
+				values[ii] = o.values[ii]*scale[i];
+			}
+		}
+	}
+	
 	public double dot(final double[] x) {
 		if(x.length!=dim) {
 			throw new IllegalArgumentException();

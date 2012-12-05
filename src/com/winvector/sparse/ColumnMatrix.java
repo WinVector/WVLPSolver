@@ -155,8 +155,30 @@ public final class ColumnMatrix implements Serializable {
 		return r;
 	}
 	
+	public double[] sumAbsRowValues() {
+		final double[] r = new double[rows];
+		for(int j=0;j<cols;++j) {
+			final SparseVec col = columns[j];
+			for(int ii=0;ii<col.indices.length;++ii) {
+				final int i = col.indices[ii];
+				final double aij = col.values[ii];
+				r[i] += Math.abs(aij);
+			}
+		}
+		return r;
+	}
+	
 	public ColumnMatrix extractRows(final int[] rb) {
 		// TODO better implementation
 		return new ColumnMatrix(matrixCopy().extractRows(rb,ColtMatrix.factory));
+	}
+
+	public ColumnMatrix rescaleRows(double[] scale) {
+		final ColumnMatrix r = new ColumnMatrix(rows,cols);
+		for(int j=0;j<cols;++j) {
+			r.columns[j] = new SparseVec(columns[j],scale);
+		}
+		// TODO Auto-generated method stub
+		return r;
 	}
 }
