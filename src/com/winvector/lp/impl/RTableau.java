@@ -144,8 +144,12 @@ final class RTableau implements Serializable {
 	public void basisPivot(final int leavingI, final int enteringV, final double[] binvu) throws LPErrorException {
 		basis[leavingI] = enteringV;
 		++normalSteps;
-		if(normalSteps%(m+n+1)==0) {
+		if(normalSteps%(5*m+1)==0) {
 			BInv = null; // forced refresh
+			// ideas is BInv is getting unreliable due to rounding
+			// a refresh takes around O(m^3) steps and updates take O(m^2) steps.
+			// so every m steps we can hide the extra m^3 work which amortizes to m^3/m per-step 
+			// of a refresh
 		}
 		if (BInv != null) {
 			// rank 1 update the inverse
