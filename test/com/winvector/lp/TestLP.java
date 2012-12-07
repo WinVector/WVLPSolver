@@ -35,7 +35,7 @@ public final class TestLP  {
 			final LPEQProb prob = new LPEQProb(new ColumnMatrix(factory.newMatrix(1, 1,false)),
 					new double[1], c);
 			final RevisedSimplexSolver solver = new RevisedSimplexSolver();
-			solver.solve(prob, null, 0.0,1000);
+			solver.solve(prob, null, 0.0, 1000, factory);
 		} catch (LPException.LPUnboundedException ue) {
 			caught1 = true;
 		} catch (LPException le) {
@@ -50,7 +50,7 @@ public final class TestLP  {
 			final LPEQProb prob = new LPEQProb(new ColumnMatrix(factory.newMatrix(1, 1,false)),
 					new double[1], c);
 			final RevisedSimplexSolver solver = new RevisedSimplexSolver();
-			solver.solve(prob, null, 0.0,1000);
+			solver.solve(prob, null, 0.0, 1000, factory);
 		} catch (LPException le) {
 			fail("caught: " + le);
 		}
@@ -72,7 +72,7 @@ public final class TestLP  {
 	
 	public <Z extends Matrix<Z>> void testLPExample(final LinalgFactory<Z> factory) throws LPException {
 		final LPEQProb prob = exampleProblem(factory);
-		final LPSoln soln1 = prob.solveDebugByInspect(new RevisedSimplexSolver(), 1.0e-6,1000);
+		final LPSoln soln1 = prob.solveDebugByInspect(new RevisedSimplexSolver(), 1.0e-6, 1000, factory);
 		final double[] expect = {3.00000, 3.00000, 2.00000, 0.00000, 0.00000};
 		assertNotNull(soln1);
 		assertNotNull(soln1.x);

@@ -15,7 +15,7 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 	private final int cols;
 	private final double[][] u;
 	
-	public NativeMatrix(final int m, final int n, final boolean wantSparse) {
+	private NativeMatrix(final int m, final int n, final boolean wantSparse) {
 		this.rows = m;
 		this.cols = n;
 		u = new double[m][n];

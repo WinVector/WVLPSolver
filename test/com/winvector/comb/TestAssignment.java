@@ -19,7 +19,7 @@ public class TestAssignment {
 				{ 1, Double.NaN, 4 },
 				{ 3, 100, 3 }
 		};
-		final int[] assignment = Assignment.computeAssignment(c,1000);
+		final int[] assignment = Assignment.computeAssignment(c,1000,NativeMatrix.factory);
 		assertNotNull(assignment);
 		final boolean valid = Assignment.checkValid(c,assignment);
 		assertTrue(valid);
@@ -45,7 +45,7 @@ public class TestAssignment {
 			for(int splotch=0;splotch<n-1;++splotch) {
 				c[rand.nextInt(n)][rand.nextInt(n)] = Double.NaN;
 			}
-			final int[] assignment = Assignment.computeAssignment(c,1000);
+			final int[] assignment = Assignment.computeAssignment(c,1000,NativeMatrix.factory);
 			assertNotNull(assignment);
 			final boolean valid = Assignment.checkValid(c,assignment);
 			assertTrue(valid);

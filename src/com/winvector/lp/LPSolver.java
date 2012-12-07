@@ -1,5 +1,8 @@
 package com.winvector.lp;
 
+import com.winvector.linagl.LinalgFactory;
+import com.winvector.linagl.Matrix;
+
 
 
 /**
@@ -8,7 +11,7 @@ package com.winvector.lp;
 
 /**
  * primal: min c.x: A x = b, x>=0 dual: max y.b: y A <= c y b = y A x <= c x (by
- * y A <=c, x>=0) , so y . b <= c . x at optimial y.b = c.x
+ * y A <=c, x>=0) , so y . b <= c . x at optimal y.b = c.x
  */
 public interface LPSolver {
 	/**
@@ -21,6 +24,6 @@ public interface LPSolver {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	LPSoln solve(LPEQProb prob, int[] basis_in, double tol, final int maxRounds)
+	<T extends Matrix<T>> LPSoln solve(LPEQProb prob, int[] basis_in, double tol, final int maxRounds, LinalgFactory<T> factory)
 			throws LPException;
 }

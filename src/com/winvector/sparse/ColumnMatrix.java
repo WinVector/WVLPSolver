@@ -1,18 +1,18 @@
 package com.winvector.sparse;
 
 import java.io.PrintStream;
-import java.io.Serializable;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.linalg.colt.ColtMatrix;
+import com.winvector.linagl.PreMatrix;
+import com.winvector.linalg.colt.NativeMatrix;
 
 /**
  * immutable sparse matrix
  * @author johnmount
  *
  */
-public final class ColumnMatrix implements Serializable {
+public final class ColumnMatrix implements PreMatrix {
 	private static final long serialVersionUID = 1L;
 
 	public final int rows;
@@ -127,13 +127,13 @@ public final class ColumnMatrix implements Serializable {
 	}
 
 	
-	public ColtMatrix matrixCopy() {
+	public <T extends Matrix<T>> T matrixCopy(final LinalgFactory<T> factory) {
 		int npop = 0;
 		for(int j=0;j<cols;++j) {
 			npop += columns[j].indices.length;
 		}
 		boolean wantSparse = npop<(0.1*rows)*cols;		
-		final ColtMatrix m = new ColtMatrix(rows,cols,wantSparse);
+		final T m = factory.newMatrix(rows,cols,wantSparse);
 		for(int j=0;j<cols;++j) {
 			final SparseVec col = columns[j];
 			for(int ii=0;ii<col.indices.length;++ii) {
@@ -170,7 +170,7 @@ public final class ColumnMatrix implements Serializable {
 	
 	public ColumnMatrix extractRows(final int[] rb) {
 		// TODO better implementation
-		return new ColumnMatrix(matrixCopy().extractRows(rb,ColtMatrix.factory));
+		return new ColumnMatrix(matrixCopy(NativeMatrix.factory).extractRows(rb,NativeMatrix.factory));
 	}
 
 	public ColumnMatrix rescaleRows(double[] scale) {
@@ -178,7 +178,16 @@ public final class ColumnMatrix implements Serializable {
 		for(int j=0;j<cols;++j) {
 			r.columns[j] = new SparseVec(columns[j],scale);
 		}
-		// TODO Auto-generated method stub
 		return r;
+	}
+
+	@Override
+	public int rows() {
+		return rows;
+	}
+
+	@Override
+	public int cols() {
+		return cols;
 	}
 }

@@ -6,7 +6,6 @@ import java.util.Set;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPMalformedException;
@@ -90,7 +89,7 @@ public final class Assignment {
 		}
 		try {
 			final LPEQProb prob = buildAssignmentProb(factory,cost);
-			final LPSoln soln1 = solver.solve(prob, null, 1.0e-6,maxIts);
+			final LPSoln soln1 = solver.solve(prob, null, 1.0e-6,maxIts, factory);
 			final int[] assignment = new int[n];
 			int nextIndex = 0;
 			for(int i=0;i<n;++i) {
@@ -112,9 +111,9 @@ public final class Assignment {
 		}
 	}
 	
-	public static int[] computeAssignment(final double[][] cost, final int maxIts) {
+	public static <T extends Matrix<T>> int[] computeAssignment(final double[][] cost, final int maxIts, final LinalgFactory<T> factory) {
 		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
-		return computeAssignment(cost,NativeMatrix.factory,solver,maxIts);
+		return computeAssignment(cost,factory,solver,maxIts);
 	}
 	
 	public static boolean checkValid(final double[][] cost, final int[] assignment) {

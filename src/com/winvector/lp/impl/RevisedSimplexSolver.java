@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
@@ -35,7 +36,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	
 
 	
-	private int[] runSimplex(final RTableau tab, final double tol, final int maxRounds) throws LPException {
+	private <T extends Matrix<T>> int[] runSimplex(final RTableau<T> tab, final double tol, final int maxRounds) throws LPException {
 		if (debug > 0) {
 			System.out.println("start: " + stringBasis(tab.basis));
 		}
@@ -252,12 +253,13 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	protected LPSoln rawSolve(final LPEQProb prob, final int[] basis0, double tol, final int maxRounds) 
+	@Override
+	protected <T extends Matrix<T>> LPSoln rawSolve(final LPEQProb prob, final int[] basis0, double tol, final int maxRounds, final LinalgFactory<T> factory) 
 			throws LPException {
 		if ((tol<=0)||Double.isNaN(tol)||Double.isInfinite(tol)) {
 			tol = 0.0;
 		}
-		final RTableau t = new RTableau(prob, basis0);
+		final RTableau<T> t = new RTableau<T>(prob, basis0,factory);
 		final int[] rbasis = runSimplex(t,tol,maxRounds);
 		//System.out.println("steps: " + t.normalSteps);
 		//System.out.println("" + "nvars" + "\t" + "ncond" + "\t" + "steps" + "\t" + "inspections");
@@ -266,7 +268,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			return null;
 		}
 		try {
-			return new LPSoln(LPEQProb.soln(prob.A, prob.b, rbasis, tol), rbasis);
+			return new LPSoln(LPEQProb.soln(prob.A, prob.b, rbasis, tol, factory), rbasis);
 		} catch (LPException e) {
 			//		    System.out.println("{");
 			//		    for(int i=0;i<basis0.length;++i) {

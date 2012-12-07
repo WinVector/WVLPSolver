@@ -3,8 +3,8 @@ package com.winvector.lp.impl;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
@@ -17,7 +17,7 @@ import com.winvector.sparse.SparseVec;
  * @author johnmount
  *
  */
-final class RTableau implements Serializable {
+final class RTableau<T extends Matrix<T>> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	public final LPEQProb prob;
@@ -28,7 +28,8 @@ final class RTableau implements Serializable {
 
 	public final int[] basis;
 	
-	public NativeMatrix BInv = null;
+	public final LinalgFactory<T> factory;
+	public T BInv = null;
 
 	// run counters
 	public int normalSteps = 0;
@@ -47,7 +48,7 @@ final class RTableau implements Serializable {
 	public double[] basisSolveRight(final double[] y) throws LPErrorException {
 		if(null==BInv) {
 			try {
-				BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
+				BInv = prob.A.extractColumns(basis,factory).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert basis");
 			}
@@ -67,7 +68,7 @@ final class RTableau implements Serializable {
 	public double[] basisSolveRight(final SparseVec y) throws LPErrorException {
 		if(null==BInv) {
 			try {
-				BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
+				BInv = prob.A.extractColumns(basis,factory).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert basis");
 			}
@@ -86,7 +87,7 @@ final class RTableau implements Serializable {
 	public double[] basisSolveLeft(final double[] y) throws LPErrorException {
 		if(null==BInv) {
 			try {
-				BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
+				BInv = prob.A.extractColumns(basis,factory).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert basis");
 			}
@@ -104,7 +105,8 @@ final class RTableau implements Serializable {
 	 * @param basis
 	 *            m-vector that is a valid starting basis
 	 */
-	public RTableau(final LPEQProb prob_in, final int[] basis_in) throws LPException {
+	public RTableau(final LPEQProb prob_in, final int[] basis_in, final LinalgFactory<T> factory) throws LPException {
+		this.factory = factory;
 		prob = prob_in;
 		//RevisedSimplexSolver.checkParams(prob.A, prob.b, prob.c, basis_in);
 		m = prob.A.rows;
@@ -114,7 +116,7 @@ final class RTableau implements Serializable {
 			basis[i] = basis_in[i];
 		}
 		try {
-			BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
+			BInv = prob.A.extractColumns(basis,factory).inverse();
 		} catch (Exception e) {
 			throw new LPErrorException("couldn't invert initial basis");
 		}
@@ -167,7 +169,7 @@ final class RTableau implements Serializable {
 			}
 		} else {
 			try {
-				BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
+				BInv = prob.A.extractColumns(basis,factory).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert intermediate basis");
 			}
@@ -190,7 +192,7 @@ final class RTableau implements Serializable {
 			basis[i] = d[i];
 		}
 		try {
-			BInv = prob.A.extractColumns(basis,NativeMatrix.factory).inverse();
+			BInv = prob.A.extractColumns(basis,factory).inverse();
 		} catch (Exception e) {
 			throw new LPErrorException("couldn't invert reset basis");
 		}

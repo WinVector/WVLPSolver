@@ -19,7 +19,7 @@ import com.winvector.sparse.SparseVec;
 public class TestLPImpl {
 	public <Z extends Matrix<Z>> void testRank1Update(final LinalgFactory<Z> factory) throws LPException {
 		final LPEQProb prob = TestLP.exampleProblem(factory);
-		final RTableau tab = new RTableau(prob,new int[] {0,1,2});
+		final RTableau<Z> tab = new RTableau<Z>(prob,new int[] {0,1,2},factory);
 		final int leavingI = 0;
 		final int enteringI = 3;
 		final SparseVec u = tab.prob.A.extractColumn(enteringI);

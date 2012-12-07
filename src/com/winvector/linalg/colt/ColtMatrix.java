@@ -16,7 +16,7 @@ public class ColtMatrix extends Matrix<ColtMatrix> {
 	private final boolean wantSparse;
 	private final DoubleMatrix2D underlying;
 	
-	public ColtMatrix(final int m, final int n, final boolean wantSparse) {
+	private ColtMatrix(final int m, final int n, final boolean wantSparse) {
 		this.wantSparse = wantSparse;
 		if(wantSparse) {
 			underlying = new SparseDoubleMatrix2D(m,n);

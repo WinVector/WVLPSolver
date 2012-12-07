@@ -4,8 +4,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.linalg.colt.NativeMatrix;
+import com.winvector.linagl.PreMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
@@ -41,16 +42,16 @@ abstract class LPSolverImpl implements LPSolver {
 	 * @throws LPException.LPMalformedException
 	 *             if parameters don't match defs
 	 */
-	public static void checkParams(final ColumnMatrix A, final double[] b, final double[] c, final int[] basis)
+	public static void checkParams(final PreMatrix A, final double[] b, final double[] c, final int[] basis)
 			throws LPException.LPMalformedException {
 		if ((A == null) || (b == null) || (c == null) || (basis == null)
-				|| (A.rows <= 0) || (A.rows != b.length)
-				|| (A.rows != basis.length) || (A.cols != c.length)) {
+				|| (A.rows() <= 0) || (A.rows() != b.length)
+				|| (A.rows() != basis.length) || (A.cols() != c.length)) {
 			String problem = "misformed problem";
 			if (A == null) {
 				problem = problem + " A==null";
 			} else {
-				if (A.rows <= 0) {
+				if (A.rows() <= 0) {
 					problem = problem + " A.rows()<=0";
 				}
 			}
@@ -58,8 +59,8 @@ abstract class LPSolverImpl implements LPSolver {
 				problem = problem + " b==null";
 			} else {
 				if (A != null) {
-					if (A.rows != b.length) {
-						problem = problem + " A.rows()(" + A.rows
+					if (A.rows() != b.length) {
+						problem = problem + " A.rows()(" + A.rows()
 								+ ")!=b.length(" + b.length + ")";
 					}
 				}
@@ -67,9 +68,9 @@ abstract class LPSolverImpl implements LPSolver {
 			if (c == null) {
 				problem = problem + " c==null";
 			} else {
-				if ((A != null) && (A.rows > 0)) {
-					if (A.cols != c.length) {
-						problem = problem + " A.cols()(" + A.cols
+				if ((A != null) && (A.rows() > 0)) {
+					if (A.cols() != c.length) {
+						problem = problem + " A.cols()(" + A.cols()
 								+ ")!=c.length(" + c.length + ")";
 					}
 				}
@@ -78,16 +79,16 @@ abstract class LPSolverImpl implements LPSolver {
 				problem = problem + " basis==null";
 			} else {
 				if (A != null) {
-					if (A.rows != basis.length) {
-						problem = problem + " A.rows()(" + A.rows
+					if (A.rows() != basis.length) {
+						problem = problem + " A.rows()(" + A.rows()
 								+ ")!=basis.length(" + basis.length + ")";
 					}
 				}
 			}
 			throw new LPException.LPMalformedException(problem);
 		}
-		int m = A.rows;
-		int n = A.cols;
+		int m = A.rows();
+		int n = A.cols();
 		if (m > n) {
 			throw new LPException.LPMalformedException("m>n");
 		}
@@ -142,13 +143,13 @@ abstract class LPSolverImpl implements LPSolver {
 	 *            (optional) n-vector
 	 * @return basic solution to A x = b x>=0 or null (from basis)
 	 */
-	private static LPSoln tryBasis(final ColumnMatrix A, final int[] basis, final double[] b) {
-		if ((basis == null) || (basis.length != A.rows)) {
+	private static <T extends Matrix<T>> LPSoln tryBasis(final PreMatrix A, final int[] basis, final double[] b, final LinalgFactory<T> factory) {
+		if ((basis == null) || (basis.length != A.rows())) {
 			return null;
 		}
 		double[] x = null;
 		try {
-			final Matrix<NativeMatrix> AP = A.extractColumns(basis,NativeMatrix.factory);
+			final Matrix<T> AP = A.extractColumns(basis,factory);
 			x = AP.solve(b, false);
 		} catch (Exception e) {
 		}
@@ -172,8 +173,8 @@ abstract class LPSolverImpl implements LPSolver {
 	 *            (optional) n-vector
 	 * @return basic solution to A x = b x>=0
 	 */
-	private LPSoln basisFromVector(final ColumnMatrix A, final double[] hint, final double[] b) {
-		if (A.cols <= 0) {
+	private <T extends Matrix<T>> LPSoln basisFromVector(final PreMatrix A, final double[] hint, final double[] b, final LinalgFactory<T> factory) {
+		if (A.cols() <= 0) {
 			return new LPSoln(new double[0], new int[0]);
 		}
 		int[] cb = null;
@@ -196,8 +197,8 @@ abstract class LPSolverImpl implements LPSolver {
 		} else {
 			cb = new int[0];
 		}
-		final int[] gb = A.matrixCopy().colBasis(cb,minBasisEpsilon);
-		final LPSoln r = tryBasis(A, gb, b);
+		final int[] gb = A.matrixCopy(factory).colBasis(cb,minBasisEpsilon);
+		final LPSoln r = tryBasis(A, gb, b, factory);
 		return r;
 	}
 
@@ -210,14 +211,14 @@ abstract class LPSolverImpl implements LPSolver {
 	 *            (optional) n-vector
 	 * @return basic solution to A x = b x>=0
 	 */
-	private LPSoln inspectForBasis(final ColumnMatrix A, final double[] hint, final double[] b) {
-		LPSoln r = basisFromVector(A, hint, b);
+	private <T extends Matrix<T>> LPSoln inspectForBasis(final PreMatrix A, final double[] hint, final double[] b, final LinalgFactory<T> factory) {
+		LPSoln r = basisFromVector(A, hint, b, factory);
 		if (r != null) {
 			return r;
 		}
 		if ((hint != null) && (Matrix.nNonZero(hint)> 0)) {
 			// try zero/initial basis
-			r = basisFromVector(A, null, b);
+			r = basisFromVector(A, null, b, factory);
 			if (r != null) {
 				return r;
 			}
@@ -259,8 +260,8 @@ abstract class LPSolverImpl implements LPSolver {
 	 *             (if infeas or unbounded) no need to check feasibility of
 	 *             input or output (check by wrapper)
 	 */
-	protected abstract LPSoln rawSolve(LPEQProb prob, int[] basis0,
-			final double tol, final int maxRounds) throws LPException;
+	protected abstract <T extends Matrix<T>> LPSoln rawSolve(LPEQProb prob, int[] basis0,
+			final double tol, final int maxRounds, final LinalgFactory<T> factory) throws LPException;
 
 	/**
 	 * @param A
@@ -276,7 +277,8 @@ abstract class LPSolverImpl implements LPSolver {
 	 * 
 	 * phase 1: min 1.s (A b) (x) = b, x,s>=0 (s) start with x = 0, s = 1.
 	 */
-	private LPSoln solvePhase1(final ColumnMatrix A, final double[] b, final double tol, final int maxRounds) 
+	private <T extends Matrix<T>> LPSoln solvePhase1(final ColumnMatrix A, final double[] b, final double tol, 
+			final int maxRounds, final LinalgFactory<T> factory) 
 			throws LPException {
 //		{
 //			final LPSoln r = inspectForBasis(A, null, b);
@@ -291,7 +293,7 @@ abstract class LPSolverImpl implements LPSolver {
 		c[n] = 1.0;
 		final LPEQProb p1prob = new LPEQProb(AP, b, c);
 		final int[] ibasis0 = new int[] { n };
-		final int[] basis0 = AP.matrixCopy().colBasis(ibasis0,minBasisEpsilon);
+		final int[] basis0 = AP.matrixCopy(factory).colBasis(ibasis0,minBasisEpsilon);
 		// A is full row rank coming in (needs to be also even
 		// though AP is full row rank by construction we won't
 		// be able to move off it as a basis).
@@ -299,7 +301,7 @@ abstract class LPSolverImpl implements LPSolver {
 			throw new LPErrorException("bad basis0");
 		}
 		//p1prob.soln(basis0,tol); // force check that initial basis is good
-		LPSoln soln = rawSolve(p1prob, basis0, tol, maxRounds);
+		LPSoln soln = rawSolve(p1prob, basis0, tol, maxRounds, factory);
 		if ((soln == null) || (soln.basis == null)
 				|| (soln.basis.length != basis0.length) || (soln.x == null)
 				|| (soln.x.length != c.length)) {
@@ -347,7 +349,8 @@ abstract class LPSolverImpl implements LPSolver {
 			for (int i = 0; i < rowset.length; ++i) {
 				rowset[i] = i;
 			}
-			final int[] nb = A.matrixCopy().extractRows(rowset,NativeMatrix.factory).colBasis(sb,minBasisEpsilon);
+			// TODO: cut down the copies here!
+			final int[] nb = A.matrixCopy(factory).extractRows(rowset,factory).colBasis(sb,minBasisEpsilon);
 			soln = new LPSoln(soln.x, nb);
 			// re-check basis facts
 			if ((soln.basis == null) || (soln.basis.length != basis0.length)) {
@@ -381,7 +384,8 @@ abstract class LPSolverImpl implements LPSolver {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
-	public LPSoln solve(final LPEQProb origProb, final int[] basis_in, final double tol,final int maxRounds)
+	@Override
+	public <T extends Matrix<T>> LPSoln solve(final LPEQProb origProb, final int[] basis_in, final double tol,final int maxRounds, final LinalgFactory<T> factory)
 			throws LPException {
 		if (verbose > 0) {
 			System.out.println("solve:");
@@ -391,7 +395,7 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		// get rid of degenerate cases
 		//System.out.println("start rb1");
-		final int[] rb = origProb.A.matrixCopy().rowBasis(null,minBasisEpsilon);
+		final int[] rb = origProb.A.matrixCopy(factory).rowBasis(null,minBasisEpsilon);
 		if ((rb == null) || (rb.length <= 0)) {
 			//solving 0 x = b
 			if (!Matrix.isZero(origProb.b)) {
@@ -422,7 +426,7 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		// deal with square system
 		if (prob.A.rows >= prob.A.cols) {
-			final double[] x = prob.A.matrixCopy().solve(prob.b, false);
+			final double[] x = prob.A.matrixCopy(factory).solve(prob.b, false);
 			if (x == null) {
 				throw new LPException.LPInfeasibleException(
 						"linear problem infeasible");
@@ -476,7 +480,7 @@ abstract class LPSolverImpl implements LPSolver {
 				for (int i = 0; i < basis0.length; ++i) {
 					basis0[i] = basis_in[i];
 				}
-				final double[] x0 = LPEQProb.soln(prob.A, prob.b, basis0, tol);
+				final double[] x0 = LPEQProb.soln(prob.A, prob.b, basis0, tol, factory);
 				LPEQProb.checkPrimFeas(prob.A, prob.b, x0, tol);
 			} catch (Exception e) {
 				basis0 = null;
@@ -487,7 +491,7 @@ abstract class LPSolverImpl implements LPSolver {
 			if (verbose > 0) {
 				System.out.println("phase1");
 			}
-			final LPSoln phase1Soln = solvePhase1(prob.A, prob.b, tol,maxRounds);
+			final LPSoln phase1Soln = solvePhase1(prob.A, prob.b, tol, maxRounds, factory);
 			if (phase1Soln != null) {
 				basis0 = phase1Soln.basis;
 			}
@@ -497,9 +501,9 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		if (Matrix.isZero(prob.c)) {
 			// no objective function, any basis will do
-			return tryBasis(prob.A, basis0, prob.b);
+			return tryBasis(prob.A, basis0, prob.b, factory);
 		}
-		final LPSoln soln = rawSolve(prob, basis0, tol,maxRounds);
+		final LPSoln soln = rawSolve(prob, basis0, tol, maxRounds, factory);
 		if ((soln == null) || (soln.x == null) || (soln.basis == null)
 				|| (soln.basis.length != basis0.length)) {
 			throw new LPException.LPErrorException(

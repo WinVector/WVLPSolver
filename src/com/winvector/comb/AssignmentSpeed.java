@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
@@ -26,7 +27,7 @@ public class AssignmentSpeed {
 	 * @return
 	 * @throws LPException
 	 */
-	public static Map<String,Long> runSet(final LPEQProb prob, Map<String,LPSolver> solvers) throws LPException {
+	public static <T extends Matrix<T>> Map<String,Long> runSet(final LPEQProb prob, Map<String,LPSolver> solvers, final LinalgFactory<T> factory) throws LPException {
 		final Map<String,Long> res = new TreeMap<String,Long>();
 		final Set<String> zaps = new HashSet<String>();
 		for(final Map.Entry<String,LPSolver> me: solvers.entrySet()) {
@@ -37,7 +38,7 @@ public class AssignmentSpeed {
 				LPSoln soln = null;
 				final long startMS = System.currentTimeMillis();
 				try {
-					soln = solver.solve(prob,null,1.0e-5,100000);
+					soln = solver.solve(prob,null,1.0e-5,100000,factory);
 				} catch (LPException e) {
 				}
 				final long endMS = System.currentTimeMillis();
@@ -53,7 +54,7 @@ public class AssignmentSpeed {
 						sawValue = value;
 					}
 					if(soln.basis!=null) {
-						final double[] dual = prob.inspectForDual(soln,1.0e-3);
+						final double[] dual = prob.inspectForDual(soln,1.0e-3,factory);
 						LPEQProb.checkPrimDualOpt(prob.A, prob.b, prob.c, soln.x, dual, 1.0e-3);
 					}
 					res.put(name,durationMS);
@@ -90,7 +91,7 @@ public class AssignmentSpeed {
 					}
 				}
 				final LPEQProb prob = Assignment.buildAssignmentProb(NativeMatrix.factory,c);
-				final Map<String,Long> durations = runSet(prob,solvers);
+				final Map<String,Long> durations = runSet(prob,solvers,NativeMatrix.factory);
 				System.out.print(n);
 				for(final String name: solvers.keySet()) {
 					final Long val = durations.get(name);

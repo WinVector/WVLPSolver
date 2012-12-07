@@ -1,14 +1,11 @@
 package com.winvector.linagl;
 
 import java.io.PrintStream;
-import java.io.Serializable;
 import java.util.BitSet;
 
-import com.winvector.linalg.colt.NativeMatrix;
 
 
-
-public abstract class Matrix<T extends Matrix<T>> implements Serializable {
+public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	private static final long serialVersionUID = 1L;
 	
 
@@ -36,6 +33,10 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 			}
 		}
 		return r;
+	}
+	
+	public <Z extends Matrix<Z>> Z matrixCopy(final LinalgFactory<Z> factory) {
+		return copy(factory,sparseRep());
 	}
 
 	public <Z extends Matrix<Z>> Z transpose(final LinalgFactory<Z> factory, final boolean wantSparse) {
@@ -282,12 +283,12 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	}
 	
 	public int[] rowBasis(final int[] forcedRows, final double minVal) {
-		final NativeMatrix c = copy(NativeMatrix.factory,false);
+		final T c = copy(factory(),false);
 		return rowBasis(c,forcedRows,minVal);
 	}
 	
 	public int[] colBasis(final int[] forcedRows, final double minVal) {
-		final NativeMatrix c = transpose(NativeMatrix.factory,false);
+		final T c = transpose(factory(),false);
 		return rowBasis(c,forcedRows,minVal);
 	}
 

@@ -9,6 +9,8 @@ import org.apache.commons.math3.optimization.linear.LinearObjectiveFunction;
 import org.apache.commons.math3.optimization.linear.Relationship;
 import org.apache.commons.math3.optimization.linear.SimplexSolver;
 
+import com.winvector.linagl.LinalgFactory;
+import com.winvector.linagl.Matrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPSoln;
@@ -57,8 +59,8 @@ public final class M3Solver implements LPSolver {
 	
 
 	@Override
-	public LPSoln solve(final LPEQProb prob, final int[] basis_in, final double tol,
-			final int maxRounds) throws LPException {
+	public <T extends Matrix<T>> LPSoln solve(final LPEQProb prob, final int[] basis_in, final double tol,
+			final int maxRounds, final LinalgFactory<T> factory) throws LPException {
 		final M3Prob m3Prob = convertProbToM3(prob);
 		final SimplexSolver m3solver = new SimplexSolver();
 		m3solver.setMaxIterations(maxRounds);
