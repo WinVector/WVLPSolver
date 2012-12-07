@@ -6,7 +6,7 @@ import java.util.Arrays;
 import com.winvector.linagl.Matrix;
 
 /**
- * immutable vector
+ * immutable vector, pop count can not be taking from length (some zero entries may be stored)
  * @author johnmount
  *
  */
@@ -14,8 +14,8 @@ public final class SparseVec implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	public final int dim;
-	final int[] indices;
-	final double[] values;
+	int[] indices;    // do not alter!
+	double[] values;  // do not alter!
 	
 	public SparseVec(final double[] x) {
 		dim = x.length;
@@ -25,12 +25,13 @@ public final class SparseVec implements Serializable {
 				++index;
 			}
 		}
-		final int nnz = index;
+		final boolean forceDense = (dim<5)||(index>=dim)||(index>=(2*dim)/3);
+		final int nnz = forceDense?dim:index;
 		indices = new int[nnz];
 		values = new double[nnz];
 		index = 0;
 		for(int i=0;(i<dim)&&(index<nnz);++i) {
-			if(x[i]!=0) {
+			if(forceDense||(x[i]!=0)) {
 				indices[index] = i;
 				values[index] = x[i];
 				++index;
@@ -40,7 +41,7 @@ public final class SparseVec implements Serializable {
 	
 	SparseVec(final SparseVec o, final double[] scale) {
 		dim = o.dim;
-		indices = new int[o.indices.length];
+		indices = o.indices; // share indices
 		values = new double[indices.length];
 		for(int ii=0;ii<indices.length;++ii) {
 			final int i = o.indices[ii];
@@ -79,6 +80,16 @@ public final class SparseVec implements Serializable {
 		return r;		
 	}
 	
+	int popCount() {
+		int npop = 0;
+		for(final double vi: values) {
+			if(0.0!=vi) {
+				++npop;
+			}
+		}
+		return npop;
+	}
+	
 	/**
 	 * slow (discouraged)
 	 * @param i
@@ -88,12 +99,18 @@ public final class SparseVec implements Serializable {
 		if((i<0)||(i>=dim)) {
 			throw new ArrayIndexOutOfBoundsException(""+i);
 		}
-		final int ii = Arrays.binarySearch(indices,i);
-		if((ii<0)||(ii>=indices.length)) {
-			return 0.0;
-		}
-		if(i!=indices[ii]) {
-			throw new IllegalStateException("lookup failed " + i + " -> " + ii + "\t" + indices[ii]);
+		final int ii;
+		if((i<indices.length)&&(i==indices[i])) {
+			// identity map, can skip binary search
+			ii = i;
+		} else {
+			ii = Arrays.binarySearch(indices,i);
+			if((ii<0)||(ii>=indices.length)) {
+				return 0.0;
+			}
+			if(i!=indices[ii]) {
+				throw new IllegalStateException("lookup failed " + i + " -> " + ii + "\t" + indices[ii]);
+			}
 		}
 		return values[ii];
 	}

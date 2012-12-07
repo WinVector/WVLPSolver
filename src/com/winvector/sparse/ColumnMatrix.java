@@ -84,7 +84,9 @@ public final class ColumnMatrix implements PreMatrix {
 			for(int ii=0;ii<col.indices.length;++ii) {
 				final int i = col.indices[ii];
 				final double aij = col.values[ii];
-				res[i] += aij*x[j];
+				if(0.0!=aij) {
+					res[i] += aij*x[j];
+				}
 			}
 		}
 		return res;
@@ -99,7 +101,9 @@ public final class ColumnMatrix implements PreMatrix {
 			for(int ii=0;ii<col.indices.length;++ii) {
 				final int i = col.indices[ii];
 				final double aij = col.values[ii];
-				res[j] += aij*y[i];
+				if(0.0!=aij) {
+					res[j] += aij*y[i];
+				}
 			}
 		}
 		return res;
@@ -112,7 +116,7 @@ public final class ColumnMatrix implements PreMatrix {
 		int npop = 0;
 		for(int jj=0;jj<basis.length;++jj) {
 			final int j = basis[jj];
-			npop += columns[j].indices.length;
+			npop += columns[j].popCount();
 		}
 		boolean wantSparse = npop<(0.1*rows)*basis.length;
 		final T r = factory.newMatrix(rows,basis.length,wantSparse);
@@ -120,7 +124,10 @@ public final class ColumnMatrix implements PreMatrix {
 			final int j = basis[jj];
 			final SparseVec col = columns[j];
 			for(int ii=0;ii<col.indices.length;++ii) {
-				r.set(col.indices[ii],jj,col.values[ii]);
+				final double aij = col.values[ii];
+				if(0.0!=aij) {
+					r.set(col.indices[ii],jj,aij);
+				}
 			}
 		}
 		return r;
@@ -130,14 +137,17 @@ public final class ColumnMatrix implements PreMatrix {
 	public <T extends Matrix<T>> T matrixCopy(final LinalgFactory<T> factory) {
 		int npop = 0;
 		for(int j=0;j<cols;++j) {
-			npop += columns[j].indices.length;
+			npop += columns[j].popCount();
 		}
 		boolean wantSparse = npop<(0.1*rows)*cols;		
 		final T m = factory.newMatrix(rows,cols,wantSparse);
 		for(int j=0;j<cols;++j) {
 			final SparseVec col = columns[j];
 			for(int ii=0;ii<col.indices.length;++ii) {
-				m.set(col.indices[ii],j,col.values[ii]);
+				final double aij = col.values[ii];
+				if(0.0!=aij) {
+					m.set(col.indices[ii],j,aij);
+				}
 			}
 		}
 		return m;
@@ -162,7 +172,9 @@ public final class ColumnMatrix implements PreMatrix {
 			for(int ii=0;ii<col.indices.length;++ii) {
 				final int i = col.indices[ii];
 				final double aij = col.values[ii];
-				r[i] += Math.abs(aij);
+				if(0.0!=aij) {
+					r[i] += Math.abs(aij);
+				}
 			}
 		}
 		return r;
