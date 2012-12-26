@@ -31,6 +31,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public boolean earlyR = false;                 // allow partial inspection for entering columns
 	public boolean earlyLeavingCalc = true;       // value and sort steps early
 	public boolean earlyLeavingExit = true;       // allow early inspection exit on valuation calc
+	public boolean resuffle = true;               // re-shuffle inspection order each pass
 	public Random rand = new Random(3252351L);
 
 	
@@ -111,6 +112,9 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			//prob.soln(basis,tol);
 			//System.out.println("basis good");
 			inspectionOrder.startPass();
+			if(resuffle) {
+				inspectionOrder.shuffle();
+			}
 			curBasisIndicator.clear();
 			for(final int bi: tab.basis) {
 				curBasisIndicator.set(bi);

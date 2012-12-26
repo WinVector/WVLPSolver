@@ -29,6 +29,7 @@ public final class InspectionOrder {
 				++index;
 			}
 		}
+		shuffle();
 	}
 	
 	public boolean hasNext() {
@@ -43,6 +44,10 @@ public final class InspectionOrder {
 
 	public void startPass() {
 		ptr = 0;
+	}
+	
+	public void shuffle() {
+		startPass();
 		for(int i=0;i<nids-1;++i) {
 			final int j = i + rand.nextInt(nids-i);
 			final int idi = ids[i];
