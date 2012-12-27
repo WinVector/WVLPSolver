@@ -94,5 +94,24 @@ public final class TestLP  {
 			testLPExample(f);
 		}
 	}
-
+	
+	@Test
+	public void testShadow() throws LPException {
+		final LinalgFactory<NativeMatrix> factory = NativeMatrix.factory;
+		final Matrix<NativeMatrix> m = factory.newMatrix(4,7,false);
+		final double[] b = new double[4];
+		final double[] c = new double[7];
+		m.set(0,0,1.0); m.set(0,3,1.0); b[0] = 0.0;   // x0 <= 10, x0 + s0 = 10
+		m.set(1,1,1.0); m.set(1,4,1.0); b[1] = 0.0;   // x1 + s1 = 10
+		m.set(2,2,1.0); m.set(2,5,1.0); b[2] = 10.0;   // x2 + s2 = 10
+		m.set(3,0,1.0); m.set(3,1,1.0); m.set(3,2,1.0); m.set(3,6,1.0); b[3] = 10.0;   // x1 + x2 + x3 - s3 = 10
+		c[0] = -10.0; c[1] = -50.0; c[2] = -100.0;                   // maximize 10*x0 + 50*x1 + 100*x2
+		final LPEQProb prob = new LPEQProb(new ColumnMatrix(m),b,c);
+		prob.printCPLEX(System.out);
+		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
+		final double tol = 1.0e-10;
+		final LPSoln soln = solver.solve(prob, null, tol, 1000, factory);
+		final double[] dual = prob.inspectForDual(soln, tol,factory);
+		assertNotNull(dual);
+	}
 }

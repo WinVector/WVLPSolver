@@ -325,46 +325,41 @@ public final class LPEQProb implements Serializable {
 	 * @param factory 
 	 * @return dual-optimal solution
 	 */
-	public <T extends Matrix<T>> double[] inspectForDual(final LPSoln p, final double tol, final LinalgFactory<T> factory) throws LPException {
-		checkPrimFeas(A, b, p.x, tol);
-		// we now have a list of equality constraints to work with
-		try {
-			// least squares solve sub-system
-			final T fullA = A.matrixCopy(factory);
-			final int[] rb = fullA.rowBasis(null,1.0e-5);
-			if ((rb == null) || (rb.length <= 0)) {
-				final double[] y = new double[b.length];
-				checkPrimDualFeas(A, b, c, p.x, y, tol);
-				checkPrimDualOpt(A, b, c, p.x, y, tol);
-				return y;
-			}
-			final T eqmat = factory.newMatrix(p.basis.length+1, p.basis.length,true);
-			final double[] eqvec = new double[p.basis.length+1];
-			// put in obj-relation
-			eqmat.setRow(0,Matrix.extract(b,rb));
-			eqvec[0] = Matrix.dot(c,p.x);
-			// put in all complementary slackness relns
-			// Schrijver p. 95
-			for (int bi = 0; bi < p.basis.length; ++bi) {
-				int i = p.basis[bi];
-				eqmat.setRow(bi+1,Matrix.extract(fullA.extractColumn(i),rb));
-				eqvec[bi+1] = c[i];
-			}
-			final double[] yr = eqmat.solve(eqvec, true);
-			final double[] y = new double[b.length];
-			if (yr != null) {
-				for(int j=0;j<yr.length;++j) {
-					y[rb[j]] = yr[j];
-				}
-			}
-			checkPrimDualFeas(A, b, c, p.x, y, tol);
-			checkPrimDualOpt(A, b, c, p.x, y, tol);
-			return y;
-		} catch (Exception e) {
-			System.out.println("caughtZ: " + e);
-			return null;
-		}
-	}
+	 public <T extends Matrix<T>> double[] inspectForDual(final LPSoln p, final double tol, final LinalgFactory<T> factory) throws LPException {
+		 checkPrimFeas(A, b, p.x, tol);
+		 // we now have a list of equality constraints to work with
+		 // least squares solve sub-system
+		 final T fullA = A.matrixCopy(factory);
+		 final int[] rb = fullA.rowBasis(null,1.0e-5);
+		 if ((rb == null) || (rb.length <= 0)) {
+			 final double[] y = new double[b.length];
+			 checkPrimDualFeas(A, b, c, p.x, y, tol);
+			 checkPrimDualOpt(A, b, c, p.x, y, tol);
+			 return y;
+		 }
+		 final T eqmat = factory.newMatrix(p.basis.length+1, p.basis.length,true);
+		 final double[] eqvec = new double[p.basis.length+1];
+		 // put in obj-relation
+		 eqmat.setRow(0,Matrix.extract(b,rb));
+		 eqvec[0] = Matrix.dot(c,p.x);
+		 // put in all complementary slackness relns
+		 // Schrijver p. 95
+		 for (int bi = 0; bi < p.basis.length; ++bi) {
+			 int i = p.basis[bi];
+			 eqmat.setRow(bi+1,Matrix.extract(fullA.extractColumn(i),rb));
+			 eqvec[bi+1] = c[i];
+		 }
+		 final double[] yr = eqmat.solve(eqvec, true);
+		 final double[] y = new double[b.length];
+		 if (yr != null) {
+			 for(int j=0;j<yr.length;++j) {
+				 y[rb[j]] = yr[j];
+			 }
+		 }
+		 checkPrimDualFeas(A, b, c, p.x, y, tol);
+		 checkPrimDualOpt(A, b, c, p.x, y, tol);
+		 return y;
+	 }
 
 	/**
 	 * @param solver
