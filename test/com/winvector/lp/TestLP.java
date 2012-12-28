@@ -72,13 +72,13 @@ public final class TestLP  {
 	
 	public <Z extends Matrix<Z>> void testLPExample(final LinalgFactory<Z> factory) throws LPException {
 		final LPEQProb prob = exampleProblem(factory);
-		final LPSoln soln1 = prob.solveDebugByInspect(new RevisedSimplexSolver(), 1.0e-6, 1000, factory);
+		final LPSoln soln1 = prob.solveDebug(new RevisedSimplexSolver(), 1.0e-6, 1000, factory);
 		final double[] expect = {3.00000, 3.00000, 2.00000, 0.00000, 0.00000};
 		assertNotNull(soln1);
-		assertNotNull(soln1.x);
-		assertEquals(expect.length,soln1.x.length);
+		assertNotNull(soln1.primalSolution);
+		assertEquals(expect.length,soln1.primalSolution.length);
 		for(int i=0;i<expect.length;++i) {
-			assertTrue(Math.abs(soln1.x[i]-expect[i])<1.0e-3);
+			assertTrue(Math.abs(soln1.primalSolution[i]-expect[i])<1.0e-3);
 		}
 	}
 	
@@ -111,7 +111,7 @@ public final class TestLP  {
 		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 		final double tol = 1.0e-10;
 		final LPSoln soln = solver.solve(prob, null, tol, 1000, factory);
-		final double[] dual = prob.inspectForDual(soln, tol,factory);
+		final double[] dual = prob.dualSolution(soln, tol,factory);
 		assertNotNull(dual);
 	}
 }

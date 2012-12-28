@@ -102,7 +102,7 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 	 * 
 	 * @param prob
 	 *            well formed LPProb
-	 * @param basis
+	 * @param basisColumns
 	 *            m-vector that is a valid starting basis
 	 */
 	public RTableau(final LPEQProb prob_in, final int[] basis_in, final LinalgFactory<T> factory) throws LPException {

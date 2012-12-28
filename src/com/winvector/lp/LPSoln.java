@@ -8,26 +8,33 @@ import com.winvector.linagl.Matrix;
 public final class LPSoln implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	public final double[] x;
-	public final int[] basis;
+	public final double[] primalSolution;
+	public final int[] basisColumns;
+	public int[] basisRows;
 
-	public LPSoln(final double[] x_in, final int[] basis_in) {
-		x = x_in;
-		basis = basis_in;
+	public LPSoln(final double[] primalSoln_in, final int[] basisColumns_in, final int[] basisRows_in) {
+		primalSolution = primalSoln_in;
+		basisColumns = basisColumns_in;
+		basisRows = basisRows_in;
+	}
+	
+	// TODO: replace this constructor
+	public LPSoln(final double[] primalSoln_in, final int[] basisColumns_in) {
+		this(primalSoln_in,basisColumns_in,null);
 	}
 
 	public String toString() {
 		final StringBuilder b = new StringBuilder();
-		if (x != null) {
-			b.append(Matrix.toString(x));
+		if (primalSolution != null) {
+			b.append(Matrix.toString(primalSolution));
 		}
-		if (basis != null) {
+		if (basisColumns != null) {
 			b.append(" (");
-			for (int i = 0; i < basis.length; ++i) {
+			for (int i = 0; i < basisColumns.length; ++i) {
 				if (i > 0) {
 					b.append(" ");
 				}
-				b.append(basis[i]);
+				b.append(basisColumns[i]);
 			}
 			b.append(")");
 		}

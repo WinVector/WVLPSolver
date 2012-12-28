@@ -271,16 +271,6 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		if (rbasis == null) {
 			return null;
 		}
-		try {
-			return new LPSoln(LPEQProb.soln(prob.A, prob.b, rbasis, tol, factory), rbasis);
-		} catch (LPException e) {
-			//		    System.out.println("{");
-			//		    for(int i=0;i<basis0.length;++i) {
-			//			System.out.print(" " + basis0[i]);
-			//		    }
-			//		    System.out.println("}");
-			//		    prob.print(System.out);
-			throw e;
-		}
+		return new LPSoln(LPEQProb.primalSoln(prob.A, prob.b, rbasis, tol, factory), rbasis);
 	}
 }

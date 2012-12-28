@@ -2,11 +2,6 @@ package com.winvector.lp.impl;
 
 import java.util.Arrays;
 
-import com.winvector.linagl.LinalgFactory;
-import com.winvector.linagl.Matrix;
-import com.winvector.lp.LPEQProb;
-import com.winvector.lp.LPException.LPErrorException;
-
 
 /**
  * comparison key for a basis
@@ -78,24 +73,5 @@ final class SBasis implements Comparable<SBasis> {
 			r += i * d[i];
 		}
 		return r;
-	}
-
-	public <T extends Matrix<T>> double value(final LPEQProb p, final double[] obj, double tol, final LinalgFactory<T> factory) {
-		try {
-			if((tol<=0)||Double.isInfinite(tol)||Double.isNaN(tol)) { 
-				tol = 0.0;
-			}
-			final Matrix<T> B = p.A.extractColumns(d,factory);
-			final double[] xB = B.solve(p.b);
-			final double[] check = B.mult(xB);
-			if (Matrix.distSq(p.b,check) > (tol*tol) ) {
-				throw new LPErrorException("could not solve basis");
-			}
-			final double[] cB = Matrix.extract(obj,d);
-			double objVal = Matrix.dot(cB,xB);
-			return objVal;
-		} catch (Exception e) {
-			return Double.NaN;
-		}
 	}
 }

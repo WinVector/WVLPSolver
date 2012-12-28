@@ -111,7 +111,7 @@ public final class LPEQProb implements Serializable {
 	 * @throws LPException
 	 *             on bad data
 	 */
-	public static <T extends Matrix<T>> double[] soln(final PreMatrix A, final double[] b, final int[] basis, final double tol, final LinalgFactory<T> factory)
+	public static <T extends Matrix<T>> double[] primalSoln(final PreMatrix A, final double[] b, final int[] basis, final double tol, final LinalgFactory<T> factory)
 			throws LPException {
 		if ((A == null) || (b == null) || (basis == null) || (A.rows() <= 0)
 				|| (A.rows() != b.length) || (basis.length != A.rows())) {
@@ -286,38 +286,6 @@ public final class LPEQProb implements Serializable {
 	}
 
 	/**
-	 * @return dual problem (converted to primal form)
-	 * @throws LPException
-	 *             (if infeas or unbounded)
-	 * 
-	 * dual: max y.b: y A <= c dual soln (useful for debugging): ( tran(A)
-	 * -tran(A) I) ( y+ ) = c, ( y- ) ( s ) min (-b b 0).(y+ y- s), (y+ y- s) >=
-	 * 0 sg(c) is a diagonal matrix with sg(c)_i,i = 1 if c_i>=0, -1 otherwise
-	 */
-	 private <T extends Matrix<T>> LPEQProb dual(final LinalgFactory<T> factory) throws LPException {
-		final int m = A.rows;
-		final int n = A.cols;
-		final double[] cp = new double[2 * m + n];
-		final T AP = factory.newMatrix(n, cp.length,true);
-		// TODO: non-dense version of this
-		for (int i = 0; i < n; ++i) {
-			for (int j = 0; j < m; ++j) {
-				final double aji = A.get(j, i);
-				if(0.0!=aji) {
-					AP.set(i, j, A.get(j, i));
-					AP.set(i, j + m, -A.get(j, i));
-				}
-			}
-			AP.set(i, i + 2 * m, 1.0);
-		}
-		for (int i = 0; i < m; ++i) {
-			cp[i] = -b[i];
-			cp[i + m] = b[i];
-		}
-		return new LPEQProb(new ColumnMatrix(AP), c, cp);
-	}
-
-	/**
 	 * @param p
 	 *            primal optimal solution
 	 * @param tol
@@ -325,24 +293,23 @@ public final class LPEQProb implements Serializable {
 	 * @param factory 
 	 * @return dual-optimal solution
 	 */
-	 public <T extends Matrix<T>> double[] inspectForDual(final LPSoln p, final double tol, final LinalgFactory<T> factory) throws LPException {
-		 checkPrimFeas(A, b, p.x, tol);
+	 public <T extends Matrix<T>> double[] dualSolution(final LPSoln p, final double tol, final LinalgFactory<T> factory) throws LPException {
+		 checkPrimFeas(A, b, p.primalSolution, tol);
 		 // we now have a list of equality constraints to work with
-		 // least squares solve sub-system
 		 final T fullA = A.matrixCopy(factory);
 		 final int[] rb = fullA.rowBasis(null,1.0e-5);
 		 if ((rb == null) || (rb.length <= 0)) {
 			 final double[] y = new double[b.length];
-			 checkPrimDualFeas(A, b, c, p.x, y, tol);
-			 checkPrimDualOpt(A, b, c, p.x, y, tol);
+			 checkPrimDualFeas(A, b, c, p.primalSolution, y, tol);
+			 checkPrimDualOpt(A, b, c, p.primalSolution, y, tol);
 			 return y;
 		 }
-		 final T eqmat = factory.newMatrix(p.basis.length, p.basis.length,true);
-		 final double[] eqvec = new double[p.basis.length];
+		 final T eqmat = factory.newMatrix(p.basisColumns.length, p.basisColumns.length,true);
+		 final double[] eqvec = new double[p.basisColumns.length];
 		 // put in all complementary slackness relns
 		 // Schrijver p. 95
-		 for (int bi = 0; bi < p.basis.length; ++bi) {
-			 int i = p.basis[bi];
+		 for (int bi = 0; bi < p.basisColumns.length; ++bi) {
+			 int i = p.basisColumns[bi];
 			 eqmat.setRow(bi,Matrix.extract(fullA.extractColumn(i),rb));
 			 eqvec[bi] = c[i];
 		 }
@@ -353,51 +320,10 @@ public final class LPEQProb implements Serializable {
 				 y[rb[j]] = yr[j];
 			 }
 		 }
-		 checkPrimDualFeas(A, b, c, p.x, y, tol);
-		 checkPrimDualOpt(A, b, c, p.x, y, tol);
+		 checkPrimDualFeas(A, b, c, p.primalSolution, y, tol);
+		 checkPrimDualOpt(A, b, c, p.primalSolution, y, tol);
 		 return y;
 	 }
-
-	/**
-	 * @param solver
-	 *            solver
-	 * @param basis_in
-	 *            (optional) valid initial basis
-	 * @return y m-vector s.t. y A <= c and y.b maximized
-	 * @throws LPException
-	 *             (if infeas or unbounded)
-	 */
-	public <T extends Matrix<T>> LPSoln solveDual(final LPSolver solver, final int[] basis_in, final double tol, final int maxRounds, final LinalgFactory<T> factory)
-			throws LPException {
-		int m = A.rows;
-		final LPEQProb dual = dual(factory);
-		final LPSoln s = solver.solve(dual, basis_in, tol,maxRounds,factory);
-		final double[] y = new double[m];
-		for (int i = 0; i < m; ++i) {
-			y[i] = s.x[i] - s.x[i + m];
-		}
-		checkDualFeas(A, c, y, tol);
-		return new LPSoln(y, s.basis);
-	}
-
-	/**
-	 * solves primal and dual to prove solution
-	 * 
-	 * @param solver
-	 *            solver
-	 * @throws LPException
-	 *             (if infeas or unbounded)
-	 */
-	public <T extends Matrix<T>> LPSoln solveDebugByInspect(final LPSolver solver, final double tol, final int maxRounds, final LinalgFactory<T> factory)
-			throws LPException {
-		final LPSoln primSoln = solver.solve(this, null, 1.0e-6,maxRounds,factory);
-		final double[] y2 = inspectForDual(primSoln, tol,factory);
-		checkPrimDualOpt(A, b, c, primSoln.x, y2, tol);
-		//LPSoln dualSoln = solveDual(solver,null);
-		//checkPrimDualOpt(primSoln.x,dualSoln.x);
-		return primSoln;
-	}
-
 
 	public int nvars() {
 		if (A != null) {
@@ -435,8 +361,8 @@ public final class LPEQProb implements Serializable {
 	 */
 	public <T extends Matrix<T>> LPSoln solveDebug(final LPSolver solver, final double tol, final int maxRounds, final LinalgFactory<T> factory) throws LPException {
 		final LPSoln primSoln = solver.solve(this, null, tol, maxRounds, factory);
-		final LPSoln dualSoln = solveDual(solver, null, tol, maxRounds, factory);
-		checkPrimDualOpt(A, b, c, primSoln.x, dualSoln.x, tol);
+		final double[] dualSoln = dualSolution(primSoln, tol,factory);
+		checkPrimDualOpt(A, b, c, primSoln.primalSolution, dualSoln, tol);
 		return primSoln;
 	}
 

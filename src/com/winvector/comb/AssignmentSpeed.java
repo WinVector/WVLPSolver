@@ -44,8 +44,8 @@ public class AssignmentSpeed {
 				final long endMS = System.currentTimeMillis();
 				final long durationMS = endMS-startMS;
 				if(null!=soln) {
-					LPEQProb.checkPrimFeas(prob.A, prob.b, soln.x, 1.0e-3);
-					final double value = Matrix.dot(soln.x,prob.c);
+					LPEQProb.checkPrimFeas(prob.A, prob.b, soln.primalSolution, 1.0e-3);
+					final double value = Matrix.dot(soln.primalSolution,prob.c);
 					if(!Double.isNaN(sawValue)) {
 						if(Math.abs(value-sawValue)>1.0e-3) {
 							throw new LPErrorException("solution costs did not match");
@@ -53,9 +53,9 @@ public class AssignmentSpeed {
 					} else {
 						sawValue = value;
 					}
-					if(soln.basis!=null) {
-						final double[] dual = prob.inspectForDual(soln,1.0e-3,factory);
-						LPEQProb.checkPrimDualOpt(prob.A, prob.b, prob.c, soln.x, dual, 1.0e-3);
+					if(soln.basisColumns!=null) {
+						final double[] dual = prob.dualSolution(soln,1.0e-3,factory);
+						LPEQProb.checkPrimDualOpt(prob.A, prob.b, prob.c, soln.primalSolution, dual, 1.0e-3);
 					}
 					res.put(name,durationMS);
 				}

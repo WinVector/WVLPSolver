@@ -164,68 +164,6 @@ abstract class LPSolverImpl implements LPSolver {
 		return new LPSoln(x, basis);
 	}
 
-	/**
-	 * @param A
-	 *            full row-rank m by n matrix
-	 * @param b
-	 *            m-vector
-	 * @param hint
-	 *            (optional) n-vector
-	 * @return basic solution to A x = b x>=0
-	 */
-	private <T extends Matrix<T>> LPSoln basisFromVector(final PreMatrix A, final double[] hint, final double[] b, final LinalgFactory<T> factory) {
-		if (A.cols() <= 0) {
-			return new LPSoln(new double[0], new int[0]);
-		}
-		int[] cb = null;
-		if (hint != null) {
-			int k = 0;
-			for(int j=0;j<hint.length;++j) { 
-				if(Math.abs(hint[j])>0.0) {
-					++k;
-				}
-			}
-			final int nhint = k;
-			cb = new int[k];
-			k = 0;
-			for(int j=0;(j<hint.length)&&(k<nhint);++j) { 
-				if(Math.abs(hint[j])>0.0) {
-					cb[k] = j;
-					++k;
-				}
-			}
-		} else {
-			cb = new int[0];
-		}
-		final int[] gb = A.matrixCopy(factory).colBasis(cb,minBasisEpsilon);
-		final LPSoln r = tryBasis(A, gb, b, factory);
-		return r;
-	}
-
-	/**
-	 * @param A
-	 *            full row-rank m by n matrix
-	 * @param b
-	 *            m-vector
-	 * @param hint
-	 *            (optional) n-vector
-	 * @return basic solution to A x = b x>=0
-	 */
-	private <T extends Matrix<T>> LPSoln inspectForBasis(final PreMatrix A, final double[] hint, final double[] b, final LinalgFactory<T> factory) {
-		LPSoln r = basisFromVector(A, hint, b, factory);
-		if (r != null) {
-			return r;
-		}
-		if ((hint != null) && (Matrix.nNonZero(hint)> 0)) {
-			// try zero/initial basis
-			r = basisFromVector(A, null, b, factory);
-			if (r != null) {
-				return r;
-			}
-		}
-		return null;
-	}
-
 	static String stringBasis(final int[] b) {
 		if (b == null) {
 			return null;
@@ -302,46 +240,46 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		//p1prob.soln(basis0,tol); // force check that initial basis is good
 		LPSoln soln = rawSolve(p1prob, basis0, tol, maxRounds, factory);
-		if ((soln == null) || (soln.basis == null)
-				|| (soln.basis.length != basis0.length) || (soln.x == null)
-				|| (soln.x.length != c.length)) {
+		if ((soln == null) || (soln.basisColumns == null)
+				|| (soln.basisColumns.length != basis0.length) || (soln.primalSolution == null)
+				|| (soln.primalSolution.length != c.length)) {
 			throw new LPException.LPErrorException(
 					"bad basis back from phase1 raw solve");
 		}
 		// check objective value is zero
-		final double v = Matrix.dot(c,soln.x);
+		final double v = Matrix.dot(c,soln.primalSolution);
 		if (Math.abs(v)>1.0e-5) {
 			throw new LPException.LPInfeasibleException("primal infeasible");
 		}
 		// check basis is good
-		if (soln.basis.length > 1) {
-			Arrays.sort(soln.basis);
+		if (soln.basisColumns.length > 1) {
+			Arrays.sort(soln.basisColumns);
 		}
-		for (int i = 1; i < soln.basis.length; ++i) {
-			if (soln.basis[i] <= soln.basis[i - 1]) {
+		for (int i = 1; i < soln.basisColumns.length; ++i) {
+			if (soln.basisColumns[i] <= soln.basisColumns[i - 1]) {
 				throw new LPException.LPErrorException(
 						"duplicate column in basis");
 			}
 		}
-		for (int i = 0; i < soln.basis.length; ++i) {
-			if ((soln.basis[i] >= n) && (Math.abs(soln.x[soln.basis[i]])!=0)) {
+		for (int i = 0; i < soln.basisColumns.length; ++i) {
+			if ((soln.basisColumns[i] >= n) && (Math.abs(soln.primalSolution[soln.basisColumns[i]])!=0)) {
 				throw new LPException.LPErrorException(
-						"non-zero slack variable in phase 1 " + soln.basis[i]);
+						"non-zero slack variable in phase 1 " + soln.basisColumns[i]);
 			}
 		}
-		if (soln.basis[soln.basis.length - 1] >= n) {
+		if (soln.basisColumns[soln.basisColumns.length - 1] >= n) {
 			// must adjust basis to be off slacks
 			int nGood = 0;
-			for (int i = 0; i < soln.basis.length; ++i) {
-				if (soln.basis[i] < n) {
+			for (int i = 0; i < soln.basisColumns.length; ++i) {
+				if (soln.basisColumns[i] < n) {
 					++nGood;
 				}
 			}
 			final int[] sb = new int[nGood];
 			nGood = 0;
-			for (int i = 0; i < soln.basis.length; ++i) {
-				if (soln.basis[i] < n) {
-					sb[nGood] = soln.basis[i];
+			for (int i = 0; i < soln.basisColumns.length; ++i) {
+				if (soln.basisColumns[i] < n) {
+					sb[nGood] = soln.basisColumns[i];
 					++nGood;
 				}
 			}
@@ -351,22 +289,22 @@ abstract class LPSolverImpl implements LPSolver {
 			}
 			// TODO: cut down the copies here!
 			final int[] nb = A.matrixCopy(factory).extractRows(rowset,factory).colBasis(sb,minBasisEpsilon);
-			soln = new LPSoln(soln.x, nb);
+			soln = new LPSoln(soln.primalSolution, nb);
 			// re-check basis facts
-			if ((soln.basis == null) || (soln.basis.length != basis0.length)) {
+			if ((soln.basisColumns == null) || (soln.basisColumns.length != basis0.length)) {
 				throw new LPException.LPErrorException(
 						"bad basis back from phase1 raw solve");
 			}
-			if (soln.basis.length > 1) {
-				Arrays.sort(soln.basis);
+			if (soln.basisColumns.length > 1) {
+				Arrays.sort(soln.basisColumns);
 			}
-			for (int i = 1; i < soln.basis.length; ++i) {
-				if (soln.basis[i] <= soln.basis[i - 1]) {
+			for (int i = 1; i < soln.basisColumns.length; ++i) {
+				if (soln.basisColumns[i] <= soln.basisColumns[i - 1]) {
 					throw new LPException.LPErrorException(
 							"duplicate column in basis");
 				}
 			}
-			if (soln.basis[soln.basis.length - 1] >= n) {
+			if (soln.basisColumns[soln.basisColumns.length - 1] >= n) {
 				throw new LPException.LPErrorException(
 						"basis couldn't move off slack");
 			}
@@ -380,7 +318,7 @@ abstract class LPSolverImpl implements LPSolver {
 	 * @param basis_in
 	 *            (optional) valid initial basis
 	 * @return x n-vector s.t. A x = b and x>=0 and c.x minimized allowed to
-	 *         stop if A x = b, x>=0 c.x <=l
+	 *         stop if A x = b, x>=0 c.x <=l, plus row and column basis for this solution
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 */
@@ -413,9 +351,9 @@ abstract class LPSolverImpl implements LPSolver {
 			for (int i = 0; i < b.length; ++i) {
 				b[i] = i;
 			}
-			return new LPSoln(x, b);
+			return new LPSoln(x, b, rb);
 		}
-		LPEQProb prob;
+		LPEQProb prob = null;
 		// select out irredundant rows
 		if (rb.length != origProb.A.rows) {
 			final ColumnMatrix nA = origProb.A.extractRows(rb);
@@ -439,7 +377,7 @@ abstract class LPSolverImpl implements LPSolver {
 			for (int i = 0; i < b.length; ++i) {
 				b[i] = i;
 			}
-			return new LPSoln(x, b);
+			return new LPSoln(x, b, rb);
 		}
 		// re-scale
 		final double scaleRange = 10.0;
@@ -480,7 +418,7 @@ abstract class LPSolverImpl implements LPSolver {
 				for (int i = 0; i < basis0.length; ++i) {
 					basis0[i] = basis_in[i];
 				}
-				final double[] x0 = LPEQProb.soln(prob.A, prob.b, basis0, tol, factory);
+				final double[] x0 = LPEQProb.primalSoln(prob.A, prob.b, basis0, tol, factory);
 				LPEQProb.checkPrimFeas(prob.A, prob.b, x0, tol);
 			} catch (Exception e) {
 				basis0 = null;
@@ -493,26 +431,29 @@ abstract class LPSolverImpl implements LPSolver {
 			}
 			final LPSoln phase1Soln = solvePhase1(prob.A, prob.b, tol, maxRounds, factory);
 			if (phase1Soln != null) {
-				basis0 = phase1Soln.basis;
+				basis0 = phase1Soln.basisColumns;
 			}
 		}
 		if (verbose > 0) {
 			System.out.println("phase2");
 		}
+		final LPSoln soln;
 		if (Matrix.isZero(prob.c)) {
 			// no objective function, any basis will do
-			return tryBasis(prob.A, basis0, prob.b, factory);
+			soln = tryBasis(prob.A, basis0, prob.b, factory);
+		} else {
+			soln = rawSolve(prob, basis0, tol, maxRounds, factory);
+			if ((soln == null) || (soln.primalSolution == null) || (soln.basisColumns == null)
+				|| (soln.basisColumns.length != basis0.length)) {
+				throw new LPException.LPErrorException(
+						"bad basis back from phase1 raw solve");
+			}
 		}
-		final LPSoln soln = rawSolve(prob, basis0, tol, maxRounds, factory);
-		if ((soln == null) || (soln.x == null) || (soln.basis == null)
-				|| (soln.basis.length != basis0.length)) {
-			throw new LPException.LPErrorException(
-					"bad basis back from phase1 raw solve");
-		}
-		LPEQProb.checkPrimFeas(prob.A, prob.b, soln.x, tol);
+		LPEQProb.checkPrimFeas(prob.A, prob.b, soln.primalSolution, tol);
 		if (prob != origProb) {
-			LPEQProb.checkPrimFeas(origProb.A, origProb.b, soln.x, tol);
+			LPEQProb.checkPrimFeas(origProb.A, origProb.b, soln.primalSolution, tol);
 		}
+		soln.basisRows = rb;
 		return soln;
 	}
 }
