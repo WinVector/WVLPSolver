@@ -297,7 +297,12 @@ public final class LPEQProb implements Serializable {
 		 checkPrimFeas(A, b, p.primalSolution, tol);
 		 // we now have a list of equality constraints to work with
 		 final T fullA = A.matrixCopy(factory);
-		 final int[] rb = fullA.rowBasis(null,1.0e-5);
+		 final int[] rb;
+		 if(p.basisRows!=null) {
+			 rb = p.basisRows;
+		 } else {
+			 rb = fullA.rowBasis(null,1.0e-5);
+		 }
 		 if ((rb == null) || (rb.length <= 0)) {
 			 final double[] y = new double[b.length];
 			 checkPrimDualFeas(A, b, c, p.primalSolution, y, tol);
