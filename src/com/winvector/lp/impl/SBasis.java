@@ -86,7 +86,7 @@ final class SBasis implements Comparable<SBasis> {
 				tol = 0.0;
 			}
 			final Matrix<T> B = p.A.extractColumns(d,factory);
-			final double[] xB = B.solve(p.b, false);
+			final double[] xB = B.solve(p.b);
 			final double[] check = B.mult(xB);
 			if (Matrix.distSq(p.b,check) > (tol*tol) ) {
 				throw new LPErrorException("could not solve basis");

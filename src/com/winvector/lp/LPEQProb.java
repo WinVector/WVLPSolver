@@ -121,7 +121,7 @@ public final class LPEQProb implements Serializable {
 			throw new LPException.LPErrorException("m>n in soln()");
 		}
 		final Matrix<T> AP = A.extractColumns(basis,factory);
-		final double[] xp = AP.solve(b, false);
+		final double[] xp = AP.solve(b);
 		final double[] x = new double[A.cols()];
 		if (xp == null) {
 			throw new LPException.LPErrorException("basis solution failed");
@@ -337,19 +337,16 @@ public final class LPEQProb implements Serializable {
 			 checkPrimDualOpt(A, b, c, p.x, y, tol);
 			 return y;
 		 }
-		 final T eqmat = factory.newMatrix(p.basis.length+1, p.basis.length,true);
-		 final double[] eqvec = new double[p.basis.length+1];
-		 // put in obj-relation
-		 eqmat.setRow(0,Matrix.extract(b,rb));
-		 eqvec[0] = Matrix.dot(c,p.x);
+		 final T eqmat = factory.newMatrix(p.basis.length, p.basis.length,true);
+		 final double[] eqvec = new double[p.basis.length];
 		 // put in all complementary slackness relns
 		 // Schrijver p. 95
 		 for (int bi = 0; bi < p.basis.length; ++bi) {
 			 int i = p.basis[bi];
-			 eqmat.setRow(bi+1,Matrix.extract(fullA.extractColumn(i),rb));
-			 eqvec[bi+1] = c[i];
+			 eqmat.setRow(bi,Matrix.extract(fullA.extractColumn(i),rb));
+			 eqvec[bi] = c[i];
 		 }
-		 final double[] yr = eqmat.solve(eqvec, true);
+		 final double[] yr = eqmat.solve(eqvec);
 		 final double[] y = new double[b.length];
 		 if (yr != null) {
 			 for(int j=0;j<yr.length;++j) {

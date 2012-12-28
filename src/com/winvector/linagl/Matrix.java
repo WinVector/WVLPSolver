@@ -18,7 +18,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	abstract public void set(int i, int j, double d);
 
 	abstract public <Z extends T> T multMat(final Z o);
-	abstract public double[] solve(final double[] y, final boolean leastsq);
+	abstract public double[] solve(final double[] y);
 	abstract public T inverse();
 	
 	

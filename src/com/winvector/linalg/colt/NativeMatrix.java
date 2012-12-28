@@ -48,20 +48,15 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 	}
 
 	@Override
-	public double[] solve(final double[] bIn, final boolean leastsq) {
+	public double[] solve(final double[] bIn) {
 		if(bIn.length!=rows()) {
 			throw new IllegalArgumentException();
 		}
-		DoubleMatrix2D b = new DenseDoubleMatrix2D(rows(),1);
+		final DoubleMatrix2D b = new DenseDoubleMatrix2D(rows(),1);
 		for(int i=0;i<rows();++i) {
 			b.set(i,0,bIn[i]);
 		}
-		DoubleMatrix2D a = new DenseDoubleMatrix2D(u);
-		if(leastsq) {
-			final DoubleMatrix2D at = Algebra.ZERO.transpose(a);
-			a = Algebra.ZERO.mult(at,a);
-			b = Algebra.ZERO.mult(at,b);
-		}
+		final DoubleMatrix2D a = new DenseDoubleMatrix2D(u);
 		final DoubleMatrix2D p = Algebra.ZERO.solve(a,b);
 		final double[] r = new double[cols()];
 		for(int i=0;i<r.length;++i) {

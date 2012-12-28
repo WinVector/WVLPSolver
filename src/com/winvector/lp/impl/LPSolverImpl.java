@@ -150,7 +150,7 @@ abstract class LPSolverImpl implements LPSolver {
 		double[] x = null;
 		try {
 			final Matrix<T> AP = A.extractColumns(basis,factory);
-			x = AP.solve(b, false);
+			x = AP.solve(b);
 		} catch (Exception e) {
 		}
 		if (x == null) {
@@ -426,7 +426,7 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		// deal with square system
 		if (prob.A.rows >= prob.A.cols) {
-			final double[] x = prob.A.matrixCopy(factory).solve(prob.b, false);
+			final double[] x = prob.A.matrixCopy(factory).solve(prob.b);
 			if (x == null) {
 				throw new LPException.LPInfeasibleException(
 						"linear problem infeasible");

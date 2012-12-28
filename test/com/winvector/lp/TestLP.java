@@ -107,7 +107,7 @@ public final class TestLP  {
 		m.set(3,0,1.0); m.set(3,1,1.0); m.set(3,2,1.0); m.set(3,6,1.0); b[3] = 10.0;   // x1 + x2 + x3 - s3 = 10
 		c[0] = -10.0; c[1] = -50.0; c[2] = -100.0;                   // maximize 10*x0 + 50*x1 + 100*x2
 		final LPEQProb prob = new LPEQProb(new ColumnMatrix(m),b,c);
-		prob.printCPLEX(System.out);
+		//prob.printCPLEX(System.out);
 		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 		final double tol = 1.0e-10;
 		final LPSoln soln = solver.solve(prob, null, tol, 1000, factory);
