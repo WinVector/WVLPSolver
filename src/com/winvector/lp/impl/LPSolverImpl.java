@@ -2,11 +2,13 @@ package com.winvector.lp.impl;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.PreMatrix;
+import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
@@ -199,7 +201,7 @@ abstract class LPSolverImpl implements LPSolver {
 	 *             input or output (check by wrapper)
 	 */
 	protected abstract <T extends Matrix<T>> LPSoln rawSolve(LPEQProb prob, int[] basis0,
-			final double tol, final int maxRounds, final LinalgFactory<T> factory) throws LPException;
+			final double tol, final int maxRounds, final LinalgFactory<T> factory, final EarlyExitCondition earlyExitCondition) throws LPException;
 
 	/**
 	 * @param A
@@ -215,7 +217,7 @@ abstract class LPSolverImpl implements LPSolver {
 	 * 
 	 * phase 1: min 1.s (A b) (x) = b, x,s>=0 (s) start with x = 0, s = 1.
 	 */
-	private <T extends Matrix<T>> LPSoln solvePhase1(final ColumnMatrix A, final double[] b, final double tol, 
+	private <T extends Matrix<T>> LPSoln solvePhase1(final ColumnMatrix A, final double[] b, final double[] cin, final double tol, 
 			final int maxRounds, final LinalgFactory<T> factory) 
 			throws LPException {
 //		{
@@ -228,6 +230,11 @@ abstract class LPSolverImpl implements LPSolver {
 		final int n = A.cols;
 		final double[] c = new double[n + 1];
 		final ColumnMatrix AP = A.addColumn(b);
+		if(null!=cin) {
+			for(int i=0;i<n;++i) {
+				c[i] = 1.0e-8*cin[i];
+			}
+		}
 		c[n] = 1.0;
 		final LPEQProb p1prob = new LPEQProb(AP, b, c);
 		final int[] ibasis0 = new int[] { n };
@@ -239,7 +246,18 @@ abstract class LPSolverImpl implements LPSolver {
 			throw new LPErrorException("bad basis0");
 		}
 		//p1prob.soln(basis0,tol); // force check that initial basis is good
-		LPSoln soln = rawSolve(p1prob, basis0, tol, maxRounds, factory);
+		LPSoln soln = rawSolve(p1prob, basis0, tol, maxRounds, factory, new EarlyExitCondition() {
+			@Override
+			public boolean canExit(final int[] basis) {
+				for(final int bi: basis) {
+					if(bi>=n) {
+						return false;
+					}
+				}
+				return true;
+			}
+		});
+		final int stepsTaken = soln.stepsTaken;
 		if ((soln == null) || (soln.basisColumns == null)
 				|| (soln.basisColumns.length != basis0.length) || (soln.primalSolution == null)
 				|| (soln.primalSolution.length != c.length)) {
@@ -289,7 +307,8 @@ abstract class LPSolverImpl implements LPSolver {
 			}
 			// TODO: cut down the copies here!
 			final int[] nb = A.matrixCopy(factory).extractRows(rowset,factory).colBasis(sb,minBasisEpsilon);
-			soln = new LPSoln(soln.primalSolution, nb);
+			soln = new LPSoln(soln.primalSolution, nb, soln.basisRows);
+			soln.stepsTaken = stepsTaken;
 			// re-check basis facts
 			if ((soln.basisColumns == null) || (soln.basisColumns.length != basis0.length)) {
 				throw new LPException.LPErrorException(
@@ -425,13 +444,15 @@ abstract class LPSolverImpl implements LPSolver {
 				System.out.println("caught: " + e);
 			}
 		}
+		int phase1StepsTaken = 0;
 		if (basis0 == null) {
 			if (verbose > 0) {
 				System.out.println("phase1");
 			}
-			final LPSoln phase1Soln = solvePhase1(prob.A, prob.b, tol, maxRounds, factory);
+			final LPSoln phase1Soln = solvePhase1(prob.A, prob.b , prob.c, tol, maxRounds, factory);
 			if (phase1Soln != null) {
 				basis0 = phase1Soln.basisColumns;
+				phase1StepsTaken = phase1Soln.stepsTaken;
 			}
 		}
 		if (verbose > 0) {
@@ -442,13 +463,14 @@ abstract class LPSolverImpl implements LPSolver {
 			// no objective function, any basis will do
 			soln = tryBasis(prob.A, basis0, prob.b, factory);
 		} else {
-			soln = rawSolve(prob, basis0, tol, maxRounds, factory);
+			soln = rawSolve(prob, basis0, tol, maxRounds, factory, null);
 			if ((soln == null) || (soln.primalSolution == null) || (soln.basisColumns == null)
 				|| (soln.basisColumns.length != basis0.length)) {
 				throw new LPException.LPErrorException(
 						"bad basis back from phase1 raw solve");
 			}
 		}
+		//System.out.println("phase1steps " + phase1StepsTaken + ", phase2 steps " + soln.stepsTaken);
 		LPEQProb.checkPrimFeas(prob.A, prob.b, soln.primalSolution, tol);
 		if (prob != origProb) {
 			LPEQProb.checkPrimFeas(origProb.A, origProb.b, soln.primalSolution, tol);

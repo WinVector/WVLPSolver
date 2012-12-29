@@ -8,6 +8,7 @@ import java.util.TreeSet;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
+import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPTooManyStepsException;
@@ -32,12 +33,13 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public boolean earlyLeavingCalc = true;       // value and sort steps early
 	public boolean earlyLeavingExit = true;       // allow early inspection exit on valuation calc
 	public boolean resuffle = true;               // re-shuffle inspection order each pass
-	public Random rand = new Random(3252351L);
+	private final Random rand = new Random(3252351L);
 
 	
 
 	
-	private <T extends Matrix<T>> int[] runSimplex(final RTableau<T> tab, final double tol, final int maxRounds) throws LPException {
+	private <T extends Matrix<T>> int[] runSimplex(final RTableau<T> tab, final double tol, 
+			final int maxRounds, final EarlyExitCondition earlyExitCondition) throws LPException {
 		if (debug > 0) {
 			System.out.println("start: " + stringBasis(tab.basis));
 		}
@@ -206,6 +208,11 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			// perform the swap
 			tab.basisPivot(leavingI,enteringV,bestBinvu);
 			//System.out.println("leave: " + basis[leavingI]);
+			if(null!=earlyExitCondition) {
+				if(earlyExitCondition.canExit(tab.basis)) {
+					return tab.basis();
+				}
+			}
 		}
 		throw new LPTooManyStepsException("max steps>" + maxRounds);
 	}
@@ -258,19 +265,22 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	 *             (if infeas or unbounded)
 	 */
 	@Override
-	protected <T extends Matrix<T>> LPSoln rawSolve(final LPEQProb prob, final int[] basis0, double tol, final int maxRounds, final LinalgFactory<T> factory) 
-			throws LPException {
+	protected <T extends Matrix<T>> LPSoln rawSolve(final LPEQProb prob,
+			final int[] basis0, double tol, final int maxRounds, final LinalgFactory<T> factory,
+			final EarlyExitCondition earlyExitCondition) throws LPException {
 		if ((tol<=0)||Double.isNaN(tol)||Double.isInfinite(tol)) {
 			tol = 0.0;
 		}
 		final RTableau<T> t = new RTableau<T>(prob, basis0,factory);
-		final int[] rbasis = runSimplex(t,tol,maxRounds);
+		final int[] rbasis = runSimplex(t,tol,maxRounds,earlyExitCondition);
 		//System.out.println("steps: " + t.normalSteps);
 		//System.out.println("" + "nvars" + "\t" + "ncond" + "\t" + "steps" + "\t" + "inspections");
 		//System.out.println("" + prob.nvars() + "\t" + prob.b.length + "\t" + t.normalSteps + "\t" + t.inspections);
 		if (rbasis == null) {
 			return null;
 		}
-		return new LPSoln(LPEQProb.primalSoln(prob.A, prob.b, rbasis, tol, factory), rbasis);
+		final LPSoln lpSoln = new LPSoln(LPEQProb.primalSoln(prob.A, prob.b, rbasis, tol, factory), rbasis);
+		lpSoln.stepsTaken = t.normalSteps;
+		return lpSoln;
 	}
 }
