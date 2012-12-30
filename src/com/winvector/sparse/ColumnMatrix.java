@@ -1,6 +1,7 @@
 package com.winvector.sparse;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
@@ -153,15 +154,17 @@ public final class ColumnMatrix implements PreMatrix {
 		return m;
 	}
 
-	public ColumnMatrix addColumn(final double[] b) {
-		if(b.length!=rows) {
-			throw new IllegalArgumentException();
-		}
-		final ColumnMatrix r = new ColumnMatrix(rows,cols+1);
+	public ColumnMatrix addColumns(final ArrayList<SparseVec> cs) {
+		final ColumnMatrix r = new ColumnMatrix(rows,cols+cs.size());
 		for(int i=0;i<cols;++i) {
 			r.columns[i] = columns[i];
 		}
-		r.columns[cols] = new SparseVec(b);
+		for(int i=0;i<cs.size();++i) {
+			if(cs.get(i).dim!=rows) {
+				throw new IllegalArgumentException();
+			}
+			r.columns[cols+i] = cs.get(i);
+		}
 		return r;
 	}
 	

@@ -1,5 +1,6 @@
 package com.winvector.lp.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,10 +11,10 @@ import com.winvector.linagl.PreMatrix;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
-import com.winvector.lp.LPException.LPErrorException;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.LPSolver;
 import com.winvector.sparse.ColumnMatrix;
+import com.winvector.sparse.SparseVec;
 
 /**
  * primal: min c.x: A x = b, x>=0 dual: max y.b: y A <= c y b = y A x <= c x (by
@@ -219,33 +220,30 @@ abstract class LPSolverImpl implements LPSolver {
 	private <T extends Matrix<T>> LPSoln solvePhase1(final ColumnMatrix A, final double[] b, final double[] cin, final double tol, 
 			final int maxRounds, final LinalgFactory<T> factory) 
 			throws LPException {
-//		{
-//			final LPSoln r = inspectForBasis(A, null, b);
-//			if (r != null) {
-//				return r;
-//			}
-//		}
 		final int m = A.rows;
 		final int n = A.cols;
 		final double[] c = new double[n + m];
-		ColumnMatrix AP = A;
-		for(int i=0;i<m;++i) {
-			// TODO: add columns in batch sparse
-			final double[] ei = new double[m];
-			if(b[i]>=0) {
-				ei[i] = 1.0; 
-			} else {
-				ei[i] = -1.0;
+		final ColumnMatrix AP;
+		{
+			final ArrayList<SparseVec> slackCols = new ArrayList<SparseVec>(m);
+			for(int i=0;i<m;++i) {
+				slackCols.add(new SparseVec(m,i,b[i]>=0?1.0:-1.0));
 			}
-			AP = AP.addColumn(ei);
+			AP = A.addColumns(slackCols);
 		}
-//		if(null!=cin) {
-//			for(int i=0;i<n;++i) {
-//				c[i] = 1.0e-8*cin[i];
-//			}
-//		}
 		for(int i=n;i<m+n;++i) {
 			c[i] = 1.0;
+		}
+		if(null!=cin) {
+			// hint at actual objective fn
+			double sumAbscin = 0.0;
+			for(int i=0;i<n;++i) {
+				sumAbscin += Math.abs(cin[i]);
+			}
+			final double scale = 1.0e-7/(1.0+sumAbscin);
+			for(int i=0;i<n;++i) {
+				c[i] = scale*cin[i];
+			}
 		}
 		final LPEQProb p1prob = new LPEQProb(AP, b, c);
 		final int[] basis0 = new int[m];

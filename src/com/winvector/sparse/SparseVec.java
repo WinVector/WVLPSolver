@@ -17,6 +17,17 @@ public final class SparseVec implements Serializable {
 	int[] indices;    // do not alter!
 	double[] values;  // do not alter!
 	
+	public SparseVec(final int dim, final int coord, final double val) {
+		if((coord<0)||(coord>dim)) {
+			throw new IllegalArgumentException();
+		}
+		this.dim = dim;
+		indices = new int[1];
+		values = new double[1];
+		indices[0] = coord;
+		values[0] = val;
+	}
+	
 	public SparseVec(final double[] x) {
 		dim = x.length;
 		int index = 0;
