@@ -215,9 +215,9 @@ abstract class LPSolverImpl implements LPSolver {
 	 * @throws LPException
 	 *             (if infeas or unbounded)
 	 * 
-	 * phase 1: min 1.s (A b) (x) = b, x,s>=0 (s) start with x = 0, s = 1.
+	 * phase 1 get a basis 
 	 */
-	private <T extends Matrix<T>> LPSoln solvePhase1(final ColumnMatrix A, final double[] b, final double[] cin, final double tol, 
+	private <T extends Matrix<T>> int[] solvePhase1(final ColumnMatrix A, final double[] b, final double[] cin, final double tol, 
 			final int maxRounds, final LinalgFactory<T> factory) 
 			throws LPException {
 		final int m = A.rows;
@@ -261,7 +261,6 @@ abstract class LPSolverImpl implements LPSolver {
 				return true;
 			}
 		});
-		final int stepsTaken = soln.stepsTaken;
 		if ((soln == null) || (soln.basisColumns == null)
 				|| (soln.basisColumns.length != basis0.length) || (soln.primalSolution == null)
 				|| (soln.primalSolution.length != c.length)) {
@@ -283,20 +282,14 @@ abstract class LPSolverImpl implements LPSolver {
 						"duplicate column in basis");
 			}
 		}
+		int nGood = 0;
 		for (int i = 0; i < soln.basisColumns.length; ++i) {
-			if ((soln.basisColumns[i] >= n) && (Math.abs(soln.primalSolution[soln.basisColumns[i]])!=0)) {
-				throw new LPException.LPErrorException(
-						"non-zero slack variable in phase 1 " + soln.basisColumns[i]);
+			if (soln.basisColumns[i] < n) {
+				++nGood;
 			}
 		}
-		if (soln.basisColumns[soln.basisColumns.length - 1] >= n) {
-			// must adjust basis to be off slacks
-			int nGood = 0;
-			for (int i = 0; i < soln.basisColumns.length; ++i) {
-				if (soln.basisColumns[i] < n) {
-					++nGood;
-				}
-			}
+		if (nGood<m) {
+			// must adjust basis to be off slacks, should get here- but rounding could make this necessary
 			final int[] sb = new int[nGood];
 			nGood = 0;
 			for (int i = 0; i < soln.basisColumns.length; ++i) {
@@ -311,28 +304,9 @@ abstract class LPSolverImpl implements LPSolver {
 			}
 			// TODO: cut down the copies here!
 			final int[] nb = A.matrixCopy(factory).extractRows(rowset,factory).colBasis(sb,minBasisEpsilon);
-			soln = new LPSoln(soln.primalSolution, nb, soln.basisRows);
-			soln.stepsTaken = stepsTaken;
-			// re-check basis facts
-			if ((soln.basisColumns == null) || (soln.basisColumns.length != basis0.length)) {
-				throw new LPException.LPErrorException(
-						"bad basis back from phase1 raw solve");
-			}
-			if (soln.basisColumns.length > 1) {
-				Arrays.sort(soln.basisColumns);
-			}
-			for (int i = 1; i < soln.basisColumns.length; ++i) {
-				if (soln.basisColumns[i] <= soln.basisColumns[i - 1]) {
-					throw new LPException.LPErrorException(
-							"duplicate column in basis");
-				}
-			}
-			if (soln.basisColumns[soln.basisColumns.length - 1] >= n) {
-				throw new LPException.LPErrorException(
-						"basis couldn't move off slack");
-			}
+			return nb;
 		}
-		return soln;
+		return soln.basisColumns;
 	}
 
 	/**
@@ -448,16 +422,11 @@ abstract class LPSolverImpl implements LPSolver {
 				System.out.println("caught: " + e);
 			}
 		}
-		int phase1StepsTaken = 0;
 		if (basis0 == null) {
 			if (verbose > 0) {
 				System.out.println("phase1");
 			}
-			final LPSoln phase1Soln = solvePhase1(prob.A, prob.b , prob.c, tol, maxRounds, factory);
-			if (phase1Soln != null) {
-				basis0 = phase1Soln.basisColumns;
-				phase1StepsTaken = phase1Soln.stepsTaken;
-			}
+			basis0 = solvePhase1(prob.A, prob.b , prob.c, tol, maxRounds, factory);
 		}
 		if (verbose > 0) {
 			System.out.println("phase2");
