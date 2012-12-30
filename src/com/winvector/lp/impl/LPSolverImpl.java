@@ -2,7 +2,6 @@ package com.winvector.lp.impl;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 
 import com.winvector.linagl.LinalgFactory;
@@ -228,24 +227,31 @@ abstract class LPSolverImpl implements LPSolver {
 //		}
 		final int m = A.rows;
 		final int n = A.cols;
-		final double[] c = new double[n + 1];
-		final ColumnMatrix AP = A.addColumn(b);
-		if(null!=cin) {
-			for(int i=0;i<n;++i) {
-				c[i] = 1.0e-8*cin[i];
+		final double[] c = new double[n + m];
+		ColumnMatrix AP = A;
+		for(int i=0;i<m;++i) {
+			// TODO: add columns in batch sparse
+			final double[] ei = new double[m];
+			if(b[i]>=0) {
+				ei[i] = 1.0; 
+			} else {
+				ei[i] = -1.0;
 			}
+			AP = AP.addColumn(ei);
 		}
-		c[n] = 1.0;
+//		if(null!=cin) {
+//			for(int i=0;i<n;++i) {
+//				c[i] = 1.0e-8*cin[i];
+//			}
+//		}
+		for(int i=n;i<m+n;++i) {
+			c[i] = 1.0;
+		}
 		final LPEQProb p1prob = new LPEQProb(AP, b, c);
-		final int[] ibasis0 = new int[] { n };
-		final int[] basis0 = AP.matrixCopy(factory).colBasis(ibasis0,minBasisEpsilon);
-		// A is full row rank coming in (needs to be also even
-		// though AP is full row rank by construction we won't
-		// be able to move off it as a basis).
-		if (basis0.length != m) {
-			throw new LPErrorException("bad basis0");
+		final int[] basis0 = new int[m];
+		for(int i=0;i<m;++i) {
+			basis0[i] = n + i;
 		}
-		//p1prob.soln(basis0,tol); // force check that initial basis is good
 		LPSoln soln = rawSolve(p1prob, basis0, tol, maxRounds, factory, new EarlyExitCondition() {
 			@Override
 			public boolean canExit(final int[] basis) {

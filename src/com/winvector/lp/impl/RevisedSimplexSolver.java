@@ -1,10 +1,7 @@
 package com.winvector.lp.impl;
 
 import java.util.BitSet;
-import java.util.Comparator;
 import java.util.Random;
-import java.util.Set;
-import java.util.TreeSet;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
@@ -44,52 +41,11 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			System.out.println("start: " + stringBasis(tab.basis));
 		}
 		final int nvars = tab.prob.A.cols;
-		final int ncond = tab.prob.A.rows;
 		final BitSet curBasisIndicator = new BitSet(nvars);
 		for(final int bi: tab.basis) {
 			curBasisIndicator.set(bi);
 		}
-		final BitSet uselessCols = new BitSet(nvars);
-		{
-			final Comparator<Integer> ccomp = new Comparator<Integer>() {
-				@Override
-				public int compare(final Integer j1, final Integer j2) {
-					for(int i=0;i<ncond;++i) {
-						final double aij1 = tab.prob.A.get(i,j1);
-						final double aij2 = tab.prob.A.get(i,j2);
-						if(Math.abs(aij1-aij2)>1.0e-10) {
-							if(aij1>aij2) {
-								return 1;
-							} else {
-								return -1;
-							}
-						}
-					}
-					return 0;
-				}
-			};
-			final Set<Integer> seen = new TreeSet<Integer>(ccomp);
-			for(int bi: tab.basis) {
-				seen.add(bi);
-			}
-			for(int j=0;j<nvars;++j) {
-				if(!curBasisIndicator.get(j)) {
-					boolean useless = true;  // could also look for duplicate columns here
-					for(int i=0;(i<ncond) && (useless);++i) {
-						final double aij = tab.prob.A.get(i, j);
-						if(Math.abs(aij)>checkTol) {
-							useless = false;
-						}
-					}
-					if(useless ||seen.contains(j)) {
-						uselessCols.set(j);
-					} else {
-						seen.add(j);
-					}
-				}
-			}
-		}
-		final InspectionOrder inspectionOrder = new InspectionOrder(nvars,rand,uselessCols);
+		final InspectionOrder inspectionOrder = new InspectionOrder(nvars,rand);
 		final double[] bRatPtr = new double[1];
 		double[] c = tab.prob.c;
 		double[] b = tab.prob.b;
@@ -141,6 +97,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 				final int v = inspectionOrder.take();
 				if(!curBasisIndicator.get(v)) {
 					final double ri = tab.computeRI(lambda, c, v);
+					//System.out.println("\t" + v + " ri: " + ri);
 					if(ri < -enteringTol) {
 						if((rEnteringV < 0)||(ri < bestRi)) {
 							rEnteringV = v;
