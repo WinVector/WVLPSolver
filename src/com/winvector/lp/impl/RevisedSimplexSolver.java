@@ -25,10 +25,10 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public double enteringTol = 1.0e-5;
 	public double leavingTol = 1.0e-7;
 	public boolean perturbC = true;
-	public boolean perturbB = true;               // this does change which bases are co-incident and which are feasible
-	public boolean earlyR = false;                 // allow partial inspection for entering columns
-	public boolean earlyLeavingCalc = true;       // value and sort steps early
-	public boolean earlyLeavingExit = true;       // allow early inspection exit on valuation calc
+	public boolean perturbB = false;               // this does change which bases are co-incident and which are feasible
+	public boolean earlyR = true;                 // allow partial inspection for entering columns
+	public boolean earlyLeavingCalc = false;       // value and sort steps early
+	public boolean earlyLeavingExit = false;       // allow early inspection exit on valuation calc
 	public boolean resuffle = true;               // re-shuffle inspection order each pass
 	private final Random rand = new Random(3252351L);
 
