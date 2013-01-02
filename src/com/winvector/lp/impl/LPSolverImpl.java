@@ -298,7 +298,7 @@ abstract class LPSolverImpl implements LPSolver {
 					++nGood;
 				}
 			}
-			final int[] rowset = new int[n];
+			final int[] rowset = new int[A.rows];
 			for (int i = 0; i < rowset.length; ++i) {
 				rowset[i] = i;
 			}
