@@ -91,7 +91,7 @@ public final class SparseVec implements Serializable {
 		return r;		
 	}
 	
-	int popCount() {
+	public int popCount() {
 		int npop = 0;
 		for(final double vi: values) {
 			if(0.0!=vi) {
@@ -101,12 +101,22 @@ public final class SparseVec implements Serializable {
 		return npop;
 	}
 	
+	public int nzIndex() {
+		for(int ii=0;ii<values.length;++ii) {
+			final double vi = values[ii];
+			if(0.0!=vi) {
+				return indices[ii];
+			}
+		}
+		return -1;
+	}
+	
 	/**
 	 * slow (discouraged)
 	 * @param i
 	 * @return
 	 */
-	double get(final int i) {
+	public double get(final int i) {
 		if((i<0)||(i>=dim)) {
 			throw new ArrayIndexOutOfBoundsException(""+i);
 		}

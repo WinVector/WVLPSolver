@@ -2,7 +2,9 @@ package com.winvector.lp.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import com.winvector.linagl.LinalgFactory;
@@ -222,16 +224,37 @@ abstract class LPSolverImpl implements LPSolver {
 			throws LPException {
 		final int m = A.rows;
 		final int n = A.cols;
-		final double[] c = new double[n + m];
-		final ColumnMatrix AP;
-		{
-			final ArrayList<SparseVec> slackCols = new ArrayList<SparseVec>(m);
-			for(int i=0;i<m;++i) {
-				slackCols.add(new SparseVec(m,i,b[i]>=0?1.0:-1.0));
+		final Map<Integer,Integer> slackColToRow = new HashMap<Integer,Integer>(2*m+1);
+		for(int j=0;j<n;++j) {
+			final SparseVec col = A.extractColumn(j);
+			if(col.popCount()==1) {
+				final int i = col.nzIndex();
+				final double vi = col.get(i);
+				if(!slackColToRow.containsKey(i)) {
+					if((b[i]==0)||((b[i]>=0)==(vi>=0))) {
+						slackColToRow.put(i,j);
+					}
+				}
 			}
-			AP = A.addColumns(slackCols);
 		}
-		for(int i=n;i<m+n;++i) {
+		final ArrayList<SparseVec> artificialSlackCols = new ArrayList<SparseVec>(m);
+		for(int i=0;i<m;++i) {
+			if(!slackColToRow.containsKey(i)) {
+				slackColToRow.put(i,n+artificialSlackCols.size());
+				artificialSlackCols.add(new SparseVec(m,i,b[i]>=0?1.0:-1.0));
+			}
+		}
+		final int[] basis0 = new int[m];
+		for(int i=0;i<m;++i) {
+			basis0[i] = slackColToRow.get(i);
+		}
+		Arrays.sort(basis0);
+		if(artificialSlackCols.isEmpty()) {
+			return basis0;
+		}
+		final ColumnMatrix AP = A.addColumns(artificialSlackCols);
+		final double[] c = new double[n + artificialSlackCols.size()];
+		for(int i=n;i<n+artificialSlackCols.size();++i) {
 			c[i] = 1.0;
 		}
 		if(null!=cin) {
@@ -246,10 +269,6 @@ abstract class LPSolverImpl implements LPSolver {
 			}
 		}
 		final LPEQProb p1prob = new LPEQProb(AP, b, c);
-		final int[] basis0 = new int[m];
-		for(int i=0;i<m;++i) {
-			basis0[i] = n + i;
-		}
 		LPSoln soln = rawSolve(p1prob, basis0, tol, maxRounds, factory, new EarlyExitCondition() {
 			@Override
 			public boolean canExit(final int[] basis) {
