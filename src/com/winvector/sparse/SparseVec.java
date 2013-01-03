@@ -111,6 +111,17 @@ public final class SparseVec implements Serializable {
 		return -1;
 	}
 	
+	public double[] toDense() {
+		final double[] x = new double[dim];
+		for(int ii=0;ii<values.length;++ii) {
+			final double vi = values[ii];
+			if(0.0!=vi) {
+				x[indices[ii]] = vi;
+			}
+		}
+		return x;
+	}
+	
 	/**
 	 * slow (discouraged)
 	 * @param i

@@ -40,7 +40,6 @@ public final class LPEQProb implements Serializable {
 		A = A_in;
 		b = b_in;
 		c = c_in;
-		//checkForRemovableVariables();
 	}
 	
 	/**
@@ -364,12 +363,11 @@ public final class LPEQProb implements Serializable {
 	 public <T extends Matrix<T>> double[] dualSolution(final LPSoln p, final double tol, final LinalgFactory<T> factory) throws LPException {
 		 checkPrimFeas(A, b, p.primalSolution, tol);
 		 // we now have a list of equality constraints to work with
-		 final T fullA = A.matrixCopy(factory);
 		 final int[] rb;
 		 if(p.basisRows!=null) {
 			 rb = p.basisRows;
 		 } else {
-			 rb = fullA.rowBasis(1.0e-5);
+			 rb = A.matrixCopy(factory).rowBasis(1.0e-5);
 		 }
 		 if ((rb == null) || (rb.length <= 0)) {
 			 final double[] y = new double[b.length];
@@ -383,7 +381,7 @@ public final class LPEQProb implements Serializable {
 		 // Schrijver p. 95
 		 for (int bi = 0; bi < p.basisColumns.length; ++bi) {
 			 int i = p.basisColumns[bi];
-			 eqmat.setRow(bi,Matrix.extract(fullA.extractColumn(i),rb));
+			 eqmat.setRow(bi,Matrix.extract(A.extractColumn(i).toDense(),rb));
 			 eqvec[bi] = c[i];
 		 }
 		 final double[] yr = eqmat.solve(eqvec);
@@ -411,16 +409,6 @@ public final class LPEQProb implements Serializable {
 
 	public void print() {
 		print(System.out);
-	}
-
-
-	public double primalValue(final double[] x) {
-		return Matrix.dot(c,x);
-	}
-
-
-	public double dualValue(final double[] y) {
-		return Matrix.dot(b,y);
 	}
 
 
