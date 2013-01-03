@@ -3,6 +3,8 @@ package com.winvector.linagl;
 import java.io.PrintStream;
 import java.util.BitSet;
 
+import com.winvector.sparse.SparseVec;
+
 
 
 public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
@@ -299,13 +301,13 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 		}
 	}
 
-	public double[] extractColumn(final int ci) {
+	public SparseVec extractColumn(final int ci) {
 		final double[] r = new double[rows()];
 		for(int i=0;i<rows();++i) {
 			final double e = get(i, ci);
 			r[i] = e;
 		}
-		return r;
+		return new SparseVec(r);
 	}
 
 	public <Z extends Matrix<Z>> Z extractRows(final int[] rowset, final LinalgFactory<Z> zfactory) {

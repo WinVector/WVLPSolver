@@ -1,5 +1,8 @@
 package com.winvector.linalg.colt;
 
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.IntArrayList;
+import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
@@ -7,6 +10,7 @@ import cern.colt.matrix.linalg.Algebra;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
+import com.winvector.sparse.SparseVec;
 
 
 
@@ -103,5 +107,28 @@ public class ColtMatrix extends Matrix<ColtMatrix> {
 	@Override
 	public LinalgFactory<ColtMatrix> factory() {
 		return factory;
+	}
+	
+	@Override
+	public SparseVec extractColumn(final int ci) {
+		if(sparseRep()) {
+			final DoubleMatrix1D col = underlying.viewColumn(ci);
+			final int card = col.cardinality();
+			final IntArrayList indexList = new IntArrayList(card);
+			final DoubleArrayList valueList = new DoubleArrayList(card);
+			col.getNonZeros(indexList,valueList);
+			final int k = indexList.size();
+			final int[] indices = new int[k];
+			final double[] values = new double[k];
+			for(int ii=0;ii<k;++ii) {
+				final int index = indexList.get(ii);
+				final double value = valueList.get(ii);
+				indices[ii] = index;
+				values[ii] = value;
+			}
+			return new SparseVec(rows(),indices,values);
+		} else {
+			return super.extractColumn(ci);
+		}
 	}
 }

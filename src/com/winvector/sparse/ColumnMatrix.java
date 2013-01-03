@@ -25,7 +25,7 @@ public final class ColumnMatrix implements PreMatrix {
 		cols = a.cols();
 		columns = new SparseVec[cols];
 		for(int j=0;j<cols;++j) {
-			columns[j] = new SparseVec(a.extractColumn(j));
+			columns[j] = a.extractColumn(j);
 		}
 	}
 

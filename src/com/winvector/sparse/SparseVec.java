@@ -65,6 +65,25 @@ public final class SparseVec implements Serializable {
 		}
 	}
 	
+	public SparseVec(final int dim, final int[] indices, final double[] values) {
+		this.dim = dim;
+		this.indices = indices;
+		this.values = values;
+		if(indices.length>0) {
+			if(indices[0]<0) {
+				throw new IllegalArgumentException("negative index");
+			}
+			if(indices[indices.length-1]>=dim) {
+				throw new IllegalArgumentException("out of bounds index");
+			}
+			for(int i=0;i<indices.length-1;++i) {
+				if(indices[i+1]<=indices[i]) {
+					throw new IllegalArgumentException("disordered indices");
+				}
+			}
+		}
+	}
+
 	public double dot(final double[] x) {
 		if(x.length!=dim) {
 			throw new IllegalArgumentException();
