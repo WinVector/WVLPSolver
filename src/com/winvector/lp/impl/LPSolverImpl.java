@@ -2,6 +2,7 @@ package com.winvector.lp.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -349,7 +350,15 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		// get rid of degenerate cases
 		//System.out.println("start rb1");
-		final int[] rb = origProb.A.matrixCopy(factory).rowBasis(null,minBasisEpsilon);
+		final int[] rb;
+		if(obviouslyFullRowRank(origProb.A)) {
+			rb = new int[origProb.A.rows];
+			for(int i=0;i<rb.length;++i) {
+				rb[i] = i;
+			}
+		} else {
+			rb = origProb.A.matrixCopy(factory).rowBasis(minBasisEpsilon);
+		}
 		if ((rb == null) || (rb.length <= 0)) {
 			//solving 0 x = b
 			if (!Matrix.isZero(origProb.b)) {
@@ -469,5 +478,20 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		soln.basisRows = rb;
 		return soln;
+	}
+
+	private boolean obviouslyFullRowRank(final ColumnMatrix a) {
+		if(a.cols<a.rows) {
+			return false;
+		}
+		final BitSet haveBasis = new BitSet(a.rows);
+		for(int j=0;j<a.cols;++j) {
+			final SparseVec col = a.extractColumn(j);
+			if(col.popCount()==1) {
+				final int i = col.nzIndex();
+				haveBasis.set(i);
+			}
+		}
+		return haveBasis.cardinality()>=a.rows;
 	}
 }

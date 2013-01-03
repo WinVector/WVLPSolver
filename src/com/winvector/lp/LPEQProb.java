@@ -369,7 +369,7 @@ public final class LPEQProb implements Serializable {
 		 if(p.basisRows!=null) {
 			 rb = p.basisRows;
 		 } else {
-			 rb = fullA.rowBasis(null,1.0e-5);
+			 rb = fullA.rowBasis(1.0e-5);
 		 }
 		 if ((rb == null) || (rb.length <= 0)) {
 			 final double[] y = new double[b.length];

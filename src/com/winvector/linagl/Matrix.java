@@ -282,9 +282,9 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 		return r;
 	}
 	
-	public int[] rowBasis(final int[] forcedRows, final double minVal) {
+	public int[] rowBasis(final double minVal) {
 		final T c = copy(factory(),false);
-		return rowBasis(c,forcedRows,minVal);
+		return rowBasis(c,null,minVal);
 	}
 	
 	public int[] colBasis(final int[] forcedRows, final double minVal) {
