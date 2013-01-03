@@ -146,7 +146,7 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 	public void basisPivot(final int leavingI, final int enteringV, final double[] binvu) throws LPErrorException {
 		basis[leavingI] = enteringV;
 		++normalSteps;
-		if(normalSteps%(5*m+1)==0) {
+		if(normalSteps%(15*m+1)==0) {
 			BInv = null; // forced refresh
 			// ideas is BInv is getting unreliable due to rounding
 			// a refresh takes around O(m^3) steps and updates take O(m^2) steps.
