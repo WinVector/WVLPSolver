@@ -110,12 +110,9 @@ public class ColtMatrix extends Matrix<ColtMatrix> {
 	}
 	
 	@Override
-	public SparseVec extractColumn(final int ci) {
+	public SparseVec extractColumn(final int ci, final IntArrayList indexList, final DoubleArrayList valueList) {
 		if(sparseRep()) {
 			final DoubleMatrix1D col = underlying.viewColumn(ci);
-			final int card = col.cardinality();
-			final IntArrayList indexList = new IntArrayList(card);
-			final DoubleArrayList valueList = new DoubleArrayList(card);
 			col.getNonZeros(indexList,valueList);
 			final int k = indexList.size();
 			final int[] indices = new int[k];
@@ -128,7 +125,7 @@ public class ColtMatrix extends Matrix<ColtMatrix> {
 			}
 			return new SparseVec(rows(),indices,values);
 		} else {
-			return super.extractColumn(ci);
+			return super.extractColumn(ci,indexList,valueList);
 		}
 	}
 }

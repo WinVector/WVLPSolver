@@ -3,6 +3,9 @@ package com.winvector.linagl;
 import java.io.PrintStream;
 import java.util.BitSet;
 
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.IntArrayList;
+
 import com.winvector.sparse.SparseVec;
 
 
@@ -54,7 +57,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 		return r;
 	}
 
-	public double[] extractRow(final int ri) {
+	private double[] extractRow(final int ri) {
 		final double[] r = new double[cols()];
 		for(int i=0;i<cols();++i) {
 			final double e = get(ri, i);
@@ -301,7 +304,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 		}
 	}
 
-	public SparseVec extractColumn(final int ci) {
+	public SparseVec extractColumn(final int ci, final IntArrayList indexList, final DoubleArrayList valueList) {
 		final double[] r = new double[rows()];
 		for(int i=0;i<rows();++i) {
 			final double e = get(i, ci);

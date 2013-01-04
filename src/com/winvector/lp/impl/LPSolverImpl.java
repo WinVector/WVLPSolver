@@ -3,9 +3,7 @@ package com.winvector.lp.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import com.winvector.linagl.LinalgFactory;
@@ -225,39 +223,35 @@ abstract class LPSolverImpl implements LPSolver {
 			throws LPException {
 		final int m = A.rows;
 		final int n = A.cols;
-		final Map<Integer,Integer> slackColToRow = new HashMap<Integer,Integer>(2*m+1);
-		for(int j=0;j<n;++j) {
-			final SparseVec col = A.extractColumn(j);
-			if(col.popCount()==1) {
-				final int i = col.nzIndex();
-				final double vi = col.get(i);
-				if(!slackColToRow.containsKey(i)) {
-					if((b[i]==0)||((b[i]>=0)==(vi>=0))) {
-						slackColToRow.put(i,j);
+		final int[] basis0 = new int[m];
+		final ArrayList<SparseVec> artificialSlackCols = new ArrayList<SparseVec>(m);
+		{
+			Arrays.fill(basis0,-1);
+			for(int j=0;j<n;++j) {
+				final SparseVec col = A.extractColumn(j);
+				if(col.popCount()==1) {
+					final int i = col.nzIndex();
+					final double vi = col.get(i);
+					if(basis0[i]<0) {
+						if((b[i]==0)||((b[i]>=0)==(vi>=0))) {
+							basis0[i] = j;
+						}
 					}
 				}
 			}
-		}
-		final ArrayList<SparseVec> artificialSlackCols = new ArrayList<SparseVec>(m);
-		for(int i=0;i<m;++i) {
-			if(!slackColToRow.containsKey(i)) {
-				slackColToRow.put(i,n+artificialSlackCols.size());
-				artificialSlackCols.add(new SparseVec(m,i,b[i]>=0?1.0:-1.0));
+			for(int i=0;i<m;++i) {
+				if(basis0[i]<0) {
+					basis0[i] = n+artificialSlackCols.size();
+					artificialSlackCols.add(new SparseVec(m,i,b[i]>=0?1.0:-1.0));
+				}
 			}
-		}
-		final int[] basis0 = new int[m];
-		for(int i=0;i<m;++i) {
-			basis0[i] = slackColToRow.get(i);
-		}
-		Arrays.sort(basis0);
-		if(artificialSlackCols.isEmpty()) {
-			return basis0;
+			Arrays.sort(basis0);
+			if(artificialSlackCols.isEmpty()) {
+				return basis0;
+			}
 		}
 		final ColumnMatrix AP = A.addColumns(artificialSlackCols);
 		final double[] c = new double[n + artificialSlackCols.size()];
-		for(int i=n;i<n+artificialSlackCols.size();++i) {
-			c[i] = 1.0;
-		}
 		if(null!=cin) {
 			// hint at actual objective fn
 			double sumAbscin = 0.0;
@@ -268,6 +262,9 @@ abstract class LPSolverImpl implements LPSolver {
 			for(int i=0;i<n;++i) {
 				c[i] = scale*cin[i];
 			}
+		}
+		for(int i=n;i<n+artificialSlackCols.size();++i) {
+			c[i] = 1.0;
 		}
 		final LPEQProb p1prob = new LPEQProb(AP, b, c);
 		LPSoln soln = rawSolve(p1prob, basis0, tol, maxRounds, factory, new EarlyExitCondition() {
