@@ -108,24 +108,40 @@ public class ColtMatrix extends Matrix<ColtMatrix> {
 	public LinalgFactory<ColtMatrix> factory() {
 		return factory;
 	}
+
+	private static final class ExtractTemps {
+		public final IntArrayList indexList;
+		public final DoubleArrayList valueList;
+		
+		public ExtractTemps(final int m) {
+			indexList = new IntArrayList(m);
+			valueList = new DoubleArrayList(m);
+		}
+	}
 	
 	@Override
-	public SparseVec extractColumn(final int ci, final IntArrayList indexList, final DoubleArrayList valueList) {
+	public Object buildExtractTemps(final int m) {
+		return new ExtractTemps(m);
+	}
+
+	@Override
+	public SparseVec extractColumn(final int ci, final Object extractTemps) {
 		if(sparseRep()) {
+			final ExtractTemps et = (ExtractTemps)extractTemps;
 			final DoubleMatrix1D col = underlying.viewColumn(ci);
-			col.getNonZeros(indexList,valueList);
-			final int k = indexList.size();
+			col.getNonZeros(et.indexList,et.valueList);
+			final int k = et.indexList.size();
 			final int[] indices = new int[k];
 			final double[] values = new double[k];
 			for(int ii=0;ii<k;++ii) {
-				final int index = indexList.get(ii);
-				final double value = valueList.get(ii);
+				final int index = et.indexList.get(ii);
+				final double value = et.valueList.get(ii);
 				indices[ii] = index;
 				values[ii] = value;
 			}
 			return new SparseVec(rows(),indices,values);
 		} else {
-			return super.extractColumn(ci,indexList,valueList);
+			return super.extractColumn(ci,null);
 		}
 	}
 }

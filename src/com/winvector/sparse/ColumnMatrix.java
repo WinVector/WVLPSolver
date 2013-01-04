@@ -3,9 +3,6 @@ package com.winvector.sparse;
 import java.io.PrintStream;
 import java.util.ArrayList;
 
-import cern.colt.list.DoubleArrayList;
-import cern.colt.list.IntArrayList;
-
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.PreMatrix;
@@ -27,10 +24,9 @@ public final class ColumnMatrix implements PreMatrix {
 		rows = a.rows();
 		cols = a.cols();
 		columns = new SparseVec[cols];
-		final IntArrayList indexList = new IntArrayList(rows);
-		final DoubleArrayList valueList = new DoubleArrayList(rows);
+		final Object extractTemps = a.buildExtractTemps(rows);
 		for(int j=0;j<cols;++j) {
-			columns[j] = a.extractColumn(j,indexList,valueList);
+			columns[j] = a.extractColumn(j,extractTemps);
 		}
 	}
 
