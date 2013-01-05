@@ -29,7 +29,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public boolean earlyR = true;                 // allow partial inspection for entering columns
 	public boolean earlyLeavingCalc = false;       // value and sort steps early
 	public boolean earlyLeavingExit = false;       // allow early inspection exit on valuation calc
-	public boolean resuffle = true;               // re-shuffle inspection order each pass
+	public boolean resuffle = false;               // re-shuffle inspection order each pass
 	private final Random rand = new Random(3252351L);
 
 	

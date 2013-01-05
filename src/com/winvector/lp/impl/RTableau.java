@@ -2,6 +2,7 @@ package com.winvector.lp.impl;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.BitSet;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
@@ -146,7 +147,7 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 	public void basisPivot(final int leavingI, final int enteringV, final double[] binvu) throws LPErrorException {
 		basis[leavingI] = enteringV;
 		++normalSteps;
-		if(normalSteps%(15*m+1)==0) {
+		if(normalSteps%(25*m+1)==0) {
 			BInv = null; // forced refresh
 			// ideas is BInv is getting unreliable due to rounding
 			// a refresh takes around O(m^3) steps and updates take O(m^2) steps.
@@ -158,9 +159,12 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 			final double vKInv = 1.0/binvu[leavingI];
 			for(int i=0;i<m;++i) {
 				if(leavingI!=i) {
-					final double vi = -binvu[i]*vKInv;
-					for(int j=0;j<m;++j) {
-						BInv.set(i, j,BInv.get(i, j)+vi*BInv.get(leavingI,j));
+					final double binvui = binvu[i];
+					if(binvui!=0.0) {
+						final double vi = -binvui*vKInv;
+						for(int j=0;j<m;++j) {
+							BInv.set(i, j,BInv.get(i, j)+vi*BInv.get(leavingI,j));
+						}
 					}
 				}
 			}

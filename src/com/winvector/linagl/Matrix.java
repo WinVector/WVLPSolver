@@ -294,9 +294,9 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 		return rowBasis(c,forcedRows,minVal);
 	}
 
-	public void setRow(final int ri, final double[] col) {
+	public void setRow(final int ri, final double[] row) {
 		for(int i=0;i<cols();++i) {
-			final double e = col[i];
+			final double e = row[i];
 			set(ri,i, e);
 		}
 	}
