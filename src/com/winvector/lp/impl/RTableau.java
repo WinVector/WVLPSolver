@@ -157,18 +157,24 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 		if (BInv != null) {
 			// rank 1 update the inverse
 			final double vKInv = 1.0/binvu[leavingI];
+			final BitSet lij = new BitSet(m);
+			for(int j=0;j<m;++j) {
+				if(Math.abs(BInv.get(leavingI,j))>1.0e-8) {
+					lij.set(j);
+				}
+			}
 			for(int i=0;i<m;++i) {
 				if(leavingI!=i) {
 					final double binvui = binvu[i];
 					if(binvui!=0.0) {
 						final double vi = -binvui*vKInv;
-						for(int j=0;j<m;++j) {
+						for(int j=lij.nextSetBit(0); j>=0; j=lij.nextSetBit(j+1)) { 
 							BInv.set(i, j,BInv.get(i, j)+vi*BInv.get(leavingI,j));
 						}
 					}
 				}
 			}
-			for(int j=0;j<m;++j) {
+			for(int j=lij.nextSetBit(0); j>=0; j=lij.nextSetBit(j+1)) { 
 				BInv.set(leavingI, j,vKInv*BInv.get(leavingI,j));
 			}
 		} else {
