@@ -106,10 +106,12 @@ public final class SparseVec implements Serializable {
 		if(m.cols()!=x.dim) {
 			throw new IllegalArgumentException();
 		}
-		final double[] r = new double[m.rows()];
-		for (int i = 0; i < r.length; ++i) {
+		final int mrows = m.rows();
+		final double[] r = new double[mrows];
+		final int xindiceslength = x.indices.length;
+		for (int i = 0; i < mrows; ++i) {
 			double z = 0;
-			for(int kk=0;kk<x.indices.length;++kk) {
+			for(int kk=0;kk<xindiceslength;++kk) {
 				z += x.values[kk]*m.get(i,x.indices[kk]);
 			}
 			r[i] = z;

@@ -25,9 +25,11 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	
 	
 	public <Z extends Matrix<Z>> Z copy(final LinalgFactory<Z> factory, final boolean wantSparse) {
-		final Z r = factory.newMatrix(rows(),cols(),wantSparse);
-		for(int i=0;i<rows();++i) {
-			for(int j=0;j<cols();++j) {
+		final int rows = rows();
+		final int cols = cols();
+		final Z r = factory.newMatrix(rows,cols,wantSparse);
+		for(int i=0;i<rows;++i) {
+			for(int j=0;j<cols;++j) {
 				final double vij = get(i,j);
 				if(vij!=0) {
 					r.set(i, j, vij);
@@ -42,9 +44,11 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	}
 
 	public <Z extends Matrix<Z>> Z transpose(final LinalgFactory<Z> factory, final boolean wantSparse) {
-		final Z r = factory.newMatrix(cols(),rows(),wantSparse);
-		for(int i=0;i<rows();++i) {
-			for(int j=0;j<cols();++j) {
+		final int rows = rows();
+		final int cols = cols();
+		final Z r = factory.newMatrix(cols,rows,wantSparse);
+		for(int i=0;i<rows;++i) {
+			for(int j=0;j<cols;++j) {
 				final double vij = get(i,j);
 				if(vij!=0) {
 					r.set(j, i, vij);
@@ -55,8 +59,9 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	}
 
 	private double[] extractRow(final int ri) {
-		final double[] r = new double[cols()];
-		for(int i=0;i<cols();++i) {
+		final int cols = cols();
+		final double[] r = new double[cols];
+		for(int i=0;i<cols;++i) {
 			final double e = get(ri, i);
 			r[i] = e;
 		}
@@ -64,8 +69,9 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	}
 	
 	public static double[] extract(final double[] v, final int[] indices) {
-		final double[] r = new double[indices.length];
-		for(int i=0;i<indices.length;++i) {
+		final int ilength = indices.length;
+		final double[] r = new double[ilength];
+		for(int i=0;i<ilength;++i) {
 			r[i] = v[indices[i]];
 		}
 		return r;
@@ -83,7 +89,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	public static int nNonZero(final double[] x) {
 		int n = 0;
 		for(final double xi: x) {
-			if(Math.abs(xi)>0.0) {
+			if(xi!=0.0) {
 				++n;
 			}
 		}
@@ -154,9 +160,11 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	}
 
 	public <Z extends Matrix<Z>> Z extractColumns(final int[] basis, final LinalgFactory<Z> zfactory) {
-		final Z r = zfactory.newMatrix(rows(), basis.length, false);
-		for (int col = 0; col < basis.length; ++col) {
-			for (int row = 0; row < rows(); ++row) {
+		final int blength = basis.length;
+		final int rows = rows();
+		final Z r = zfactory.newMatrix(rows, blength, false);
+		for (int col = 0; col < blength; ++col) {
+			for (int row = 0; row < rows; ++row) {
 				final double e = get(row, basis[col]);
 				if (e!=0) {
 					r.set(row, col, e);
@@ -167,32 +175,38 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	}
 
 	public double[] mult(final double[] x) {
-		if(cols()!=x.length) {
+		final int cols = cols();
+		if(cols!=x.length) {
 			throw new IllegalArgumentException();
 		}
-		final double[] r = new double[rows()];
-		for (int i = 0; i < r.length; ++i) {
-			double z = 0;
-			for(int k=0;k<cols();++k) {
-				z += x[k]*get(i,k);
+		final int rows = rows();
+		final double[] r = new double[rows];
+		for(int k=0;k<cols;++k) {
+			final double xk = x[k];
+			if(Math.abs(xk)>1.0e-8) {
+				for (int i = 0; i < rows; ++i) {
+					r[i] += xk*get(i,k);
+				}
 			}
-			r[i] = z;
 		}
 		return r;		
 	}
 	
 
 	public double[] multLeft(final double[] b) {
-		if (rows() != b.length) {
+		final int rows = rows();
+		if (rows != b.length) {
 			throw new IllegalArgumentException();
 		}
-		final double[] r = new double[cols()];
-		for (int i = 0; i < r.length; ++i) {
-			double z = 0;
-			for(int k=0;k<rows();++k) {
-				z += b[k]*get(k, i);
+		final int cols = cols();
+		final double[] r = new double[cols];
+		for(int k=0;k<rows;++k) {
+			final double bk = b[k];
+			if(Math.abs(bk)>1.0e-8) {
+				for (int i = 0; i < cols; ++i) {
+					r[i] += bk*get(k, i);
+				}
 			}
-			r[i] = z;
 		}
 		return r;
 	}
@@ -200,7 +214,8 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 
 	private static <Z extends Matrix<Z>> double rowDotRow(final Z c, final int a, final int b) {
 		double bdotb = 0.0;
-		for(int i=0;i<c.cols();++i) {
+		final int dim = c.cols();
+		for(int i=0;i<dim;++i) {
 			bdotb += c.get(a,i)*c.get(b,i);
 		}
 		return bdotb;
@@ -217,14 +232,15 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	private static <Z extends Matrix<Z>> void elimRows(final Z c, final BitSet elims, final int target) {
 		final double tdott = rowDotRow(c,target,target);
 		if(tdott>0) {
+			final int ccols = c.cols();
 			for(int ei=elims.nextSetBit(0); ei>=0; ei=elims.nextSetBit(ei+1)) {
 				if(ei!=target) {
 					final double edote = rowDotRow(c,ei,ei);
 					if(edote>0) {
 						final double edott = rowDotRow(c,ei,target);
-						if(Math.abs(edott)>0) {
+						if(edott!=0.0) {
 							final double scale = edott/edote;
-							for(int i=0;i<c.cols();++i) {
+							for(int i=0;i<ccols;++i) {
 								c.set(target,i,c.get(target,i) - c.get(ei,i)*scale);
 							}
 						}
@@ -244,9 +260,11 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	 */
 	private static <Z extends Matrix<Z>> int[] rowBasis(final Z c, final int[] forcedRows, final double minVal) {
 		final double minNormSq = minVal*minVal;
-		final BitSet checked = new BitSet(c.rows());
-		final BitSet found = new BitSet(c.rows());
-		final int nGoal = Math.min(c.cols(),c.rows());
+		final int crows = c.rows();
+		final BitSet checked = new BitSet(crows);
+		final BitSet found = new BitSet(crows);
+		final int ccols = c.cols();
+		final int nGoal = Math.min(ccols,crows);
 		int nFound = 0;
 		if(null!=forcedRows) {
 			for(final int ri: forcedRows) {
@@ -265,7 +283,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 				throw new IllegalArgumentException("candidate rows were not independent");
 			}
 		}
-		for(int ri=0;(ri<c.rows())&&(nFound<nGoal);++ri) {
+		for(int ri=0;(ri<crows)&&(nFound<nGoal);++ri) {
 			if(!checked.get(ri)) {
 				elimRows(c,found,ri);
 				final double bdotb = rowDotRow(c,ri,ri);
@@ -295,7 +313,8 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	}
 
 	public void setRow(final int ri, final double[] row) {
-		for(int i=0;i<cols();++i) {
+		final int cols = cols();
+		for(int i=0;i<cols;++i) {
 			final double e = row[i];
 			set(ri,i, e);
 		}
@@ -312,8 +331,9 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	 * @return
 	 */
 	public SparseVec extractColumn(final int ci, final Object extractTemps) {
-		final double[] r = new double[rows()];
-		for(int i=0;i<rows();++i) {
+		final int rows = rows();
+		final double[] r = new double[rows];
+		for(int i=0;i<rows;++i) {
 			final double e = get(i, ci);
 			r[i] = e;
 		}
@@ -321,9 +341,11 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 	}
 
 	public <Z extends Matrix<Z>> Z extractRows(final int[] rowset, final LinalgFactory<Z> zfactory) {
-		final Z r = zfactory.newMatrix(rowset.length,cols(),sparseRep());
-		for (int row = 0; row < rowset.length; ++row) {
-			for (int col = 0; col < cols(); ++col) {
+		final int rowsetlength = rowset.length;
+		final int cols = cols();
+		final Z r = zfactory.newMatrix(rowsetlength,cols,sparseRep());
+		for (int row = 0; row < rowsetlength; ++row) {
+			for (int col = 0; col < cols; ++col) {
 				final double e = get(rowset[row],col);
 				if (e!=0) {
 					r.set(row, col, e);

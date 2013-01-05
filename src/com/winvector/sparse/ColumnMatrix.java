@@ -82,12 +82,15 @@ public final class ColumnMatrix implements PreMatrix {
 	public double[] mult(final double[] x) {
 		final double[] res = new double[rows];
 		for(int j=0;j<cols;++j) {
-			final SparseVec col = columns[j];
-			for(int ii=0;ii<col.indices.length;++ii) {
-				final int i = col.indices[ii];
-				final double aij = col.values[ii];
-				if(0.0!=aij) {
-					res[i] += aij*x[j];
+			if(x[j]!=0) {
+				final SparseVec col = columns[j];
+				final int colindiceslength = col.indices.length;
+				for(int ii=0;ii<colindiceslength;++ii) {
+					final int i = col.indices[ii];
+					final double aij = col.values[ii];
+					if(0.0!=aij) {
+						res[i] += aij*x[j];
+					}
 				}
 			}
 		}
@@ -100,7 +103,8 @@ public final class ColumnMatrix implements PreMatrix {
 		final double[] res = new double[cols];
 		for(int j=0;j<cols;++j) {
 			final SparseVec col = columns[j];
-			for(int ii=0;ii<col.indices.length;++ii) {
+			final int colindiceslength = col.indices.length;
+			for(int ii=0;ii<colindiceslength;++ii) {
 				final int i = col.indices[ii];
 				final double aij = col.values[ii];
 				if(0.0!=aij) {
@@ -116,16 +120,18 @@ public final class ColumnMatrix implements PreMatrix {
 	public <T extends Matrix<T>> T extractColumns(final int[] basis,
 			final LinalgFactory<T> factory) {
 		int npop = 0;
-		for(int jj=0;jj<basis.length;++jj) {
+		final int blength = basis.length;
+		for(int jj=0;jj<blength;++jj) {
 			final int j = basis[jj];
 			npop += columns[j].popCount();
 		}
-		boolean wantSparse = npop<(0.1*rows)*basis.length;
-		final T r = factory.newMatrix(rows,basis.length,wantSparse);
-		for(int jj=0;jj<basis.length;++jj) {
+		boolean wantSparse = npop<(0.1*rows)*blength;
+		final T r = factory.newMatrix(rows,blength,wantSparse);
+		for(int jj=0;jj<blength;++jj) {
 			final int j = basis[jj];
 			final SparseVec col = columns[j];
-			for(int ii=0;ii<col.indices.length;++ii) {
+			final int colindiceslength = col.indices.length;
+			for(int ii=0;ii<colindiceslength;++ii) {
 				final double aij = col.values[ii];
 				if(0.0!=aij) {
 					r.set(col.indices[ii],jj,aij);
@@ -145,7 +151,8 @@ public final class ColumnMatrix implements PreMatrix {
 		final T m = factory.newMatrix(rows,cols,wantSparse);
 		for(int j=0;j<cols;++j) {
 			final SparseVec col = columns[j];
-			for(int ii=0;ii<col.indices.length;++ii) {
+			final int colindiceslength = col.indices.length;
+			for(int ii=0;ii<colindiceslength;++ii) {
 				final double aij = col.values[ii];
 				if(0.0!=aij) {
 					m.set(col.indices[ii],j,aij);
@@ -156,11 +163,12 @@ public final class ColumnMatrix implements PreMatrix {
 	}
 
 	public ColumnMatrix addColumns(final ArrayList<SparseVec> cs) {
-		final ColumnMatrix r = new ColumnMatrix(rows,cols+cs.size());
+		final int cssize = cs.size();
+		final ColumnMatrix r = new ColumnMatrix(rows,cols+cssize);
 		for(int i=0;i<cols;++i) {
 			r.columns[i] = columns[i];
 		}
-		for(int i=0;i<cs.size();++i) {
+		for(int i=0;i<cssize;++i) {
 			if(cs.get(i).dim!=rows) {
 				throw new IllegalArgumentException();
 			}
@@ -173,10 +181,11 @@ public final class ColumnMatrix implements PreMatrix {
 		final double[] r = new double[rows];
 		for(int j=0;j<cols;++j) {
 			final SparseVec col = columns[j];
-			for(int ii=0;ii<col.indices.length;++ii) {
-				final int i = col.indices[ii];
+			final int colindiceslength = col.indices.length;
+			for(int ii=0;ii<colindiceslength;++ii) {
 				final double aij = col.values[ii];
 				if(0.0!=aij) {
+					final int i = col.indices[ii];
 					r[i] += Math.abs(aij);
 				}
 			}
