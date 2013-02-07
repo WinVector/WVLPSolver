@@ -2,7 +2,6 @@ package com.winvector.lp.impl;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.BitSet;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
@@ -30,6 +29,7 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 	public final int[] basis;
 	
 	public final LinalgFactory<T> factory;
+	private final int[] binvNZJTmp;
 	public T BInv = null;
 
 	// run counters
@@ -112,6 +112,7 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 		//RevisedSimplexSolver.checkParams(prob.A, prob.b, prob.c, basis_in);
 		m = prob.A.rows;
 		n = prob.A.cols;
+		binvNZJTmp = new int[m];
 		basis = new int[basis_in.length];
 		for (int i = 0; i < basis.length; ++i) {
 			basis[i] = basis_in[i];
@@ -152,24 +153,28 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 		if (BInv != null) {
 			// rank 1 update the inverse
 			final double vKInv = 1.0/binvu[leavingI];
-			final BitSet lij = new BitSet(m);
+			int nextJJ = 0;
 			for(int j=0;j<m;++j) {
 				if(Math.abs(BInv.get(leavingI,j))>1.0e-8) {
-					lij.set(j);
+					binvNZJTmp[nextJJ] = j;
+					++nextJJ;
 				}
 			}
+			final int nJJ = nextJJ;
 			for(int i=0;i<m;++i) {
 				if(leavingI!=i) {
 					final double binvui = binvu[i];
 					if(binvui!=0.0) {
 						final double vi = -binvui*vKInv;
-						for(int j=lij.nextSetBit(0); j>=0; j=lij.nextSetBit(j+1)) { 
+						for(nextJJ=0;nextJJ<nJJ;++nextJJ) {
+							final int j = binvNZJTmp[nextJJ];
 							BInv.set(i, j,BInv.get(i, j)+vi*BInv.get(leavingI,j));
 						}
 					}
 				}
 			}
-			for(int j=lij.nextSetBit(0); j>=0; j=lij.nextSetBit(j+1)) { 
+			for(nextJJ=0;nextJJ<nJJ;++nextJJ) {
+				final int j = binvNZJTmp[nextJJ];
 				BInv.set(leavingI, j,vKInv*BInv.get(leavingI,j));
 			}
 		} else {

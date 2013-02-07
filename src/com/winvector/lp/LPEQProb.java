@@ -305,7 +305,6 @@ public final class LPEQProb extends LPProbBase {
 		 final double[] eqvec = new double[p.basisColumns.length];
 		 // put in all complementary slackness relns
 		 // Schrijver p. 95
-		 final double[] tempV = new double[p.basisColumns.length];
 		 for (int bi = 0; bi < p.basisColumns.length; ++bi) {
 			 int i = p.basisColumns[bi];
 			 eqmat.setRow(bi,Matrix.extract(A.extractColumn(i).toDense(),rb));
