@@ -31,10 +31,8 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 	public final LinalgFactory<T> factory;
 	private final int[] binvNZJTmp;
 	public T BInv = null;
-
 	// run counters
-	public int normalSteps = 0;
-	public int inspections = 0;
+	private int normalSteps = 0;
 
 
 	/**
@@ -143,7 +141,7 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 	public void basisPivot(final int leavingI, final int enteringV, final double[] binvu) throws LPErrorException {
 		basis[leavingI] = enteringV;
 		++normalSteps;
-		if(normalSteps%(25*m+1)==0) {
+		if(normalSteps%(25*(m+n)+1)==0) {
 			BInv = null; // forced refresh
 			// ideas is BInv is getting unreliable due to rounding
 			// a refresh takes around O(m^3) steps and updates take O(m^2) steps.

@@ -25,10 +25,10 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public double enteringTol = 1.0e-5;
 	public double leavingTol = 1.0e-7;
 	public boolean perturbC = true;
-	public boolean perturbB = false;               // this does change which bases are co-incident and which are feasible
+	public boolean perturbB = false;              // this does change which bases are co-incident and which are feasible
 	public boolean earlyR = true;                 // allow partial inspection for entering columns
-	public boolean earlyLeavingCalc = false;       // value and sort steps early
-	public boolean earlyLeavingExit = false;       // allow early inspection exit on valuation calc
+	public boolean earlyLeavingCalc = false;      // value and sort steps early
+	public boolean earlyLeavingExit = false;      // allow early inspection exit on valuation calc
 	public boolean resuffle = true;               // re-shuffle inspection order each pass
 	private final Random rand = new Random(3252351L);
 
@@ -40,12 +40,15 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		if (debug > 0) {
 			System.out.println("start: " + stringBasis(tab.basis));
 		}
+		// run counters
+		int normalSteps = 0;
+		int inspections = 0;
 		final int nvars = tab.prob.A.cols;
 		final BitSet curBasisIndicator = new BitSet(nvars);
 		for(final int bi: tab.basis) {
 			curBasisIndicator.set(bi);
 		}
-		final InspectionOrder inspectionOrder = new InspectionOrder(nvars,rand);
+		final InspectionOrder inspectionOrder = new RandomOrder(nvars,rand);
 		final double[] bRatPtr = new double[1];
 		double[] c = tab.prob.c;
 		double[] b = tab.prob.b;
@@ -66,7 +69,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 				b[i] = tab.prob.b[i] + p[i];
 			}
 		}
-		while (tab.normalSteps<=maxRounds) {
+		while (normalSteps<=maxRounds) {
+			++normalSteps;
 			//prob.soln(basis,tol);
 			//System.out.println("basis good");
 			inspectionOrder.startPass();
@@ -93,7 +97,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			double[] bestBinvu = null;
 			inspectionLoop:
 			while(inspectionOrder.hasNext()) {
-				++tab.inspections;
+				++inspections;
 				final int v = inspectionOrder.take();
 				if(!curBasisIndicator.get(v)) {
 					final double ri = tab.computeRI(lambda, c, v);
@@ -103,6 +107,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 							rEnteringV = v;
 							bestRi = ri;
 							if(earlyR) {
+								inspectionOrder.liked(v);
 								break inspectionLoop;
 							}
 						}
@@ -119,6 +124,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 										bestStepValue = stepValue;
 										bestBinvu = binvu;
 										if(earlyLeavingExit && (bestStepValue>0)) {
+											inspectionOrder.liked(v);
 											break inspectionLoop;
 										}
 									}
@@ -126,6 +132,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 							}
 						}
 					}
+					inspectionOrder.disliked(v);
 				}
 			}
 			if (debug > 0) {
@@ -156,6 +163,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			}
 			if (enteringV < 0) {
 				// no entry, at optimum
+				//System.out.println("steps: " + normalSteps + ", inspections: " + inspections + ", ratio: " + (inspections/(double)normalSteps));
 				return tab.basis();
 			}
 			if (leavingI < 0) {
@@ -167,6 +175,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			//System.out.println("leave: " + basis[leavingI]);
 			if(null!=earlyExitCondition) {
 				if(earlyExitCondition.canExit(tab.basis)) {
+					//System.out.println("steps: " + normalSteps + ", inspections: " + inspections + ", ratio: " + (inspections/(double)normalSteps));
 					return tab.basis();
 				}
 			}
@@ -237,7 +246,6 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			return null;
 		}
 		final LPSoln lpSoln = new LPSoln(LPEQProb.primalSoln(prob.A, prob.b, rbasis, tol, factory), rbasis);
-		lpSoln.stepsTaken = t.normalSteps;
 		return lpSoln;
 	}
 }

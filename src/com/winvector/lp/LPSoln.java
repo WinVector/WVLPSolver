@@ -11,7 +11,6 @@ public final class LPSoln implements Serializable {
 	public final double[] primalSolution;
 	public final int[] basisColumns;
 	public int[] basisRows;
-	public int stepsTaken = 0;
 
 	public LPSoln(final double[] primalSoln_in, final int[] basisColumns_in, final int[] basisRows_in) {
 		primalSolution = primalSoln_in;
