@@ -1,8 +1,0 @@
-.DS_Store
-*~
-#*#
-.settings
-bin
-.Rhistory
-/lp_solve
-gurobi.log
