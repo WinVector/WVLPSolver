@@ -161,7 +161,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	 *             (if infeas or unbounded)
 	 */
 	@Override
-	protected <T extends Matrix<T>> LPSoln rawSolve(final LPEQProbI prob,
+	public <T extends Matrix<T>> LPSoln rawSolve(final LPEQProbI prob,
 			final int[] basis0, double tol, final int maxRounds, final LinalgFactory<T> factory,
 			final EarlyExitCondition earlyExitCondition) throws LPException {
 		if ((tol<=0)||Double.isNaN(tol)||Double.isInfinite(tol)) {
