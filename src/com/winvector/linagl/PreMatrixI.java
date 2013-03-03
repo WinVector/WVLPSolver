@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 
 public interface PreMatrixI extends LinOpI,Serializable {
-	double[] mult(HVec x);
 	Object buildExtractTemps();
 	SparseVec extractColumn(int ci, Object extractTemps);
 	<T extends Matrix<T>> T extractColumns(int[] basis, LinalgFactory<T> factory);

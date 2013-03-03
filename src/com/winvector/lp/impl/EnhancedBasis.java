@@ -8,7 +8,7 @@ import java.util.Set;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.SparseVec;
-import com.winvector.linalg.colt.TabularLinOp;
+import com.winvector.linagl.TabularLinOp;
 import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
@@ -20,6 +20,7 @@ import com.winvector.lp.LPException.LPErrorException;
  */
 final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	private static final long serialVersionUID = 1L;
+	public boolean useTabular = true;
 
 	public final LPEQProbI prob;
 	public final Object extractTemps;
@@ -78,7 +79,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	 */
 	public double[] basisSolveRight(final SparseVec y) throws LPErrorException {
 		if(null!=binvS) {
-			return binvS.mult(y.toArray(m));
+			return binvS.mult(y);
 		} else {
 			return binvW.mult(y);
 		}
@@ -93,7 +94,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveLeft(final double[] y) throws LPErrorException {
-		if(null!=binvW) {
+		if(null!=binvS) {
 			return binvS.multLeft(y);
 		} else {
 			return binvW.multLeft(y);
@@ -118,7 +119,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 		extractTemps = prob.buildExtractTemps();
 		//RevisedSimplexSolver.checkParams(prob.A, prob.b, prob.c, basis_in);
 		binvNZJTmp = new int[m];
-		if(m<46340) {  // don't overrun 2^31 storage slots
+		if((m<46340)&&(useTabular)) {  // don't overrun 2^31 storage slots
 			binvS = new TabularLinOp(m,m);
 		} else {
 			binvS = null;

@@ -25,8 +25,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public double checkTol = 1.0e-8;
 	public double enteringTol = 1.0e-5;
 	public double leavingTol = 1.0e-7;
-	public boolean earlyR = true;                 // allow partial inspection for entering columns
-	public boolean resuffle = true;               // re-shuffle inspection order each pass
+	public boolean earlyR = false;                 // allow partial inspection for entering columns
+	public boolean resuffle = true;              // re-shuffle inspection order each pass
 	private final Random rand = new Random(3252351L);
 	// run counters
 	public long normalSteps = 0;

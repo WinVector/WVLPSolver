@@ -5,4 +5,5 @@ public interface LinOpI {
 	int cols();
 	double[] multLeft(double[] y);
 	double[] mult(double[] x);
+	double[] mult(HVec x);
 }
