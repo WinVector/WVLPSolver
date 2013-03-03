@@ -2,7 +2,6 @@ package com.winvector.linagl;
 
 import java.io.Serializable;
 
-import com.winvector.sparse.HVec;
 
 public interface PreMatrix extends Serializable {
 	int rows();

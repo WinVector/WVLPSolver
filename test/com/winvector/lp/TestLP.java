@@ -14,12 +14,12 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
+import com.winvector.linagl.ColumnMatrix;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.impl.RevisedSimplexSolver;
-import com.winvector.sparse.ColumnMatrix;
 
 /**
  * Junit tests. run with java junit.swingui.TestRunner

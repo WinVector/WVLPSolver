@@ -4,6 +4,7 @@ import java.util.Random;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
+import com.winvector.linagl.SparseVec;
 import com.winvector.lp.AbstractLPEQProb;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.InspectionOrder;
@@ -11,7 +12,6 @@ import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPTooManyStepsException;
 import com.winvector.lp.LPSoln;
-import com.winvector.sparse.SparseVec;
 
 /**
  * basic primal revised simplex method

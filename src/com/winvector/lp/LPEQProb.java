@@ -3,14 +3,14 @@ package com.winvector.lp;
 import java.util.Arrays;
 import java.util.Random;
 
+import com.winvector.linagl.ColumnMatrix;
+import com.winvector.linagl.HVec;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.PreMatrix;
+import com.winvector.linagl.SparseVec;
 import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.impl.RandomOrder;
-import com.winvector.sparse.ColumnMatrix;
-import com.winvector.sparse.HVec;
-import com.winvector.sparse.SparseVec;
 
 
 /**

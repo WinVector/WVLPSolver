@@ -7,10 +7,10 @@ import java.util.Set;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
+import com.winvector.linagl.SparseVec;
 import com.winvector.lp.AbstractLPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
-import com.winvector.sparse.SparseVec;
 
 /**
  * Basis enhanced with extra record keeping
@@ -70,7 +70,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 				throw new LPErrorException("couldn't invert basis");
 			}
 		}
-		return SparseVec.mult(BInv,y);
+		return BInv.mult(y);
 	}
 
 	/**

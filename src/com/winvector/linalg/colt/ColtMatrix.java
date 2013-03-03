@@ -10,7 +10,7 @@ import cern.colt.matrix.linalg.Algebra;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.sparse.SparseVec;
+import com.winvector.linagl.SparseVec;
 
 
 

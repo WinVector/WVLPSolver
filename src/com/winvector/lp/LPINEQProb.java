@@ -2,9 +2,9 @@ package com.winvector.lp;
 
 import java.util.ArrayList;
 
+import com.winvector.linagl.ColumnMatrix;
+import com.winvector.linagl.SparseVec;
 import com.winvector.lp.LPException.LPMalformedException;
-import com.winvector.sparse.ColumnMatrix;
-import com.winvector.sparse.SparseVec;
 
 /**
  * primal: A x <= b, x>=0 minimize c.x

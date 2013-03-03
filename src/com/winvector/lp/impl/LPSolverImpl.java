@@ -6,18 +6,18 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.winvector.linagl.ColumnMatrix;
+import com.winvector.linagl.HVec;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.PreMatrix;
+import com.winvector.linagl.SparseVec;
 import com.winvector.lp.AbstractLPEQProb;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.LPSolver;
-import com.winvector.sparse.ColumnMatrix;
-import com.winvector.sparse.HVec;
-import com.winvector.sparse.SparseVec;
 
 /**
  * primal: min c.x: A x = b, x>=0 dual: max y.b: y A <= c y b = y A x <= c x (by

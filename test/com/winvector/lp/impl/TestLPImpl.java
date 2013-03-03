@@ -8,12 +8,12 @@ import org.junit.Test;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
+import com.winvector.linagl.SparseVec;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.TestLP;
-import com.winvector.sparse.SparseVec;
 
 
 public class TestLPImpl {

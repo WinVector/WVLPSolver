@@ -1,9 +1,8 @@
-package com.winvector.sparse;
+package com.winvector.linagl;
 
 import java.io.Serializable;
 import java.util.Arrays;
 
-import com.winvector.linagl.Matrix;
 
 /**
  * finite set of possible non-zero entries of a possibly infinite vector
@@ -115,19 +114,6 @@ public class HVec implements Serializable {
 		return d;
 	}
 	
-	public static <T extends Matrix<T>> double[] multR(final T m, final HVec x) {
-		final int mrows = m.rows();
-		final double[] r = new double[mrows];
-		final int xindiceslength = x.indices.length;
-		for (int i = 0; i < mrows; ++i) {
-			double z = 0;
-			for(int kk=0;kk<xindiceslength;++kk) {
-				z += x.values[kk]*m.get(i,x.indices[kk]);
-			}
-			r[i] = z;
-		}
-		return r;		
-	}
 	
 	/**
 	 * slow (discouraged)

@@ -2,7 +2,7 @@ package com.winvector.lp;
 
 import java.io.Serializable;
 
-import com.winvector.sparse.HVec;
+import com.winvector.linagl.HVec;
 
 
 

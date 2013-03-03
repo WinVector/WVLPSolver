@@ -5,10 +5,10 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import com.winvector.linagl.ColumnMatrix;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.PreMatrix;
 import com.winvector.lp.LPException.LPMalformedException;
-import com.winvector.sparse.ColumnMatrix;
 
 abstract class LPProbBase implements Serializable {
 	private static final long serialVersionUID = 1L;

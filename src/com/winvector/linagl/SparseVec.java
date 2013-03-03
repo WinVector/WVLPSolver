@@ -1,6 +1,5 @@
-package com.winvector.sparse;
+package com.winvector.linagl;
 
-import com.winvector.linagl.Matrix;
 
 /**
  * immutable vector, pop count can not be taking from length (some zero entries may be stored)
@@ -35,7 +34,7 @@ public final class SparseVec extends HVec {
 	}
 	
 	
-	public static SparseVec sparseVec(final double[] x) {
+	static SparseVec sparseVec(final double[] x) {
 		final int dim = x.length;
 		int index = 0;
 		for(int i=0;i<dim;++i) {
@@ -81,22 +80,6 @@ public final class SparseVec extends HVec {
 		return super.dot(x);
 	}
 	
-	public static <T extends Matrix<T>> double[] mult(final T m, final SparseVec x) {
-		if(m.cols()!=x.dim) {
-			throw new IllegalArgumentException();
-		}
-		final int mrows = m.rows();
-		final double[] r = new double[mrows];
-		final int xindiceslength = x.indices.length;
-		for (int i = 0; i < mrows; ++i) {
-			double z = 0;
-			for(int kk=0;kk<xindiceslength;++kk) {
-				z += x.values[kk]*m.get(i,x.indices[kk]);
-			}
-			r[i] = z;
-		}
-		return r;		
-	}
 	
 
 	public double[] toDense() {

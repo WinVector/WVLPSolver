@@ -3,8 +3,6 @@ package com.winvector.linagl;
 import java.io.PrintStream;
 import java.util.BitSet;
 
-import com.winvector.sparse.HVec;
-import com.winvector.sparse.SparseVec;
 
 
 

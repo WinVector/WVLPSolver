@@ -4,6 +4,7 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.winvector.linagl.ColumnMatrix;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.lp.LPEQProb;
@@ -12,7 +13,6 @@ import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.LPSolver;
 import com.winvector.lp.impl.RevisedSimplexSolver;
-import com.winvector.sparse.ColumnMatrix;
 
 /**
  * assignment problem solved by a linear program.  mostly test/demo the lp code as you would want to solve actual assignemnt
