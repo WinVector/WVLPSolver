@@ -8,14 +8,15 @@ import java.text.NumberFormat;
 import com.winvector.linagl.ColumnMatrix;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.PreMatrix;
+import com.winvector.linagl.PreVec;
 import com.winvector.lp.LPException.LPMalformedException;
 
 abstract class LPProbBase implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
-	public final ColumnMatrix A;
+	public final ColumnMatrix A; // want to switch this to an interface
 	public final double[] b;
-	public final double[] c;
+	public final PreVec c;
 	public final String relStr;
 	
 
@@ -29,7 +30,7 @@ abstract class LPProbBase implements Serializable {
 	 * @throws LPException.LPMalformedException
 	 *             if parameters don't match defs
 	 */
-	public LPProbBase(final ColumnMatrix A_in, final double[] b_in, final double[] c_in, final String relStr)
+	public LPProbBase(final ColumnMatrix A_in, final double[] b_in, final PreVec c_in, final String relStr)
 			throws LPException.LPMalformedException {
 		checkParams(A_in, b_in, c_in);
 		A = A_in;
@@ -48,10 +49,10 @@ abstract class LPProbBase implements Serializable {
 	 * @throws LPException.LPMalformedException
 	 *             if parameters don't match defs
 	 */
-	public static void checkParams(final PreMatrix A_, final double[] b_, final double[] c_)
+	public static void checkParams(final PreMatrix A_, final double[] b_, final PreVec c_)
 			throws LPException.LPMalformedException {
 		if ((A_ == null) || (b_ == null) || (c_ == null)
-				|| (A_.rows() != b_.length) || (A_.cols() != c_.length)) {
+				|| (A_.rows() != b_.length) || (A_.cols() != c_.dim())) {
 			String problem = "misformed problem";
 			if (A_ == null) {
 				problem = problem + " A_==null";
@@ -70,9 +71,9 @@ abstract class LPProbBase implements Serializable {
 				problem = problem + " c_==null";
 			} else {
 				if ((A_ != null) && (A_.rows() > 0)) {
-					if (A_.cols() != c_.length) {
+					if (A_.cols() != c_.dim()) {
 						problem = problem + " A_.cols()(" + A_.cols()
-								+ ")!=c.length(" + c_.length + ")";
+								+ ")!=c.length(" + c_.dim() + ")";
 					}
 				}
 			}
@@ -89,7 +90,7 @@ abstract class LPProbBase implements Serializable {
 		p.print(" * x " + relStr + " ");
 		p.println(Matrix.toString(b));
 		p.print("minimize x . ");
-		p.println(Matrix.toString(c));
+		p.println(c);
 		p.println();
 	}
 	
@@ -110,8 +111,8 @@ abstract class LPProbBase implements Serializable {
 		p.print("\tvalue: ");
 		{
 			boolean first = true;
-			for(int j=0;j<c.length;++j) {
-				final double cj = c[j];
+			for(int j=0;j<c.dim();++j) {
+				final double cj = c.get(j);
 				if(Math.abs(cj)!=0) {
 					final String valCStr = vvf.format(cj);
 					if(!first) {
@@ -132,7 +133,7 @@ abstract class LPProbBase implements Serializable {
 		p.println("Subject To");
 		for(int i=0;i<b.length;++i) {
 			int nnz = 0;
-			for(int j=0;j<c.length;++j) {
+			for(int j=0;j<c.dim();++j) {
 				final double aij = A.get(i, j);
 				if(Math.abs(aij)!=0) {
 					++nnz;
@@ -141,7 +142,7 @@ abstract class LPProbBase implements Serializable {
 			if(nnz>0) {
 				p.print("\teq" + vnf.format(i) + ":\t");
 				boolean first = true;
-				for(int j=0;j<c.length;++j) {
+				for(int j=0;j<c.dim();++j) {
 					final double aij = A.get(i, j);
 					if(Math.abs(aij)!=0) {
 						final String valStr = vvf.format(aij);
@@ -162,7 +163,7 @@ abstract class LPProbBase implements Serializable {
 		}
 		p.println();
 		p.println("Bounds");
-		for(int j=0;j<c.length;++j) {
+		for(int j=0;j<c.dim();++j) {
 			p.println("\t0 <= x" + vnf.format(j));
 		}
 		p.println();

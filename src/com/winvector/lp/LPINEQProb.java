@@ -3,6 +3,8 @@ package com.winvector.lp;
 import java.util.ArrayList;
 
 import com.winvector.linagl.ColumnMatrix;
+import com.winvector.linagl.DenseVec;
+import com.winvector.linagl.PreVec;
 import com.winvector.linagl.SparseVec;
 import com.winvector.lp.LPException.LPMalformedException;
 
@@ -15,7 +17,7 @@ import com.winvector.lp.LPException.LPMalformedException;
 public final class LPINEQProb extends LPProbBase {
 	private static final long serialVersionUID = 1L;
 
-	public LPINEQProb(final ColumnMatrix A_in, final double[] b_in, final double[] c_in)
+	public LPINEQProb(final ColumnMatrix A_in, final double[] b_in, final PreVec c_in)
 			throws LPException.LPMalformedException {
 		super(A_in,b_in,c_in,"<=");
 	}
@@ -30,8 +32,8 @@ public final class LPINEQProb extends LPProbBase {
 		}
 		final double[] newc = new double[n+m];
 		for(int j=0;j<n;++j) {
-			newc[j] = c[j];
+			newc[j] = c.get(j);
 		}
-		return new LPEQProb(A.addColumns(slacks),b,newc);
+		return new LPEQProb(A.addColumns(slacks),b,new DenseVec(newc));
 	}
 }

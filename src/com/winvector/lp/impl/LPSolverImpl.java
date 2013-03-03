@@ -7,10 +7,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.winvector.linagl.ColumnMatrix;
+import com.winvector.linagl.DenseVec;
 import com.winvector.linagl.HVec;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.PreMatrix;
+import com.winvector.linagl.PreVec;
 import com.winvector.linagl.SparseVec;
 import com.winvector.lp.AbstractLPEQProb;
 import com.winvector.lp.EarlyExitCondition;
@@ -47,11 +49,11 @@ abstract class LPSolverImpl implements LPSolver {
 	 * @throws LPException.LPMalformedException
 	 *             if parameters don't match defs
 	 */
-	public static void checkParams(final PreMatrix A, final double[] b, final double[] c, final int[] basis)
+	public static void checkParams(final PreMatrix A, final double[] b, final PreVec c, final int[] basis)
 			throws LPException.LPMalformedException {
 		if ((A == null) || (b == null) || (c == null) || (basis == null)
 				|| (A.rows() <= 0) || (A.rows() != b.length)
-				|| (A.rows() != basis.length) || (A.cols() != c.length)) {
+				|| (A.rows() != basis.length) || (A.cols() != c.dim())) {
 			String problem = "misformed problem";
 			if (A == null) {
 				problem = problem + " A==null";
@@ -74,9 +76,9 @@ abstract class LPSolverImpl implements LPSolver {
 				problem = problem + " c==null";
 			} else {
 				if ((A != null) && (A.rows() > 0)) {
-					if (A.cols() != c.length) {
+					if (A.cols() != c.dim()) {
 						problem = problem + " A.cols()(" + A.cols()
-								+ ")!=c.length(" + c.length + ")";
+								+ ")!=c.length(" + c.dim() + ")";
 					}
 				}
 			}
@@ -190,7 +192,7 @@ abstract class LPSolverImpl implements LPSolver {
 	 * 
 	 * phase 1 get a basis 
 	 */
-	private <T extends Matrix<T>> int[] solvePhase1(final ColumnMatrix A, final double[] b, final double[] cin, final double tol, 
+	private <T extends Matrix<T>> int[] solvePhase1(final ColumnMatrix A, final double[] b, final PreVec cin, final double tol, 
 			final int maxRounds, final LinalgFactory<T> factory) 
 			throws LPException {
 		final int m = A.rows;
@@ -228,17 +230,17 @@ abstract class LPSolverImpl implements LPSolver {
 			// hint at actual objective fn
 			double sumAbscin = 0.0;
 			for(int i=0;i<n;++i) {
-				sumAbscin += Math.abs(cin[i]);
+				sumAbscin += Math.abs(cin.get(i));
 			}
 			final double scale = 1.0e-7/(1.0+sumAbscin);
 			for(int i=0;i<n;++i) {
-				c[i] = scale*cin[i];
+				c[i] = scale*cin.get(i);
 			}
 		}
 		for(int i=n;i<n+artificialSlackCols.size();++i) {
 			c[i] = 1.0;
 		}
-		final LPEQProb p1prob = new LPEQProb(AP, b, c);
+		final LPEQProb p1prob = new LPEQProb(AP, b, new DenseVec(c));
 		LPSoln soln = rawSolve(p1prob, basis0, tol, maxRounds, factory, new EarlyExitCondition() {
 			@Override
 			public boolean canExit(final int[] basis) {
@@ -333,14 +335,14 @@ abstract class LPSolverImpl implements LPSolver {
 				throw new LPException.LPInfeasibleException(
 						"linear relaxation incosistent");
 			}
-			for (int i = 0; i < origProb.c.length; ++i) {
-				if (origProb.c[i] < 0) {
+			for (int i = 0; i < origProb.c.dim(); ++i) {
+				if (origProb.c.get(i) < 0) {
 					throw new LPException.LPUnboundedException(
 							"unbounded minimum solving 0 x = 0");
 				}
 			}
 			final HVec x = new HVec(new int[0],new double[0]);
-			int[] b = new int[origProb.c.length];
+			int[] b = new int[origProb.c.dim()];
 			for (int i = 0; i < b.length; ++i) {
 				b[i] = i;
 			}
@@ -348,12 +350,13 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		LPEQProb prob = null;
 		// select out irredundant rows
+		final DenseVec newC = new DenseVec(origProb.c);
 		if (rb.length != origProb.A.rows) {
 			final ColumnMatrix nA = origProb.A.extractRows(rb);
 			final double[] nb = Matrix.extract(origProb.b,rb);
-			prob = new LPEQProb(nA, nb, origProb.c.clone());
+			prob = new LPEQProb(nA, nb, newC);
 		} else {
-			prob = new LPEQProb(origProb.A, origProb.b.clone(), origProb.c.clone());
+			prob = new LPEQProb(origProb.A, origProb.b.clone(), newC);
 		}
 		// deal with square system
 		if (prob.A.rows >= prob.A.cols) {
@@ -387,17 +390,17 @@ abstract class LPSolverImpl implements LPSolver {
 				}
 				prob.b[i] *= scale[i];
 			}
-			prob = new LPEQProb(prob.A.rescaleRows(scale), prob.b, prob.c);
+			prob = new LPEQProb(prob.A.rescaleRows(scale), prob.b, newC);
 		}
 		{
 			double sumAbs = 0.0;
-			for(int j=0;j<prob.c.length;++j) {
-				sumAbs += Math.abs(prob.c[j]);
+			for(int j=0;j<prob.c.dim();++j) {
+				sumAbs += Math.abs(prob.c.get(j));
 			}
-			if((sumAbs>0)&&((sumAbs>=scaleRange*prob.c.length)||(sumAbs<=prob.c.length/scaleRange))) {
-				final double scale = prob.c.length/sumAbs;
-				for(int j=0;j<prob.c.length;++j) {
-					prob.c[j] *= scale;
+			if((sumAbs>0)&&((sumAbs>=scaleRange*prob.c.dim())||(sumAbs<=prob.c.dim()/scaleRange))) {
+				final double scale = prob.c.dim()/sumAbs;
+				for(int j=0;j<prob.c.dim();++j) {
+					newC.set(j,newC.get(j)*scale);
 				}
 			}
 		}

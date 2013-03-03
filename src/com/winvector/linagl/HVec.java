@@ -119,6 +119,15 @@ public class HVec implements Serializable {
 		return d;
 	}
 	
+	public double dot(final PreVec x) {
+		final int nindices = indices.length;
+		double d = 0.0;
+		for(int ii=0;ii<nindices;++ii) {
+			d += values[ii]*x.get(indices[ii]);
+		}
+		return d;
+	}
+	
 	
 	/**
 	 * slow (discouraged)

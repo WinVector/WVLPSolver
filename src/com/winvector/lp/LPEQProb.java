@@ -1,6 +1,5 @@
 package com.winvector.lp;
 
-import java.util.Arrays;
 import java.util.Random;
 
 import com.winvector.linagl.ColumnMatrix;
@@ -8,6 +7,7 @@ import com.winvector.linagl.HVec;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.PreMatrix;
+import com.winvector.linagl.PreVec;
 import com.winvector.linagl.SparseVec;
 import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.impl.RandomOrder;
@@ -22,7 +22,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	private static final long serialVersionUID = 1L;
 	
 
-	public LPEQProb(final ColumnMatrix A_in, final double[] b_in, final double[] c_in)
+	public LPEQProb(final ColumnMatrix A_in, final double[] b_in, final PreVec c_in)
 			throws LPException.LPMalformedException {
 		super(A_in,b_in,c_in,"=");
 	}
@@ -129,14 +129,14 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	 * @throws LPException
 	 *             (if infeas ill-formed)
 	 */
-	public static void checkDualFeas(final PreMatrix A, final double[] c, final double[] y,
+	public static void checkDualFeas(final PreMatrix A, final PreVec c, final double[] y,
 			double tol) throws LPException {
 		if ((A == null) || (c == null) || (y == null)) {
 			throw new LPException.LPInfeasibleException("null argument");
 		}
 		final int m = A.rows();
 		final int n = A.cols();
-		if ((c.length != n) || (y.length != m)) {
+		if ((c.dim() != n) || (y.length != m)) {
 			throw new LPException.LPInfeasibleException(
 					"wrong shaped vectors/matrix");
 		}
@@ -145,7 +145,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 			tol = 0.0;
 		}
 		for (int i = 0; i < n; ++i) {
-			final double v = c[i] - yA[i];
+			final double v = c.get(i) - yA[i];
 			if (v<-tol) {
 				throw new LPException.LPInfeasibleException(
 						"inequality violated");
@@ -170,7 +170,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	 * @throws LPException
 	 *             (if infeas ill-formed, or y.b > c.x)
 	 */
-	public static void checkPrimDualFeas(final PreMatrix A, final double[] b, final double[] c,
+	public static void checkPrimDualFeas(final PreMatrix A, final double[] b, final PreVec c,
 			final HVec x, final double[] y, double tol) throws LPException {
 		if ((tol <= 0.0)||Double.isNaN(tol)||Double.isInfinite(tol)) { 
 			tol = 0.0;
@@ -202,7 +202,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	 * @throws LPException
 	 *             (if infeas ill-formed, or y.b != c.x)
 	 */
-	public static void checkPrimDualOpt(final PreMatrix A, final double[] b, final double[] c, 
+	public static void checkPrimDualOpt(final PreMatrix A, final double[] b, final PreVec c, 
 			final HVec x,
 			final double[] y, double tol) throws LPException {
 		if ((tol <= 0.0)||Double.isNaN(tol)||Double.isInfinite(tol)) { 
@@ -225,71 +225,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	}
 
 	
-	/**
-	 * check for variables that could be removed from problem, cases include:
-	 * 	1) variables that are never used
-	 *  2) variables that are forced to a constant by appearing alone in a row
-	 *  3) variables that are forced to zero by appearing in a row with only one set of signs and rhs=0
-	 */
-	private void checkForRemovableVariables() {
-		final double[] knownValue = new double[A.cols];
-		final double[] adjB = new double[b.length];
-		Arrays.fill(knownValue,Double.NaN);
-		for(int i=0;i<b.length;++i) {
-			adjB[i] = b[i];
-		}
-		boolean delta = true;
-		while(delta) {
-			delta = false;
-			for(int i=0;i<A.rows;++i) {
-				int nPlus = 0;
-				int nMinus = 0;
-				for(int j=0;j<A.cols;++j) {
-					if(Double.isNaN(knownValue[j])&&(A.get(i,j)!=0.0)) {
-						if(A.get(i,j)>0) {
-							nPlus += 1;
-						} else {
-							nMinus += 1;
-						}
-					}
-				}
-				if(nPlus+nMinus>0) {
-					if(nPlus+nMinus<=1) {
-						// row has only one remaining variable, so it equals RHS
-						for(int j=0;j<A.cols;++j) {
-							if(Double.isNaN(knownValue[j])&&(A.get(i,j)!=0.0)) {
-								knownValue[j] = adjB[i]/A.get(i,j);
-								for(int ii=0;ii<A.rows;++ii) {
-									if(A.get(ii,j)!=0.0) {
-										adjB[ii] -= knownValue[j]*A.get(ii,j);
-									}
-								}
-								delta = true;
-							}
-						}
-					} else if (((nPlus<=0)||(nMinus<=0))&&(adjB[i]==0.0)) {
-						// row has only one sign type and zero rhs (so all variables are zero)
-						for(int j=0;j<A.cols;++j) {
-							if(Double.isNaN(knownValue[j])&&(A.get(i,j)!=0.0)) {
-								knownValue[j] = 0.0;
-								delta = true;
-							}
-						}
-					}
-				}
-			}
-		}
-		int nFound = 0;
-		for(final double kv: knownValue) {
-			if(!Double.isNaN(kv)) {
-				++nFound;
-			}
-		}
-		if(nFound>0) {
-			System.out.println("found " + nFound + "/" + A.cols + " removable variables");
-		}
-	}
-	
+
 	/**
 	 * @param p
 	 *            primal optimal solution
@@ -320,7 +256,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 		 for (int bi = 0; bi < p.basisColumns.length; ++bi) {
 			 int i = p.basisColumns[bi];
 			 eqmat.setRow(bi,Matrix.extract(A.extractColumn(i).toDense(),rb));
-			 eqvec[bi] = c[i];
+			 eqvec[bi] = c.get(i);
 		 }
 		 final double[] yr = eqmat.solve(eqvec);
 		 final double[] y = new double[b.length];
@@ -339,7 +275,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 			return A.cols;
 		}
 		if (c != null) {
-			return c.length;
+			return c.dim();
 		}
 		return 0;
 	}
@@ -384,7 +320,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 
 	@Override
 	public double c(final int i) {
-		return c[i];
+		return c.get(i);
 	}
 
 	@Override

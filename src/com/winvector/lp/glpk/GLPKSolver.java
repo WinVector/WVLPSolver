@@ -48,7 +48,7 @@ public class GLPKSolver implements LPSolver {
 			for(int i=0;i<m;++i) { // throw out constraint lines
 				lnr.readLine();
 			}
-			final double[] v = new double[prob.c.length];
+			final double[] v = new double[prob.c.dim()];
 			for(int i=0;i<v.length;++i) {
 				final String vline = lnr.readLine();
 				v[i] = Double.parseDouble(vline.split("\\s+")[1]);

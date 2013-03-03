@@ -52,7 +52,7 @@ public final class M3Solver implements LPSolver {
 		}
 		final double[] obj = new double[n];
 		for(int j=0;j<n;++j) {
-			obj[j] = p.c[j];
+			obj[j] = p.c.get(j);
 		}
 		r.f =  new LinearObjectiveFunction(obj,0.0);
 		return r;

@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import org.junit.Test;
 
 import com.winvector.linagl.ColumnMatrix;
+import com.winvector.linagl.DenseVec;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
@@ -32,7 +33,7 @@ public final class TestLP  {
 			final double[] c = new double[1];
 			c[0] = -1.0;
 			final LPEQProb prob = new LPEQProb(new ColumnMatrix(factory.newMatrix(1, 1,false)),
-					new double[1], c);
+					new double[1], new DenseVec(c));
 			final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 			solver.solve(prob, null, 0.0, 1000, factory);
 		} catch (LPException.LPUnboundedException ue) {
@@ -47,7 +48,7 @@ public final class TestLP  {
 			final double[] c = new double[1];
 			c[0] = 1.0;
 			final LPEQProb prob = new LPEQProb(new ColumnMatrix(factory.newMatrix(1, 1,false)),
-					new double[1], c);
+					new double[1], new DenseVec(c));
 			final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 			solver.solve(prob, null, 0.0, 1000, factory);
 		} catch (LPException le) {
@@ -65,7 +66,7 @@ public final class TestLP  {
 		m.set(1,0,1.0); m.set(1,1,3.0); m.set(1,3,-1.0); b[1] = 12.0;  // x1 + 3*x2 - s2 = 12
 		m.set(2,0,1.0); m.set(2,1,-1.0); m.set(2,4,-1.0);                // x1 - x2 - s3 = 0
 		c[0] = 2.0; c[1] = 1.0;                                     // minimize 2*x1 + x2
-		final LPEQProb prob = new LPEQProb(new ColumnMatrix(m),b,c);
+		final LPEQProb prob = new LPEQProb(new ColumnMatrix(m),b,new DenseVec(c));
 		return prob;
 	}
 	
@@ -103,7 +104,7 @@ public final class TestLP  {
 		m.set(2,2,1.0); b[2] = 3.0;   // x2 <= 10
 		m.set(3,0,1.0); m.set(3,1,1.0); m.set(3,2,1.0); b[3] = 10.0;   // x0 + x1 + x2 <= 10
 		c[0] = -10.0; c[1] = -50.0; c[2] = -100.0;                   // maximize 10*x0 + 50*x1 + 100*x2
-		final LPEQProb prob = new LPINEQProb(new ColumnMatrix(m),b,c).eqForm();
+		final LPEQProb prob = new LPINEQProb(new ColumnMatrix(m),b,new DenseVec(c)).eqForm();
 		//prob.printCPLEX(System.out);
 		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 		final double tol = 1.0e-10;
