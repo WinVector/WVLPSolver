@@ -3,11 +3,7 @@ package com.winvector.linagl;
 import java.io.Serializable;
 
 
-public interface PreMatrixI extends Serializable {
-	int rows();
-	int cols();
-	double[] multLeft(double[] y);
-	double[] mult(double[] x);
+public interface PreMatrixI extends LinOpI,Serializable {
 	double[] mult(HVec x);
 	Object buildExtractTemps();
 	SparseVec extractColumn(int ci, Object extractTemps);

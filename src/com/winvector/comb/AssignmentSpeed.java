@@ -21,7 +21,7 @@ import com.winvector.lp.impl.RevisedSimplexSolver;
 
 public final class AssignmentSpeed {
 	
-	private static final class RunStats {
+	public static final class RunStats {
 		public final Map<String,Long> res = new TreeMap<String,Long>();
 		public final Set<String> zaps = new HashSet<String>();
 		public long pivots = 0;
