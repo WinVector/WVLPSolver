@@ -37,6 +37,11 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public long postPivotTimeMS = 0;	
 
 	
+	private void endRunTimingUpdate(final long startTimeMS, final long endInspectionMS) {
+		final long currentTimeMillis = System.currentTimeMillis();
+		totalTimeMS = currentTimeMillis - startTimeMS;
+		postPivotTimeMS += currentTimeMillis - endInspectionMS;
+	}
 	
 	private <T extends Matrix<T>> int[] runSimplex(final EnhancedBasis<T> tab, final double tol, 
 			final int maxRounds, final EarlyExitCondition earlyExitCondition) throws LPException {
@@ -99,14 +104,14 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			final int enteringV = rEnteringV;
 			if (enteringV < 0) {
 				// no entry, at optimum
-				totalTimeMS = System.currentTimeMillis() - startTimeMS;
+				endRunTimingUpdate(startTimeMS,endInspectionMS);
 				return tab.basis();
 			}
 			final SparseVec u = tab.prob.extractColumn(enteringV,tab.extractTemps);
 			final double[] binvu = tab.basisSolveRight(u);
 			final int leavingI = findLeaving(preB,binvu,bRatPtr);
 			if (leavingI < 0) {
-				totalTimeMS = System.currentTimeMillis() - startTimeMS;
+				endRunTimingUpdate(startTimeMS,endInspectionMS);
 				throw new LPException.LPUnboundedException(
 						"problem unbounded");
 			}
@@ -123,7 +128,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			if(null!=earlyExitCondition) {
 				if(earlyExitCondition.canExit(tab.basis)) {
 					//System.out.println("steps: " + normalSteps + ", inspections: " + inspections + ", ratio: " + (inspections/(double)normalSteps));
-					totalTimeMS = System.currentTimeMillis() - startTimeMS;
+					endRunTimingUpdate(startTimeMS,endInspectionMS);
 					return tab.basis();
 				}
 			}

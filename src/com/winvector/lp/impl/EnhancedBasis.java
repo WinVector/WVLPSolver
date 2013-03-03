@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.winvector.linagl.ColumnMatrix;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.SparseVec;
@@ -29,11 +30,21 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	
 	public final LinalgFactory<T> factory;
 	private final int[] binvNZJTmp;
-	public T BInv = null;
+	public T binvW = null;
 	// run counters
 	private long normalSteps = 0;
 
 
+	private void readyBinv() throws LPErrorException {
+		if(null==binvW) {
+			try {
+				binvW = prob.extractColumns(basis,factory).inverse();
+			} catch (Exception e) {
+				throw new LPErrorException("couldn't invert basis");
+			}
+		} 
+	}
+	
 	/**
 	 * try to use inverse to solve (if present)
 	 * 
@@ -44,14 +55,8 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveRight(final double[] y) throws LPErrorException {
-		if(null==BInv) {
-			try {
-				BInv = prob.extractColumns(basis,factory).inverse();
-			} catch (Exception e) {
-				throw new LPErrorException("couldn't invert basis");
-			}
-		}
-		return BInv.mult(y);
+		readyBinv();
+		return binvW.mult(y);
 	}
 
 	/**
@@ -64,14 +69,8 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveRight(final SparseVec y) throws LPErrorException {
-		if(null==BInv) {
-			try {
-				BInv = prob.extractColumns(basis,factory).inverse();
-			} catch (Exception e) {
-				throw new LPErrorException("couldn't invert basis");
-			}
-		}
-		return BInv.mult(y);
+		readyBinv();
+		return binvW.mult(y);
 	}
 
 	/**
@@ -83,14 +82,8 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveLeft(final double[] y) throws LPErrorException {
-		if(null==BInv) {
-			try {
-				BInv = prob.extractColumns(basis,factory).inverse();
-			} catch (Exception e) {
-				throw new LPErrorException("couldn't invert basis");
-			}
-		}
-		return BInv.multLeft(y);
+		readyBinv();
+		return binvW.multLeft(y);
 	}
 
 	/**
@@ -115,11 +108,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 			basis[i] = basis_in[i];
 			curBasisSet.add(basis[i]);
 		}
-		try {
-			BInv = prob.extractColumns(basis,factory).inverse();
-		} catch (Exception e) {
-			throw new LPErrorException("couldn't invert initial basis");
-		}
+		readyBinv();
 	}
 	
 
@@ -147,18 +136,18 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 		basis[leavingI] = enteringV;
 		++normalSteps;
 		if(normalSteps%(25*m+1)==0) {
-			BInv = null; // forced refresh
+			binvW = null; // forced refresh
 			// ideas is BInv is getting unreliable due to rounding
 			// a refresh takes around O(m^3) steps and updates take O(m^2) steps.
 			// so every m steps we can hide the extra m^3 work which amortizes to m^3/m per-step 
 			// of a refresh
 		}
-		if (BInv != null) {
+		if (binvW != null) {
 			// rank 1 update the inverse
 			final double vKInv = 1.0/binvu[leavingI];
 			int nextJJ = 0;
 			for(int j=0;j<m;++j) {
-				if(Math.abs(BInv.get(leavingI,j))>1.0e-8) {
+				if(Math.abs(binvW.get(leavingI,j))>1.0e-8) {
 					binvNZJTmp[nextJJ] = j;
 					++nextJJ;
 				}
@@ -171,21 +160,17 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 						final double vi = -binvui*vKInv;
 						for(nextJJ=0;nextJJ<nJJ;++nextJJ) {
 							final int j = binvNZJTmp[nextJJ];
-							BInv.set(i, j,BInv.get(i, j)+vi*BInv.get(leavingI,j));
+							binvW.set(i, j,binvW.get(i, j)+vi*binvW.get(leavingI,j));
 						}
 					}
 				}
 			}
 			for(nextJJ=0;nextJJ<nJJ;++nextJJ) {
 				final int j = binvNZJTmp[nextJJ];
-				BInv.set(leavingI, j,vKInv*BInv.get(leavingI,j));
+				binvW.set(leavingI, j,vKInv*binvW.get(leavingI,j));
 			}
 		} else {
-			try {
-				BInv = prob.extractColumns(basis,factory).inverse();
-			} catch (Exception e) {
-				throw new LPErrorException("couldn't invert intermediate basis");
-			}
+			readyBinv();
 		}
 	}
 
@@ -206,10 +191,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 			basis[i] = d[i];
 			curBasisSet.add(basis[i]);
 		}
-		try {
-			BInv = prob.extractColumns(basis,factory).inverse();
-		} catch (Exception e) {
-			throw new LPErrorException("couldn't invert reset basis");
-		}
+		binvW = null;
+		readyBinv();
 	}
 }

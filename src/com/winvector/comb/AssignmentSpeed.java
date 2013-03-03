@@ -8,6 +8,7 @@ import java.util.TreeMap;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
+import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
@@ -114,7 +115,7 @@ public final class AssignmentSpeed {
 						c[i][j] = rand.nextDouble();
 					}
 				}
-				final LPEQProb prob = Assignment.buildAssignmentProb(NativeMatrix.factory,c);
+				final LPEQProb prob = Assignment.buildAssignmentProb(ColtMatrix.factory,c);
 				final RunStats durations = runSet(prob,solvers,NativeMatrix.factory);
 				zaps.addAll(durations.zaps);
 				System.out.print(n);

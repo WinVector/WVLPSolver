@@ -154,4 +154,13 @@ public class HVec implements Serializable {
 		}
 		return values[ii];
 	}
+
+	public double[] toArray(final int columns) {
+		final double[] x = new double[columns];
+		final int nindices = indices.length;
+		for(int ii=0;ii<nindices;++ii) {
+			x[indices[ii]] = values[ii];
+		}
+		return x;
+	}
 }

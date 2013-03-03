@@ -4,10 +4,12 @@ import cern.colt.list.DoubleArrayList;
 import cern.colt.list.IntArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 
+import com.winvector.linagl.HVec;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.SparseVec;
@@ -143,5 +145,20 @@ public class ColtMatrix extends Matrix<ColtMatrix> {
 		} else {
 			return super.extractColumn(ci,null);
 		}
+	}
+	
+	@Override
+	public double[] mult(final double[] x) {
+		return Algebra.ZERO.mult(underlying,new DenseDoubleMatrix1D(x)).toArray();
+	}
+	
+	@Override
+	public double[] mult(final HVec x) {
+		return Algebra.ZERO.mult(underlying,new DenseDoubleMatrix1D(x.toArray(underlying.columns()))).toArray();
+	}
+	
+	@Override
+	public double[] multLeft(final double[] b) {
+		return Algebra.ZERO.mult(Algebra.ZERO.transpose(underlying),new DenseDoubleMatrix1D(b)).toArray();
 	}
 }

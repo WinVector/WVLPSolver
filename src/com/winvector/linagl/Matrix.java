@@ -173,6 +173,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 		return r;
 	}
 
+	@Override
 	public double[] mult(final double[] x) {
 		final int cols = cols();
 		if(cols!=x.length) {
@@ -208,6 +209,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 		return r;		
 	}
 
+	@Override
 	public double[] multLeft(final double[] b) {
 		final int rows = rows();
 		if (rows != b.length) {
