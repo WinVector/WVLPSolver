@@ -27,7 +27,8 @@ public final class AssignmentSpeed {
 		public long inspections = 0;
 		public long inspecionTimeMS = 0;
 		public long totalTimeMS = 0;
-		public long pivotTimeMS = 0;
+		public long prePivotTimeMS = 0;
+		public long postPivotTimeMS = 0;
 	}
 
 	/**
@@ -55,7 +56,8 @@ public final class AssignmentSpeed {
 					res.inspections = rs.inspections;
 					res.inspecionTimeMS = rs.inspectionTimeMS;
 					res.totalTimeMS = rs.totalTimeMS;
-					res.pivotTimeMS = rs.pivotTimeMS;
+					res.prePivotTimeMS = rs.prePivotTimeMS;
+					res.postPivotTimeMS = rs.postPivotTimeMS;
 				}
 				final long endMS = System.currentTimeMillis();
 				final long durationMS = endMS-startMS;
@@ -97,7 +99,8 @@ public final class AssignmentSpeed {
 		System.out.print("\t" + "pivots");
 		System.out.print("\t" + "totTimeMS");
 		System.out.print("\t" + "inspectionTimeMS");
-		System.out.print("\t" + "pivotTimeMS");
+		System.out.print("\t" + "prePivotTimeMS");
+		System.out.print("\t" + "postPivotTimeMS");
 		for(final String name: solvers.keySet()) {
 			System.out.print("\t" + name);
 		}
@@ -121,7 +124,8 @@ public final class AssignmentSpeed {
 				System.out.print("\t" + durations.pivots);
 				System.out.print("\t" + durations.totalTimeMS);
 				System.out.print("\t" + durations.inspecionTimeMS);
-				System.out.print("\t" + durations.pivotTimeMS);
+				System.out.print("\t" + durations.prePivotTimeMS);
+				System.out.print("\t" + durations.postPivotTimeMS);
 				for(final String name: solvers.keySet()) {
 					final Long val = durations.res.get(name);
 					System.out.print("\t" + ((val!=null)?val:"NaN"));

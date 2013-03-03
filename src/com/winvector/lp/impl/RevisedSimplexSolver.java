@@ -33,7 +33,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public long inspections = 0;
 	public long totalTimeMS = 0;
 	public long inspectionTimeMS = 0;
-	public long pivotTimeMS = 0;
+	public long prePivotTimeMS = 0;
+	public long postPivotTimeMS = 0;	
 
 	
 	
@@ -48,7 +49,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		inspections = 0;
 		totalTimeMS = 0;
 		inspectionTimeMS = 0;
-		pivotTimeMS = 0;
+		prePivotTimeMS = 0;
+		postPivotTimeMS = 0;
 		final InspectionOrder inspectionOrder = tab.prob.buildOrderTracker(rand);
 		final double[] bRatPtr = new double[1];
 		double[] b = tab.prob.b();
@@ -71,6 +73,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			int rEnteringV = -1;
 			double bestRi = Double.NaN;
 			final long startInspectionMS = System.currentTimeMillis();
+			prePivotTimeMS += startInspectionMS-startRoundMS;
 			inspectionLoop:
 			while(inspectionOrder.hasNext()) {
 				++inspections;
@@ -125,7 +128,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 				}
 			}
 			final long endRoundMS = System.currentTimeMillis();
-			pivotTimeMS += (startInspectionMS-startRoundMS) + (endRoundMS-endInspectionMS);
+			postPivotTimeMS += endRoundMS-endInspectionMS;
 		}
 		totalTimeMS = System.currentTimeMillis() - startTimeMS;
 		throw new LPTooManyStepsException("max steps>" + maxRounds);
