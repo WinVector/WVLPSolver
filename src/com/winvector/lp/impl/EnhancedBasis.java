@@ -2,31 +2,29 @@ package com.winvector.lp.impl;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.lp.LPEQProb;
+import com.winvector.lp.AbstractLPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
 import com.winvector.sparse.SparseVec;
 
 /**
- * not a traditional Tableau as we are not implementing the row operations that update the Tableau.
- * We instead are abstracting that down to an inverse linear operator that we incrementally update.
- * This is slower but clearer (you need to theory of actual tableau bookkeeping as you have reduced to linear algebra)
+ * Basis enhanced with extra record keeping
  * @author johnmount
  *
  */
-final class RTableau<T extends Matrix<T>> implements Serializable {
+final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	public final LPEQProb prob;
+	public final AbstractLPEQProb prob;
 
-	public final int m;
-
-	public final int n;
-
-	public final int[] basis;
+	public final int m;  // rank of basis
+	public final int[] basis; // variables in basis
+	public final Set<Integer> curBasisSet = new HashSet<Integer>(); // set of variables in basis
 	
 	public final LinalgFactory<T> factory;
 	private final int[] binvNZJTmp;
@@ -40,14 +38,14 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 	 * 
 	 * @param y
 	 * @return x s.t. x = BInv y (if BInv!=null) 
-	 *         prob.A.extractColumns(basis) x = y (otherwise)
+	 *         prob.extractColumns(basis) x = y (otherwise)
 	 *         (want x>=0)
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveRight(final double[] y) throws LPErrorException {
 		if(null==BInv) {
 			try {
-				BInv = prob.A.extractColumns(basis,factory).inverse();
+				BInv = prob.extractColumns(basis,factory).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert basis");
 			}
@@ -60,14 +58,14 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 	 * 
 	 * @param y
 	 * @return x s.t. x = BInv y (if BInv!=null) 
-	 *         prob.A.extractColumns(basis) x = y (otherwise)
+	 *         prob.extractColumns(basis) x = y (otherwise)
 	 *         (want x>=0)
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveRight(final SparseVec y) throws LPErrorException {
 		if(null==BInv) {
 			try {
-				BInv = prob.A.extractColumns(basis,factory).inverse();
+				BInv = prob.extractColumns(basis,factory).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert basis");
 			}
@@ -80,13 +78,13 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 	 * 
 	 * @param y
 	 * @return x s.t. x = y BInv (if BInv!=null) or x
-	 *         prob.A.extractColumns(basis) = y (otherwise)
+	 *         prob.extractColumns(basis) = y (otherwise)
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveLeft(final double[] y) throws LPErrorException {
 		if(null==BInv) {
 			try {
-				BInv = prob.A.extractColumns(basis,factory).inverse();
+				BInv = prob.extractColumns(basis,factory).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert basis");
 			}
@@ -104,34 +102,37 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 	 * @param basisColumns
 	 *            m-vector that is a valid starting basis
 	 */
-	public RTableau(final LPEQProb prob_in, final int[] basis_in, final LinalgFactory<T> factory) throws LPException {
+	public EnhancedBasis(final AbstractLPEQProb prob_in, final int[] basis_in, final LinalgFactory<T> factory) throws LPException {
 		this.factory = factory;
 		prob = prob_in;
 		//RevisedSimplexSolver.checkParams(prob.A, prob.b, prob.c, basis_in);
-		m = prob.A.rows;
-		n = prob.A.cols;
+		m = prob.rows();
 		binvNZJTmp = new int[m];
 		basis = new int[basis_in.length];
 		for (int i = 0; i < basis.length; ++i) {
 			basis[i] = basis_in[i];
+			curBasisSet.add(basis[i]);
 		}
 		try {
-			BInv = prob.A.extractColumns(basis,factory).inverse();
+			BInv = prob.extractColumns(basis,factory).inverse();
 		} catch (Exception e) {
 			throw new LPErrorException("couldn't invert initial basis");
 		}
 	}
 	
 
-	public double[] leftBasisSoln(final double[] c) throws LPErrorException {
-		final double[] cB = Matrix.extract(c,basis);
+	public double[] leftBasisSoln() throws LPErrorException {
+		final double[] cB = new double[m];
+		for(int i=0;i<m;++i) {
+			cB[i] = prob.c(basis[i]);
+		}
 		final double[] lambda = basisSolveLeft(cB);
 		return lambda;
 	}
 	
-	public double computeRI(final double[] lambda, final double[] c, final int vi) {
-		final double cFi = c[vi];
-		final double lambdaFi = prob.A.extractColumn(vi).dot(lambda);
+	public double computeRI(final double[] lambda, final int vi) {
+		final double cFi = prob.c(vi);
+		final double lambdaFi = prob.extractColumn(vi).dot(lambda);
 		final double ri = cFi - lambdaFi; 
 		return ri;
 	}
@@ -139,9 +140,11 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 
 
 	public void basisPivot(final int leavingI, final int enteringV, final double[] binvu) throws LPErrorException {
+		curBasisSet.remove(basis[leavingI]);
+		curBasisSet.add(enteringV);
 		basis[leavingI] = enteringV;
 		++normalSteps;
-		if(normalSteps%(25*(m+n)+1)==0) {
+		if(normalSteps%(25*m+1)==0) {
 			BInv = null; // forced refresh
 			// ideas is BInv is getting unreliable due to rounding
 			// a refresh takes around O(m^3) steps and updates take O(m^2) steps.
@@ -177,7 +180,7 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 			}
 		} else {
 			try {
-				BInv = prob.A.extractColumns(basis,factory).inverse();
+				BInv = prob.extractColumns(basis,factory).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert intermediate basis");
 			}
@@ -196,11 +199,13 @@ final class RTableau<T extends Matrix<T>> implements Serializable {
 	}
 
 	public void resetBasis(final int[] d) throws LPErrorException {
+		curBasisSet.clear();
 		for(int i=0;i<basis.length;++i) {
 			basis[i] = d[i];
+			curBasisSet.add(basis[i]);
 		}
 		try {
-			BInv = prob.A.extractColumns(basis,factory).inverse();
+			BInv = prob.extractColumns(basis,factory).inverse();
 		} catch (Exception e) {
 			throw new LPErrorException("couldn't invert reset basis");
 		}

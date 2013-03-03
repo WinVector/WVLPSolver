@@ -9,6 +9,7 @@ import java.util.Set;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.PreMatrix;
+import com.winvector.lp.AbstractLPEQProb;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
@@ -201,7 +202,7 @@ abstract class LPSolverImpl implements LPSolver {
 	 *             (if infeas or unbounded) no need to check feasibility of
 	 *             input or output (check by wrapper)
 	 */
-	protected abstract <T extends Matrix<T>> LPSoln rawSolve(LPEQProb prob, int[] basis0,
+	protected abstract <T extends Matrix<T>> LPSoln rawSolve(AbstractLPEQProb prob, int[] basis0,
 			final double tol, final int maxRounds, final LinalgFactory<T> factory, final EarlyExitCondition earlyExitCondition) throws LPException;
 
 	/**

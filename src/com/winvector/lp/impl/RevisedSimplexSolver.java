@@ -1,10 +1,10 @@
 package com.winvector.lp.impl;
 
-import java.util.BitSet;
 import java.util.Random;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
+import com.winvector.lp.AbstractLPEQProb;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
@@ -24,8 +24,6 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public double checkTol = 1.0e-8;
 	public double enteringTol = 1.0e-5;
 	public double leavingTol = 1.0e-7;
-	public boolean perturbC = true;
-	public boolean perturbB = false;              // this does change which bases are co-incident and which are feasible
 	public boolean earlyR = true;                 // allow partial inspection for entering columns
 	public boolean earlyLeavingCalc = false;      // value and sort steps early
 	public boolean earlyLeavingExit = false;      // allow early inspection exit on valuation calc
@@ -35,7 +33,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	
 
 	
-	private <T extends Matrix<T>> int[] runSimplex(final RTableau<T> tab, final double tol, 
+	private <T extends Matrix<T>> int[] runSimplex(final EnhancedBasis<T> tab, final double tol, 
 			final int maxRounds, final EarlyExitCondition earlyExitCondition) throws LPException {
 		if (debug > 0) {
 			System.out.println("start: " + stringBasis(tab.basis));
@@ -43,32 +41,9 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		// run counters
 		int normalSteps = 0;
 		int inspections = 0;
-		final int nvars = tab.prob.A.cols;
-		final BitSet curBasisIndicator = new BitSet(nvars);
-		for(final int bi: tab.basis) {
-			curBasisIndicator.set(bi);
-		}
-		final InspectionOrder inspectionOrder = new RandomOrder(nvars,rand);
+		final InspectionOrder inspectionOrder = new RandomOrder(tab.prob.ncols(),rand);
 		final double[] bRatPtr = new double[1];
-		double[] c = tab.prob.c;
-		double[] b = tab.prob.b;
-		if(perturbC) {
-			c = new double[tab.prob.c.length];
-			for(int i=0;i<c.length;++i) {
-				c[i] = tab.prob.c[i]*(1+1.0e-5*rand.nextGaussian()) + 1.0e-7*rand.nextGaussian();
-			}
-		}
-		if(perturbB) {
-			b = new double[tab.prob.b.length];
-			final double[] x = new double[tab.prob.c.length];
-			for(int i=0;i<x.length;++i) {
-				x[i] = 1.0e-7*rand.nextDouble(); // keep initial basis feasible
-			}
-			final double[] p = tab.prob.A.mult(x);
-			for(int i=0;i<b.length;++i) {
-				b[i] = tab.prob.b[i] + p[i];
-			}
-		}
+		double[] b = tab.prob.b();
 		while (normalSteps<=maxRounds) {
 			++normalSteps;
 			//prob.soln(basis,tol);
@@ -77,11 +52,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			if(resuffle) {
 				inspectionOrder.shuffle();
 			}
-			curBasisIndicator.clear();
-			for(final int bi: tab.basis) {
-				curBasisIndicator.set(bi);
-			}
-			final double[] lambda = tab.leftBasisSoln(c);
+			final double[] lambda = tab.leftBasisSoln();
 			final double[] preB = tab.basisSolveRight(b);
 			for(int i=0;i<preB.length;++i) { // assume any negative are rounding errors
 				preB[i] = Math.max(0.0,preB[i]);
@@ -99,8 +70,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			while(inspectionOrder.hasNext()) {
 				++inspections;
 				final int v = inspectionOrder.take();
-				if(!curBasisIndicator.get(v)) {
-					final double ri = tab.computeRI(lambda, c, v);
+				if(!tab.curBasisSet.contains(v)) {
+					final double ri = tab.computeRI(lambda, v);
 					//System.out.println("\t" + v + " ri: " + ri);
 					if(ri < -enteringTol) {
 						if((rEnteringV < 0)||(ri < bestRi)) {
@@ -112,7 +83,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 							}
 						}
 						if(earlyLeavingCalc) {
-							final SparseVec u = tab.prob.A.extractColumn(rEnteringV);
+							final SparseVec u = tab.prob.extractColumn(rEnteringV);
 							final double[] binvu = tab.basisSolveRight(u);
 							int leavingIndex = findLeaving(preB,binvu,bRatPtr);
 							if((leavingIndex>=0)&&(bRatPtr[0]>=0)) {
@@ -145,7 +116,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			} else {
 				enteringV = rEnteringV;
 				if(enteringV>=0) {
-					final SparseVec u = tab.prob.A.extractColumn(enteringV);
+					final SparseVec u = tab.prob.extractColumn(enteringV);
 					final double[] binvu = tab.basisSolveRight(u);
 					leavingI = findLeaving(preB,binvu,bRatPtr);
 					if(leavingI>=0) {
@@ -231,13 +202,13 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	 *             (if infeas or unbounded)
 	 */
 	@Override
-	protected <T extends Matrix<T>> LPSoln rawSolve(final LPEQProb prob,
+	protected <T extends Matrix<T>> LPSoln rawSolve(final AbstractLPEQProb prob,
 			final int[] basis0, double tol, final int maxRounds, final LinalgFactory<T> factory,
 			final EarlyExitCondition earlyExitCondition) throws LPException {
 		if ((tol<=0)||Double.isNaN(tol)||Double.isInfinite(tol)) {
 			tol = 0.0;
 		}
-		final RTableau<T> t = new RTableau<T>(prob, basis0,factory);
+		final EnhancedBasis<T> t = new EnhancedBasis<T>(prob, basis0,factory);
 		final int[] rbasis = runSimplex(t,tol,maxRounds,earlyExitCondition);
 		//System.out.println("steps: " + t.normalSteps);
 		//System.out.println("" + "nvars" + "\t" + "ncond" + "\t" + "steps" + "\t" + "inspections");
@@ -245,7 +216,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		if (rbasis == null) {
 			return null;
 		}
-		final LPSoln lpSoln = new LPSoln(LPEQProb.primalSoln(prob.A, prob.b, rbasis, tol, factory), rbasis);
+		final LPSoln lpSoln = new LPSoln(LPEQProb.primalSoln(prob, rbasis, factory), rbasis);
 		return lpSoln;
 	}
 }

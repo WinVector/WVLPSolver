@@ -7,6 +7,7 @@ import com.winvector.linagl.Matrix;
 import com.winvector.linagl.PreMatrix;
 import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.sparse.ColumnMatrix;
+import com.winvector.sparse.SparseVec;
 
 
 /**
@@ -14,7 +15,7 @@ import com.winvector.sparse.ColumnMatrix;
  * dual: max y.b: y A <= c 
  * y b = y A x <= c x (by A <=c, x>=0) , so y . b <= c . x at optimal y.b = c.x
  */
-public final class LPEQProb extends LPProbBase {
+public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	private static final long serialVersionUID = 1L;
 	
 
@@ -58,6 +59,21 @@ public final class LPEQProb extends LPProbBase {
 			x[basis[i]] = xpi;
 		}
 		checkPrimFeas(A, b, x, tol);
+		return x;
+	}
+	
+	public static <T extends Matrix<T>> double[] primalSoln(final AbstractLPEQProb prob, final int[] basis, final LinalgFactory<T> factory)
+			throws LPException {
+		final Matrix<T> AP = prob.extractColumns(basis,factory);
+		final double[] xp = AP.solve(prob.b());
+		final double[] x = new double[prob.ncols()];
+		if (xp == null) {
+			throw new LPException.LPErrorException("basis solution failed");
+		}
+		for (int i = 0; i < basis.length; ++i) {
+			final double xpi = xp[i];
+			x[basis[i]] = xpi;
+		}
 		return x;
 	}
 
@@ -351,5 +367,37 @@ public final class LPEQProb extends LPProbBase {
 		final double[] dualSoln = dualSolution(primSoln, tol,factory);
 		checkPrimDualOpt(A, b, c, primSoln.primalSolution, dualSoln, tol);
 		return primSoln;
+	}
+
+	// Abstract LPEQProb methods
+	@Override
+	public int rows() {
+		return A.rows;
+	}
+
+	@Override
+	public SparseVec extractColumn(final int j) {
+		return A.extractColumn(j);
+	}
+
+	@Override
+	public <T extends Matrix<T>> T extractColumns(final int[] basis,
+			final LinalgFactory<T> factory) {
+		return A.extractColumns(basis, factory);
+	}
+
+	@Override
+	public double c(final int i) {
+		return c[i];
+	}
+
+	@Override
+	public double[] b() {
+		return b;
+	}
+
+	@Override
+	public int ncols() {
+		return A.cols;
 	}
 }
