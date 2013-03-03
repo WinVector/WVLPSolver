@@ -120,8 +120,8 @@ public class ColtMatrix extends Matrix<ColtMatrix> {
 	}
 	
 	@Override
-	public Object buildExtractTemps(final int m) {
-		return new ExtractTemps(m);
+	public Object buildExtractTemps() {
+		return new ExtractTemps(rows());
 	}
 
 	@Override

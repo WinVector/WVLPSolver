@@ -11,11 +11,12 @@ import com.winvector.linagl.SparseVec;
  * @author johnmount
  *
  */
-public interface AbstractLPEQProb {
+public interface LPEQProbI {
 	int rows();
 	double[] b();
 	double c(int i);
-	SparseVec extractColumn(int j);
+	Object buildExtractTemps();
+	SparseVec extractColumn(int j, Object extractTemps);
 	<T extends Matrix<T>> T extractColumns(int[] basis, LinalgFactory<T> factory);
 	InspectionOrder buildOrderTracker(Random rand);
 }

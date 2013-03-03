@@ -10,18 +10,18 @@ import com.winvector.linalg.colt.NativeMatrix;
  * @author johnmount
  *
  */
-public final class ColumnMatrix implements PreMatrix {
+public final class ColumnMatrix implements PreMatrixI {
 	private static final long serialVersionUID = 1L;
 
 	public final int rows;
 	public final int cols;
 	private final SparseVec[] columns;
 	
-	public <T extends Matrix<T>> ColumnMatrix(final Matrix<T> a) {
+	public ColumnMatrix(final PreMatrixI a) {
 		rows = a.rows();
 		cols = a.cols();
 		columns = new SparseVec[cols];
-		final Object extractTemps = a.buildExtractTemps(rows);
+		final Object extractTemps = a.buildExtractTemps();
 		for(int j=0;j<cols;++j) {
 			columns[j] = a.extractColumn(j,extractTemps);
 		}
@@ -43,8 +43,13 @@ public final class ColumnMatrix implements PreMatrix {
 		return columns[col].get(row);
 	}
 
-
-	public SparseVec extractColumn(final int j) {
+	@Override
+	public Object buildExtractTemps() {
+		return null;
+	}
+	
+	@Override
+	public SparseVec extractColumn(final int j, final Object extractTemps) {
 		return columns[j];
 	}
 	

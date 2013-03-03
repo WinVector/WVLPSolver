@@ -5,18 +5,17 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import com.winvector.linagl.ColumnMatrix;
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.PreMatrix;
-import com.winvector.linagl.PreVec;
+import com.winvector.linagl.PreMatrixI;
+import com.winvector.linagl.PreVecI;
 import com.winvector.lp.LPException.LPMalformedException;
 
 abstract class LPProbBase implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
-	public final ColumnMatrix A; // want to switch this to an interface
+	public final PreMatrixI A; // want to switch this to an interface
 	public final double[] b;
-	public final PreVec c;
+	public final PreVecI c;
 	public final String relStr;
 	
 
@@ -30,7 +29,7 @@ abstract class LPProbBase implements Serializable {
 	 * @throws LPException.LPMalformedException
 	 *             if parameters don't match defs
 	 */
-	public LPProbBase(final ColumnMatrix A_in, final double[] b_in, final PreVec c_in, final String relStr)
+	public LPProbBase(final PreMatrixI A_in, final double[] b_in, final PreVecI c_in, final String relStr)
 			throws LPException.LPMalformedException {
 		checkParams(A_in, b_in, c_in);
 		A = A_in;
@@ -49,7 +48,7 @@ abstract class LPProbBase implements Serializable {
 	 * @throws LPException.LPMalformedException
 	 *             if parameters don't match defs
 	 */
-	public static void checkParams(final PreMatrix A_, final double[] b_, final PreVec c_)
+	public static void checkParams(final PreMatrixI A_, final double[] b_, final PreVecI c_)
 			throws LPException.LPMalformedException {
 		if ((A_ == null) || (b_ == null) || (c_ == null)
 				|| (A_.rows() != b_.length) || (A_.cols() != c_.dim())) {
@@ -86,7 +85,7 @@ abstract class LPProbBase implements Serializable {
 	public void print(final PrintStream p) {
 		p.println();
 		p.println("x>=0");
-		A.print(p);
+		p.println(A);
 		p.print(" * x " + relStr + " ");
 		p.println(Matrix.toString(b));
 		p.print("minimize x . ");

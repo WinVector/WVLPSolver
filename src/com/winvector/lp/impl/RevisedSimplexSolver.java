@@ -5,7 +5,7 @@ import java.util.Random;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.SparseVec;
-import com.winvector.lp.AbstractLPEQProb;
+import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.InspectionOrder;
 import com.winvector.lp.LPEQProb;
@@ -86,7 +86,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 				//System.out.println("steps: " + normalSteps + ", inspections: " + inspections + ", ratio: " + (inspections/(double)normalSteps));
 				return tab.basis();
 			}
-			final SparseVec u = tab.prob.extractColumn(enteringV);
+			final SparseVec u = tab.prob.extractColumn(enteringV,tab.extractTemps);
 			final double[] binvu = tab.basisSolveRight(u);
 			final int leavingI = findLeaving(preB,binvu,bRatPtr);
 			if (leavingI < 0) {
@@ -161,7 +161,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	 *             (if infeas or unbounded)
 	 */
 	@Override
-	protected <T extends Matrix<T>> LPSoln rawSolve(final AbstractLPEQProb prob,
+	protected <T extends Matrix<T>> LPSoln rawSolve(final LPEQProbI prob,
 			final int[] basis0, double tol, final int maxRounds, final LinalgFactory<T> factory,
 			final EarlyExitCondition earlyExitCondition) throws LPException {
 		if ((tol<=0)||Double.isNaN(tol)||Double.isInfinite(tol)) {

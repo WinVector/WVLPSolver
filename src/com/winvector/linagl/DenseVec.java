@@ -1,13 +1,13 @@
 package com.winvector.linagl;
 
-public class DenseVec implements PreVec {
+public class DenseVec implements PreVecI {
 	private final double[] x;
 	
 	public DenseVec(final double[] x) {
 		this.x = x;
 	}
 
-	public DenseVec(final PreVec c) {
+	public DenseVec(final PreVecI c) {
 		final int dim = c.dim();
 		x = new double[dim];
 		for(int i=0;i<dim;++i) {

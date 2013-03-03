@@ -8,7 +8,7 @@ import java.util.Set;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.SparseVec;
-import com.winvector.lp.AbstractLPEQProb;
+import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;
 
@@ -20,7 +20,8 @@ import com.winvector.lp.LPException.LPErrorException;
 final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	public final AbstractLPEQProb prob;
+	public final LPEQProbI prob;
+	public final Object extractTemps;
 
 	public final int m;  // rank of basis
 	public final int[] basis; // variables in basis
@@ -102,9 +103,10 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	 * @param basisColumns
 	 *            m-vector that is a valid starting basis
 	 */
-	public EnhancedBasis(final AbstractLPEQProb prob_in, final int[] basis_in, final LinalgFactory<T> factory) throws LPException {
+	public EnhancedBasis(final LPEQProbI prob_in, final int[] basis_in, final LinalgFactory<T> factory) throws LPException {
 		this.factory = factory;
 		prob = prob_in;
+		extractTemps = prob.buildExtractTemps();
 		//RevisedSimplexSolver.checkParams(prob.A, prob.b, prob.c, basis_in);
 		m = prob.rows();
 		binvNZJTmp = new int[m];
@@ -132,7 +134,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	
 	public double computeRI(final double[] lambda, final int vi) {
 		final double cFi = prob.c(vi);
-		final double lambdaFi = prob.extractColumn(vi).dot(lambda);
+		final double lambdaFi = prob.extractColumn(vi,extractTemps).dot(lambda);
 		final double ri = cFi - lambdaFi; 
 		return ri;
 	}

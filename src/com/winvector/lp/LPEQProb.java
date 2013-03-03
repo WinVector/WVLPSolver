@@ -2,12 +2,11 @@ package com.winvector.lp;
 
 import java.util.Random;
 
-import com.winvector.linagl.ColumnMatrix;
 import com.winvector.linagl.HVec;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.PreMatrix;
-import com.winvector.linagl.PreVec;
+import com.winvector.linagl.PreMatrixI;
+import com.winvector.linagl.PreVecI;
 import com.winvector.linagl.SparseVec;
 import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.impl.RandomOrder;
@@ -18,11 +17,11 @@ import com.winvector.lp.impl.RandomOrder;
  * dual: max y.b: y A <= c 
  * y b = y A x <= c x (by A <=c, x>=0) , so y . b <= c . x at optimal y.b = c.x
  */
-public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
+public final class LPEQProb extends LPProbBase implements LPEQProbI {
 	private static final long serialVersionUID = 1L;
 	
 
-	public LPEQProb(final ColumnMatrix A_in, final double[] b_in, final PreVec c_in)
+	public LPEQProb(final PreMatrixI A_in, final double[] b_in, final PreVecI c_in)
 			throws LPException.LPMalformedException {
 		super(A_in,b_in,c_in,"=");
 	}
@@ -42,7 +41,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	 * @throws LPException
 	 *             on bad data
 	 */
-	public static <T extends Matrix<T>> HVec primalSoln(final PreMatrix A, final double[] b, final int[] basis, final double tol, final LinalgFactory<T> factory)
+	public static <T extends Matrix<T>> HVec primalSoln(final PreMatrixI A, final double[] b, final int[] basis, final double tol, final LinalgFactory<T> factory)
 			throws LPException {
 		if ((A == null) || (b == null) || (basis == null) || (A.rows() <= 0)
 				|| (A.rows() != b.length) || (basis.length != A.rows())) {
@@ -61,7 +60,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 		return x;
 	}
 	
-	public static <T extends Matrix<T>> HVec primalSoln(final AbstractLPEQProb prob, final int[] basis, final LinalgFactory<T> factory)
+	public static <T extends Matrix<T>> HVec primalSoln(final LPEQProbI prob, final int[] basis, final LinalgFactory<T> factory)
 			throws LPException {
 		final Matrix<T> AP = prob.extractColumns(basis,factory);
 		final double[] xp = AP.solve(prob.b());
@@ -84,7 +83,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	 * @throws LPException
 	 *             (if infeas ill-formed)
 	 */
-	public static void checkPrimFeas(final PreMatrix A, final double[] b, final HVec x,
+	public static void checkPrimFeas(final PreMatrixI A, final double[] b, final HVec x,
 			double tol) throws LPException {
 		if ((A == null) || (b == null) || (x == null)) {
 			throw new LPException.LPInfeasibleException("null argument");
@@ -129,7 +128,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	 * @throws LPException
 	 *             (if infeas ill-formed)
 	 */
-	public static void checkDualFeas(final PreMatrix A, final PreVec c, final double[] y,
+	public static void checkDualFeas(final PreMatrixI A, final PreVecI c, final double[] y,
 			double tol) throws LPException {
 		if ((A == null) || (c == null) || (y == null)) {
 			throw new LPException.LPInfeasibleException("null argument");
@@ -170,7 +169,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	 * @throws LPException
 	 *             (if infeas ill-formed, or y.b > c.x)
 	 */
-	public static void checkPrimDualFeas(final PreMatrix A, final double[] b, final PreVec c,
+	public static void checkPrimDualFeas(final PreMatrixI A, final double[] b, final PreVecI c,
 			final HVec x, final double[] y, double tol) throws LPException {
 		if ((tol <= 0.0)||Double.isNaN(tol)||Double.isInfinite(tol)) { 
 			tol = 0.0;
@@ -202,7 +201,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	 * @throws LPException
 	 *             (if infeas ill-formed, or y.b != c.x)
 	 */
-	public static void checkPrimDualOpt(final PreMatrix A, final double[] b, final PreVec c, 
+	public static void checkPrimDualOpt(final PreMatrixI A, final double[] b, final PreVecI c, 
 			final HVec x,
 			final double[] y, double tol) throws LPException {
 		if ((tol <= 0.0)||Double.isNaN(tol)||Double.isInfinite(tol)) { 
@@ -253,9 +252,10 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 		 final double[] eqvec = new double[p.basisColumns.length];
 		 // put in all complementary slackness relns
 		 // Schrijver p. 95
+		 final Object extractTemps = A.buildExtractTemps();
 		 for (int bi = 0; bi < p.basisColumns.length; ++bi) {
 			 int i = p.basisColumns[bi];
-			 eqmat.setRow(bi,Matrix.extract(A.extractColumn(i).toDense(),rb));
+			 eqmat.setRow(bi,Matrix.extract(A.extractColumn(i,extractTemps).toDense(),rb));
 			 eqvec[bi] = c.get(i);
 		 }
 		 final double[] yr = eqmat.solve(eqvec);
@@ -272,7 +272,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 
 	public int nvars() {
 		if (A != null) {
-			return A.cols;
+			return A.cols();
 		}
 		if (c != null) {
 			return c.dim();
@@ -304,12 +304,17 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	// Abstract LPEQProb methods
 	@Override
 	public int rows() {
-		return A.rows;
+		return A.rows();
+	}
+	
+	@Override
+	public Object buildExtractTemps() {
+		return A.buildExtractTemps();
 	}
 
 	@Override
-	public SparseVec extractColumn(final int j) {
-		return A.extractColumn(j);
+	public SparseVec extractColumn(final int j, final Object extractTemps) {
+		return A.extractColumn(j,extractTemps);
 	}
 
 	@Override
@@ -330,6 +335,6 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 
 	@Override
 	public InspectionOrder buildOrderTracker(final Random rand) {
-		return new RandomOrder(A.cols,rand);
+		return new RandomOrder(A.cols(),rand);
 	}
 }

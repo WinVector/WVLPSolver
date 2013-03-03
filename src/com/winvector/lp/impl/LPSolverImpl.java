@@ -11,10 +11,10 @@ import com.winvector.linagl.DenseVec;
 import com.winvector.linagl.HVec;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
-import com.winvector.linagl.PreMatrix;
-import com.winvector.linagl.PreVec;
+import com.winvector.linagl.PreMatrixI;
+import com.winvector.linagl.PreVecI;
 import com.winvector.linagl.SparseVec;
-import com.winvector.lp.AbstractLPEQProb;
+import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
@@ -49,7 +49,7 @@ abstract class LPSolverImpl implements LPSolver {
 	 * @throws LPException.LPMalformedException
 	 *             if parameters don't match defs
 	 */
-	public static void checkParams(final PreMatrix A, final double[] b, final PreVec c, final int[] basis)
+	public static void checkParams(final PreMatrixI A, final double[] b, final PreVecI c, final int[] basis)
 			throws LPException.LPMalformedException {
 		if ((A == null) || (b == null) || (c == null) || (basis == null)
 				|| (A.rows() <= 0) || (A.rows() != b.length)
@@ -175,7 +175,7 @@ abstract class LPSolverImpl implements LPSolver {
 	 *             (if infeas or unbounded) no need to check feasibility of
 	 *             input or output (check by wrapper)
 	 */
-	protected abstract <T extends Matrix<T>> LPSoln rawSolve(AbstractLPEQProb prob, int[] basis0,
+	protected abstract <T extends Matrix<T>> LPSoln rawSolve(LPEQProbI prob, int[] basis0,
 			final double tol, final int maxRounds, final LinalgFactory<T> factory, final EarlyExitCondition earlyExitCondition) throws LPException;
 
 	/**
@@ -192,17 +192,18 @@ abstract class LPSolverImpl implements LPSolver {
 	 * 
 	 * phase 1 get a basis 
 	 */
-	private <T extends Matrix<T>> int[] solvePhase1(final ColumnMatrix A, final double[] b, final PreVec cin, final double tol, 
+	private <T extends Matrix<T>> int[] solvePhase1(final PreMatrixI A, final double[] b, final PreVecI cin, final double tol, 
 			final int maxRounds, final LinalgFactory<T> factory) 
 			throws LPException {
-		final int m = A.rows;
-		final int n = A.cols;
+		final int m = A.rows();
+		final int n = A.cols();
 		final int[] basis0 = new int[m];
 		final ArrayList<SparseVec> artificialSlackCols = new ArrayList<SparseVec>(m);
 		{
 			Arrays.fill(basis0,-1);
+			final Object extractTemps = A.buildExtractTemps();
 			for(int j=0;j<n;++j) {
-				final SparseVec col = A.extractColumn(j);
+				final SparseVec col = A.extractColumn(j,extractTemps);
 				if(col.popCount()==1) {
 					final int i = col.nzIndex();
 					final double vi = col.get(i);
@@ -224,7 +225,7 @@ abstract class LPSolverImpl implements LPSolver {
 				return basis0;
 			}
 		}
-		final ColumnMatrix AP = A.addColumns(artificialSlackCols);
+		final ColumnMatrix AP = new ColumnMatrix(A).addColumns(artificialSlackCols);
 		final double[] c = new double[n + artificialSlackCols.size()];
 		if(null!=cin) {
 			// hint at actual objective fn
@@ -288,7 +289,7 @@ abstract class LPSolverImpl implements LPSolver {
 					++nGood;
 				}
 			}
-			final int[] rowset = new int[A.rows];
+			final int[] rowset = new int[A.rows()];
 			for (int i = 0; i < rowset.length; ++i) {
 				rowset[i] = i;
 			}
@@ -322,7 +323,7 @@ abstract class LPSolverImpl implements LPSolver {
 		//System.out.println("start rb1");
 		final int[] rb;
 		if(obviouslyFullRowRank(origProb.A)) {
-			rb = new int[origProb.A.rows];
+			rb = new int[origProb.A.rows()];
 			for(int i=0;i<rb.length;++i) {
 				rb[i] = i;
 			}
@@ -351,15 +352,15 @@ abstract class LPSolverImpl implements LPSolver {
 		LPEQProb prob = null;
 		// select out irredundant rows
 		final DenseVec newC = new DenseVec(origProb.c);
-		if (rb.length != origProb.A.rows) {
-			final ColumnMatrix nA = origProb.A.extractRows(rb);
+		if (rb.length != origProb.A.rows()) {
+			final ColumnMatrix nA = new ColumnMatrix(origProb.A).extractRows(rb);
 			final double[] nb = Matrix.extract(origProb.b,rb);
 			prob = new LPEQProb(nA, nb, newC);
 		} else {
 			prob = new LPEQProb(origProb.A, origProb.b.clone(), newC);
 		}
 		// deal with square system
-		if (prob.A.rows >= prob.A.cols) {
+		if (prob.A.rows() >= prob.A.cols()) {
 			final double[] xv = prob.A.matrixCopy(factory).solve(prob.b);
 			if (xv == null) {
 				throw new LPException.LPInfeasibleException(
@@ -370,7 +371,7 @@ abstract class LPSolverImpl implements LPSolver {
 			if (prob != origProb) {
 				LPEQProb.checkPrimFeas(origProb.A, origProb.b, x, tol); // TODO: move off dense
 			}
-			int[] b = new int[prob.A.cols];
+			int[] b = new int[prob.A.cols()];
 			for (int i = 0; i < b.length; ++i) {
 				b[i] = i;
 			}
@@ -379,18 +380,19 @@ abstract class LPSolverImpl implements LPSolver {
 		// re-scale
 		final double scaleRange = 10.0;
 		{
-			final double[] rowTots = prob.A.sumAbsRowValues();
+			final ColumnMatrix probA = new ColumnMatrix(prob.A);
+			final double[] rowTots = probA.sumAbsRowValues();
 			final double[] scale = new double[rowTots.length];
 			for(int i=0;i<prob.b.length;++i) {
 				final double sumAbs = rowTots[i] + Math.abs(prob.b[i]);
-				if((sumAbs>0)&&((sumAbs>=scaleRange*(prob.A.cols+1.0))||(sumAbs<=(prob.A.cols+1.0)/scaleRange))) {
-					scale[i] = (prob.A.cols+1.0)/sumAbs;
+				if((sumAbs>0)&&((sumAbs>=scaleRange*(prob.A.cols()+1.0))||(sumAbs<=(prob.A.cols()+1.0)/scaleRange))) {
+					scale[i] = (prob.A.cols()+1.0)/sumAbs;
 				} else {
 					scale[i] = 1.0;
 				}
 				prob.b[i] *= scale[i];
 			}
-			prob = new LPEQProb(prob.A.rescaleRows(scale), prob.b, newC);
+			prob = new LPEQProb(probA.rescaleRows(scale), prob.b, newC);
 		}
 		{
 			double sumAbs = 0.0;
@@ -406,7 +408,7 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		// work on basis
 		int[] basis0 = null;
-		if ((basis_in != null) && (basis_in.length == prob.A.rows)) {
+		if ((basis_in != null) && (basis_in.length == prob.A.rows())) {
 			try {
 				if (verbose > 0) {
 					System.out.println("import basis");
@@ -446,18 +448,19 @@ abstract class LPSolverImpl implements LPSolver {
 		return soln;
 	}
 
-	private boolean obviouslyFullRowRank(final ColumnMatrix a) {
-		if(a.cols<a.rows) {
+	private boolean obviouslyFullRowRank(final PreMatrixI a) {
+		if(a.cols()<a.rows()) {
 			return false;
 		}
-		final BitSet haveBasis = new BitSet(a.rows);
-		for(int j=0;j<a.cols;++j) {
-			final SparseVec col = a.extractColumn(j);
+		final BitSet haveBasis = new BitSet(a.rows());
+		final Object extractTemps = a.buildExtractTemps();
+		for(int j=0;j<a.cols();++j) {
+			final SparseVec col = a.extractColumn(j,extractTemps);
 			if(col.popCount()==1) {
 				final int i = col.nzIndex();
 				haveBasis.set(i);
 			}
 		}
-		return haveBasis.cardinality()>=a.rows;
+		return haveBasis.cardinality()>=a.rows();
 	}
 }

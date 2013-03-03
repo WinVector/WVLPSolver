@@ -1,6 +1,6 @@
 package com.winvector.linagl;
 
-public interface PreVec {
+public interface PreVecI {
 	int dim();
 	double get(int i);
 }

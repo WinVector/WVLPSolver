@@ -40,8 +40,8 @@ public final class M3Solver implements LPSolver {
 
 	public static M3Prob convertProbToM3(final LPEQProb p) {
 		M3Prob r = new M3Prob();
-		final int m = p.A.rows;
-		final int n = p.A.cols;
+		final int m = p.A.rows();
+		final int n = p.A.cols();
 		for(int i=0;i<m;++i) {
 			final double[] coef = new double[n];
 			for(int j=0;j<n;++j) {

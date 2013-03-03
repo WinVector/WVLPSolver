@@ -6,7 +6,7 @@ import java.util.BitSet;
 
 
 
-public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
+public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 	private static final long serialVersionUID = 1L;
 	
 
@@ -335,14 +335,16 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 		}
 	}
 	
-	public Object buildExtractTemps(final int m) {
+
+	@Override
+	public Object buildExtractTemps() {
+		// TODO Auto-generated method stub
 		return null;
 	}
-
+	
 	/**
 	 * 
 	 * @param ci
-	 * @param extractTemps ignored, can be null- reserved for use by derived classes
 	 * @return
 	 */
 	public SparseVec extractColumn(final int ci, final Object extractTemps) {
