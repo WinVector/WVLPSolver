@@ -201,7 +201,7 @@ public final class ColumnMatrix implements PreMatrix {
 	public ColumnMatrix rescaleRows(double[] scale) {
 		final ColumnMatrix r = new ColumnMatrix(rows,cols);
 		for(int j=0;j<cols;++j) {
-			r.columns[j] = new SparseVec(columns[j],scale);
+			r.columns[j] = columns[j].scale(scale);
 		}
 		return r;
 	}
@@ -214,5 +214,22 @@ public final class ColumnMatrix implements PreMatrix {
 	@Override
 	public int cols() {
 		return cols;
+	}
+
+	@Override
+	public double[] mult(final HVec x) {
+		final int rows = rows();
+		final double[] r = new double[rows];
+		final int nindices = x.indices.length;
+		for(int ii=0;ii<nindices;++ii) {
+			final int k = x.indices[ii];
+			final double xk = x.values[ii];
+			if(Math.abs(xk)>1.0e-8) {
+				for (int i = 0; i < rows; ++i) {
+					r[i] += xk*get(i,k);
+				}
+			}
+		}
+		return r;		
 	}
 }

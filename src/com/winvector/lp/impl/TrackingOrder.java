@@ -3,6 +3,8 @@ package com.winvector.lp.impl;
 import java.util.Arrays;
 import java.util.Random;
 
+import com.winvector.lp.InspectionOrder;
+
 public final class TrackingOrder implements InspectionOrder {
 	
 	private static final class InspectionRecord implements Comparable<InspectionRecord> {

@@ -26,7 +26,7 @@ public final class LPINEQProb extends LPProbBase {
 		final int n = A.cols;
 		final ArrayList<SparseVec> slacks = new ArrayList<SparseVec>(m);
 		for(int i=0;i<m;++i) {
-			slacks.add(new SparseVec(m,i,1.0));
+			slacks.add(SparseVec.sparseVec(m,i,1.0));
 		}
 		final double[] newc = new double[n+m];
 		for(int j=0;j<n;++j) {

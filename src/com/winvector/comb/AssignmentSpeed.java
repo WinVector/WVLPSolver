@@ -45,7 +45,7 @@ public class AssignmentSpeed {
 				final long durationMS = endMS-startMS;
 				if(null!=soln) {
 					LPEQProb.checkPrimFeas(prob.A, prob.b, soln.primalSolution, 1.0e-3);
-					final double value = Matrix.dot(soln.primalSolution,prob.c);
+					final double value = soln.primalSolution.dot(prob.c);
 					if(!Double.isNaN(sawValue)) {
 						if(Math.abs(value-sawValue)>1.0e-3) {
 							throw new LPErrorException("solution costs did not match");

@@ -3,6 +3,7 @@ package com.winvector.linagl;
 import java.io.PrintStream;
 import java.util.BitSet;
 
+import com.winvector.sparse.HVec;
 import com.winvector.sparse.SparseVec;
 
 
@@ -192,6 +193,22 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 		return r;		
 	}
 	
+	@Override
+	public double[] mult(final HVec x) {
+		final int rows = rows();
+		final double[] r = new double[rows];
+		final int nindices = x.nIndices();
+		for(int ii=0;ii<nindices;++ii) {
+			final int k = x.index(ii);
+			final double xk = x.value(ii);
+			if(Math.abs(xk)>1.0e-8) {
+				for (int i = 0; i < rows; ++i) {
+					r[i] += xk*get(i,k);
+				}
+			}
+		}
+		return r;		
+	}
 
 	public double[] multLeft(final double[] b) {
 		final int rows = rows();
@@ -337,7 +354,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrix {
 			final double e = get(i, ci);
 			r[i] = e;
 		}
-		return new SparseVec(r);
+		return SparseVec.sparseVec(r);
 	}
 
 	public <Z extends Matrix<Z>> Z extractRows(final int[] rowset, final LinalgFactory<Z> zfactory) {

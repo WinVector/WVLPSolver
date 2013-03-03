@@ -1,12 +1,15 @@
 package com.winvector.lp;
 
 import java.util.Arrays;
+import java.util.Random;
 
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.PreMatrix;
 import com.winvector.lp.LPException.LPMalformedException;
+import com.winvector.lp.impl.RandomOrder;
 import com.winvector.sparse.ColumnMatrix;
+import com.winvector.sparse.HVec;
 import com.winvector.sparse.SparseVec;
 
 
@@ -58,22 +61,18 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 			final double xpi = xp[i];
 			x[basis[i]] = xpi;
 		}
-		checkPrimFeas(A, b, x, tol);
+		checkPrimFeas(A, b, HVec.hVec(x), tol);
 		return x;
 	}
 	
-	public static <T extends Matrix<T>> double[] primalSoln(final AbstractLPEQProb prob, final int[] basis, final LinalgFactory<T> factory)
+	public static <T extends Matrix<T>> HVec primalSoln(final AbstractLPEQProb prob, final int[] basis, final LinalgFactory<T> factory)
 			throws LPException {
 		final Matrix<T> AP = prob.extractColumns(basis,factory);
 		final double[] xp = AP.solve(prob.b());
-		final double[] x = new double[prob.ncols()];
 		if (xp == null) {
 			throw new LPException.LPErrorException("basis solution failed");
 		}
-		for (int i = 0; i < basis.length; ++i) {
-			final double xpi = xp[i];
-			x[basis[i]] = xpi;
-		}
+		final HVec x = new HVec(basis,xp); 
 		return x;
 	}
 
@@ -89,22 +88,22 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	 * @throws LPException
 	 *             (if infeas ill-formed)
 	 */
-	public static void checkPrimFeas(final PreMatrix A, final double[] b, final double[] x,
+	public static void checkPrimFeas(final PreMatrix A, final double[] b, final HVec x,
 			double tol) throws LPException {
 		if ((A == null) || (b == null) || (x == null)) {
 			throw new LPException.LPInfeasibleException("null argument");
 		}
 		int m = A.rows();
-		int n = A.cols();
-		if ((b.length != m) || (x.length != n)) {
+		if ((b.length != m) ) {
 			throw new LPException.LPInfeasibleException(
 					"wrong shaped vectors/matrix");
 		}
 		if ((tol <= 0.0)||Double.isNaN(tol)||Double.isInfinite(tol)) { 
 			tol = 0.0;
 		}
-		for (int i = 0; i < n; ++i) {
-			final double xi = x[i];
+		final int nindices = x.nIndices();
+		for (int ii = 0; ii < nindices; ++ii) {
+			final double xi = x.value(ii);
 			if (xi<-tol) {
 				throw new LPException.LPInfeasibleException("negative entry");
 			}
@@ -176,14 +175,14 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	 *             (if infeas ill-formed, or y.b > c.x)
 	 */
 	public static void checkPrimDualFeas(final PreMatrix A, final double[] b, final double[] c,
-			final double[] x, final double[] y, double tol) throws LPException {
+			final HVec x, final double[] y, double tol) throws LPException {
 		if ((tol <= 0.0)||Double.isNaN(tol)||Double.isInfinite(tol)) { 
 			tol = 0.0;
 		}
 		checkPrimFeas(A, b, x, tol);
 		checkDualFeas(A, c, y, tol);
 		final double yb = Matrix.dot(y,b);
-		final double cx = Matrix.dot(c,x);
+		final double cx = x.dot(c);
 		final double d = cx - yb;
 		if (d<-tol) {
 			// not possible by above checks, but helps us debug above checks
@@ -207,7 +206,8 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	 * @throws LPException
 	 *             (if infeas ill-formed, or y.b != c.x)
 	 */
-	public static void checkPrimDualOpt(final PreMatrix A, final double[] b, final double[] c, final double[] x,
+	public static void checkPrimDualOpt(final PreMatrix A, final double[] b, final double[] c, 
+			final HVec x,
 			final double[] y, double tol) throws LPException {
 		if ((tol <= 0.0)||Double.isNaN(tol)||Double.isInfinite(tol)) { 
 			tol = 0.0;
@@ -215,7 +215,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 		checkPrimFeas(A, b, x, tol);
 		checkDualFeas(A, c, y, tol);
 		final double yb = Matrix.dot(y,b);
-		final double cx = Matrix.dot(c,x);
+		final double cx = x.dot(c);
 		final double d = cx - yb;
 		if (d < -tol) {
 			// not possible by above checks, but helps us debug above checks
@@ -397,7 +397,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	}
 
 	@Override
-	public int ncols() {
-		return A.cols;
+	public InspectionOrder buildOrderTracker(final Random rand) {
+		return new RandomOrder(A.cols,rand);
 	}
 }

@@ -1,4 +1,4 @@
-package com.winvector.lp.impl;
+package com.winvector.lp;
 
 public interface InspectionOrder {
 	void startPass();

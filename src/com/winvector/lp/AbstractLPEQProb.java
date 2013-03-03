@@ -1,5 +1,7 @@
 package com.winvector.lp;
 
+import java.util.Random;
+
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.sparse.SparseVec;
@@ -15,5 +17,5 @@ public interface AbstractLPEQProb {
 	double c(int i);
 	SparseVec extractColumn(int j);
 	<T extends Matrix<T>> T extractColumns(int[] basis, LinalgFactory<T> factory);
-	int ncols(); // TODO: get rid of this method by moving R-inspection into a service
+	InspectionOrder buildOrderTracker(Random rand);
 }

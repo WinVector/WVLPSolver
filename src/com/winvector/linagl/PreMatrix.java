@@ -2,11 +2,14 @@ package com.winvector.linagl;
 
 import java.io.Serializable;
 
+import com.winvector.sparse.HVec;
+
 public interface PreMatrix extends Serializable {
 	int rows();
 	int cols();
 	double[] multLeft(double[] y);
 	double[] mult(double[] x);
+	double[] mult(HVec x);
 	<T extends Matrix<T>> T extractColumns(int[] basis, LinalgFactory<T> factory);
 	<T extends Matrix<T>> T matrixCopy(LinalgFactory<T> factory);
 }

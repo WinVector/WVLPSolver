@@ -16,6 +16,7 @@ import com.winvector.lp.LPException;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.LPSolver;
 import com.winvector.sparse.ColumnMatrix;
+import com.winvector.sparse.HVec;
 import com.winvector.sparse.SparseVec;
 
 /**
@@ -243,7 +244,7 @@ abstract class LPSolverImpl implements LPSolver {
 			for(int i=0;i<m;++i) {
 				if(basis0[i]<0) {
 					basis0[i] = n+artificialSlackCols.size();
-					artificialSlackCols.add(new SparseVec(m,i,b[i]>=0?1.0:-1.0));
+					artificialSlackCols.add(SparseVec.sparseVec(m,i,b[i]>=0?1.0:-1.0));
 				}
 			}
 			Arrays.sort(basis0);
@@ -280,13 +281,12 @@ abstract class LPSolverImpl implements LPSolver {
 			}
 		});
 		if ((soln == null) || (soln.basisColumns == null)
-				|| (soln.basisColumns.length != basis0.length) || (soln.primalSolution == null)
-				|| (soln.primalSolution.length != c.length)) {
+				|| (soln.basisColumns.length != basis0.length) || (soln.primalSolution == null)) {
 			throw new LPException.LPErrorException(
 					"bad basis back from phase1 raw solve");
 		}
 		// check objective value is zero
-		final double v = Matrix.dot(c,soln.primalSolution);
+		final double v = soln.primalSolution.dot(c);
 		if (Math.abs(v)>1.0e-5) {
 			throw new LPException.LPInfeasibleException("primal infeasible");
 		}
@@ -374,7 +374,7 @@ abstract class LPSolverImpl implements LPSolver {
 			for (int i = 0; i < b.length; ++i) {
 				b[i] = i;
 			}
-			return new LPSoln(x, b, rb);
+			return new LPSoln(HVec.hVec(x), b, rb);
 		}
 		LPEQProb prob = null;
 		// select out irredundant rows
@@ -392,15 +392,15 @@ abstract class LPSolverImpl implements LPSolver {
 				throw new LPException.LPInfeasibleException(
 						"linear problem infeasible");
 			}
-			LPEQProb.checkPrimFeas(prob.A, prob.b, x, tol);
+			LPEQProb.checkPrimFeas(prob.A, prob.b, HVec.hVec(x), tol);   // TODO: move off dense
 			if (prob != origProb) {
-				LPEQProb.checkPrimFeas(origProb.A, origProb.b, x, tol);
+				LPEQProb.checkPrimFeas(origProb.A, origProb.b, HVec.hVec(x), tol); // TODO: move off dense
 			}
 			int[] b = new int[x.length];
 			for (int i = 0; i < b.length; ++i) {
 				b[i] = i;
 			}
-			return new LPSoln(x, b, rb);
+			return new LPSoln(HVec.hVec(x), b, rb);
 		}
 		// re-scale
 		final double scaleRange = 10.0;
@@ -442,7 +442,7 @@ abstract class LPSolverImpl implements LPSolver {
 					basis0[i] = basis_in[i];
 				}
 				final double[] x0 = LPEQProb.primalSoln(prob.A, prob.b, basis0, tol, factory);
-				LPEQProb.checkPrimFeas(prob.A, prob.b, x0, tol);
+				LPEQProb.checkPrimFeas(prob.A, prob.b, HVec.hVec(x0), tol); // TODO: move off dense
 			} catch (Exception e) {
 				basis0 = null;
 				System.out.println("caught: " + e);

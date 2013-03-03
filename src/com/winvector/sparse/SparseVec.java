@@ -1,8 +1,5 @@
 package com.winvector.sparse;
 
-import java.io.Serializable;
-import java.util.Arrays;
-
 import com.winvector.linagl.Matrix;
 
 /**
@@ -10,31 +7,36 @@ import com.winvector.linagl.Matrix;
  * @author johnmount
  *
  */
-public final class SparseVec implements Serializable {
+public final class SparseVec extends HVec {
 	private static final long serialVersionUID = 1L;
 	
 	public final int dim;
-	int[] indices;    // do not alter!
-	double[] values;  // do not alter!
-	
-	public SparseVec(final int dim, final int coord, final double val) {
-		if((coord<0)||(coord>dim)) {
-			throw new IllegalArgumentException();
-		}
+		
+	public SparseVec(final int dim, final int[] indices, final double[] values) {
+		super(indices,values);
 		this.dim = dim;
-		if(val!=0) {
-			indices = new int[1];
-			values = new double[1];
-			indices[0] = coord;
-			values[0] = val;
-		} else {
-			indices = new int[0];
-			values = new double[0];			
+		final int nindices = indices.length;
+		if(nindices>0) {
+			if(indices[nindices-1]>=dim) {
+				throw new IllegalArgumentException("out of bounds index");
+			}
 		}
 	}
 	
-	public SparseVec(final double[] x) {
-		dim = x.length;
+	public static SparseVec sparseVec(final int dim, final int coord, final double val) {
+		if(val==0) {
+			return new SparseVec(dim,new int[0],new double[0]);
+		} else {
+			if((coord<0)||(coord>dim)) {
+				throw new IllegalArgumentException();
+			}
+			return new SparseVec(dim,new int[] { coord }, new double[] {val});
+		}
+	}
+	
+	
+	public static SparseVec sparseVec(final double[] x) {
+		final int dim = x.length;
 		int index = 0;
 		for(int i=0;i<dim;++i) {
 			if(x[i]!=0) {
@@ -42,8 +44,8 @@ public final class SparseVec implements Serializable {
 			}
 		}
 		final int nnz = index;
-		indices = new int[nnz];
-		values = new double[nnz];
+		final int[] indices = new int[nnz];
+		final double[] values = new double[nnz];
 		index = 0;
 		for(int i=0;(i<dim)&&(index<nnz);++i) {
 			if(x[i]!=0) {
@@ -52,54 +54,31 @@ public final class SparseVec implements Serializable {
 				++index;
 			}
 		}
+		return new SparseVec(dim,indices,values);
 	}
 	
-	SparseVec(final SparseVec o, final double[] scale) {
-		dim = o.dim;
-		indices = o.indices; // share indices
+	
+	SparseVec scale(final double[] scale) {
+		SparseVec v = new SparseVec(dim,indices,new double[values.length]); // share indices
 		final int nindices = indices.length;
-		values = new double[nindices];
 		for(int ii=0;ii<nindices;++ii) {
-			final int i = o.indices[ii];
-			indices[ii] = i;
+			final int i = indices[ii];
 			if(null==scale) {
-				values[ii] = o.values[ii];
+				v.values[ii] = values[ii];
 			} else {
-				values[ii] = o.values[ii]*scale[i];
+				v.values[ii] = values[ii]*scale[i];
 			}
 		}
+		return v;
 	}
 	
-	public SparseVec(final int dim, final int[] indices, final double[] values) {
-		this.dim = dim;
-		this.indices = indices;
-		this.values = values;
-		final int nindices = indices.length;
-		if(nindices>0) {
-			if(indices[0]<0) {
-				throw new IllegalArgumentException("negative index");
-			}
-			if(indices[nindices-1]>=dim) {
-				throw new IllegalArgumentException("out of bounds index");
-			}
-			for(int i=0;i<nindices-1;++i) {
-				if(indices[i+1]<=indices[i]) {
-					throw new IllegalArgumentException("disordered indices");
-				}
-			}
-		}
-	}
+
 
 	public double dot(final double[] x) {
 		if(x.length!=dim) {
 			throw new IllegalArgumentException();
 		}
-		final int nindices = indices.length;
-		double d = 0.0;
-		for(int ii=0;ii<nindices;++ii) {
-			d += values[ii]*x[indices[ii]];
-		}
-		return d;
+		return super.dot(x);
 	}
 	
 	public static <T extends Matrix<T>> double[] mult(final T m, final SparseVec x) {
@@ -119,26 +98,7 @@ public final class SparseVec implements Serializable {
 		return r;		
 	}
 	
-	public int popCount() {
-		int npop = 0;
-		for(final double vi: values) {
-			if(0.0!=vi) {
-				++npop;
-			}
-		}
-		return npop;
-	}
-	
-	public int nzIndex() {
-		for(int ii=0;ii<values.length;++ii) {
-			final double vi = values[ii];
-			if(0.0!=vi) {
-				return indices[ii];
-			}
-		}
-		return -1;
-	}
-	
+
 	public double[] toDense() {
 		final double[] x = new double[dim];
 		final int nindices = indices.length;
@@ -160,20 +120,6 @@ public final class SparseVec implements Serializable {
 		if((i<0)||(i>=dim)) {
 			throw new ArrayIndexOutOfBoundsException(""+i);
 		}
-		final int ii;
-		final int nindices = indices.length;
-		if((i<nindices)&&(i==indices[i])) {
-			// identity map, can skip binary search
-			ii = i;
-		} else {
-			ii = Arrays.binarySearch(indices,i);
-			if((ii<0)||(ii>=nindices)) {
-				return 0.0;
-			}
-			if(i!=indices[ii]) {
-				throw new IllegalStateException("lookup failed " + i + " -> " + ii + "\t" + indices[ii]);
-			}
-		}
-		return values[ii];
+		return super.get(i);
 	}
 }

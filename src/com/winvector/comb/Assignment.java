@@ -96,7 +96,7 @@ public final class Assignment {
 				for(int j=0;j<n;++j) {
 					final double cij = cost[i][j];
 					if((!Double.isNaN(cij))&&(!Double.isInfinite(cij))) {
-						final double sv = soln1.primalSolution[nextIndex];
+						final double sv = soln1.primalSolution.get(nextIndex); // TODO: avoid get()
 						if(sv>=0.5) {
 							assignment[i] = j;
 						}						

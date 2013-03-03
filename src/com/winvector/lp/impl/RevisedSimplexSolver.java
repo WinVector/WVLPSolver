@@ -6,6 +6,7 @@ import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.lp.AbstractLPEQProb;
 import com.winvector.lp.EarlyExitCondition;
+import com.winvector.lp.InspectionOrder;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPTooManyStepsException;
@@ -25,8 +26,6 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public double enteringTol = 1.0e-5;
 	public double leavingTol = 1.0e-7;
 	public boolean earlyR = true;                 // allow partial inspection for entering columns
-	public boolean earlyLeavingCalc = false;      // value and sort steps early
-	public boolean earlyLeavingExit = false;      // allow early inspection exit on valuation calc
 	public boolean resuffle = true;               // re-shuffle inspection order each pass
 	private final Random rand = new Random(3252351L);
 
@@ -41,7 +40,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		// run counters
 		int normalSteps = 0;
 		int inspections = 0;
-		final InspectionOrder inspectionOrder = new RandomOrder(tab.prob.ncols(),rand);
+		final InspectionOrder inspectionOrder = tab.prob.buildOrderTracker(rand);
 		final double[] bRatPtr = new double[1];
 		double[] b = tab.prob.b();
 		while (normalSteps<=maxRounds) {
@@ -61,11 +60,6 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			// determines joining variable
 			int rEnteringV = -1;
 			double bestRi = Double.NaN;
-			// step valued version of inspection
-			double bestStepValue = Double.NaN;
-			int leavingI = -1;
-			int matchingEnterV = -1;
-			double[] bestBinvu = null;
 			inspectionLoop:
 			while(inspectionOrder.hasNext()) {
 				++inspections;
@@ -82,48 +76,22 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 								break inspectionLoop;
 							}
 						}
-						if(earlyLeavingCalc) {
-							final SparseVec u = tab.prob.extractColumn(rEnteringV);
-							final double[] binvu = tab.basisSolveRight(u);
-							int leavingIndex = findLeaving(preB,binvu,bRatPtr);
-							if((leavingIndex>=0)&&(bRatPtr[0]>=0)) {
-								final double stepValue = -ri*bRatPtr[0];
-								if(stepValue>=0) {
-									if((leavingI<0)||(stepValue>bestStepValue)) {
-										leavingI = leavingIndex;
-										matchingEnterV = v;
-										bestStepValue = stepValue;
-										bestBinvu = binvu;
-										if(earlyLeavingExit && (bestStepValue>0)) {
-											inspectionOrder.liked(v);
-											break inspectionLoop;
-										}
-									}
-								}
-							}
-						}
 					}
 					inspectionOrder.disliked(v);
 				}
 			}
-			if (debug > 0) {
-				System.out.println(" rEnteringV: " + rEnteringV + "\t" + bestRi 
-						+ ",\tleavingI:\t" + leavingI + "\t" + leavingI + "\t" + matchingEnterV + "\t" + bestStepValue);
+			final int enteringV = rEnteringV;
+			if (enteringV < 0) {
+				// no entry, at optimum
+				//System.out.println("steps: " + normalSteps + ", inspections: " + inspections + ", ratio: " + (inspections/(double)normalSteps));
+				return tab.basis();
 			}
-			final int enteringV;
-			if(leavingI>=0) {
-				enteringV = matchingEnterV;
-			} else {
-				enteringV = rEnteringV;
-				if(enteringV>=0) {
-					final SparseVec u = tab.prob.extractColumn(enteringV);
-					final double[] binvu = tab.basisSolveRight(u);
-					leavingI = findLeaving(preB,binvu,bRatPtr);
-					if(leavingI>=0) {
-						bestBinvu = binvu;
-						bestStepValue = -bestRi*bRatPtr[0];
-					}
-				}
+			final SparseVec u = tab.prob.extractColumn(enteringV);
+			final double[] binvu = tab.basisSolveRight(u);
+			final int leavingI = findLeaving(preB,binvu,bRatPtr);
+			if (leavingI < 0) {
+				throw new LPException.LPUnboundedException(
+						"problem unbounded");
 			}
 			if (debug > 0) {
 				System.out.print(" leavingI: " + leavingI);
@@ -132,17 +100,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 				}
 				System.out.println();
 			}
-			if (enteringV < 0) {
-				// no entry, at optimum
-				//System.out.println("steps: " + normalSteps + ", inspections: " + inspections + ", ratio: " + (inspections/(double)normalSteps));
-				return tab.basis();
-			}
-			if (leavingI < 0) {
-				throw new LPException.LPUnboundedException(
-						"problem unbounded");
-			}
 			// perform the swap
-			tab.basisPivot(leavingI,enteringV,bestBinvu);
+			tab.basisPivot(leavingI,enteringV,binvu);
 			//System.out.println("leave: " + basis[leavingI]);
 			if(null!=earlyExitCondition) {
 				if(earlyExitCondition.canExit(tab.basis)) {
@@ -216,7 +175,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		if (rbasis == null) {
 			return null;
 		}
-		final LPSoln lpSoln = new LPSoln(LPEQProb.primalSoln(prob, rbasis, factory), rbasis);
+		final LPSoln lpSoln = new LPSoln(LPEQProb.primalSoln(prob, rbasis, factory), rbasis, null); // TODO: annotate row basis
 		return lpSoln;
 	}
 }

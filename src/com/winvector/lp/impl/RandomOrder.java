@@ -2,6 +2,8 @@ package com.winvector.lp.impl;
 
 import java.util.Random;
 
+import com.winvector.lp.InspectionOrder;
+
 public final class RandomOrder implements InspectionOrder {
 	
 	

@@ -6,7 +6,6 @@ package com.winvector.lp;
 
 
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -76,9 +75,8 @@ public final class TestLP  {
 		final double[] expect = {3.00000, 3.00000, 2.00000, 0.00000, 0.00000};
 		assertNotNull(soln1);
 		assertNotNull(soln1.primalSolution);
-		assertEquals(expect.length,soln1.primalSolution.length);
 		for(int i=0;i<expect.length;++i) {
-			assertTrue(Math.abs(soln1.primalSolution[i]-expect[i])<1.0e-3);
+			assertTrue(Math.abs(soln1.primalSolution.get(i)-expect[i])<1.0e-3);
 		}
 	}
 	
