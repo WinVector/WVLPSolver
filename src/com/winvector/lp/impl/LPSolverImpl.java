@@ -139,36 +139,6 @@ abstract class LPSolverImpl implements LPSolver {
 		return r;
 	}
 
-	/**
-	 * @param A
-	 *            full row-rank m by n matrix
-	 * @param basis
-	 *            column basis
-	 * @param hint
-	 *            (optional) n-vector
-	 * @return basic solution to A x = b x>=0 or null (from basis)
-	 */
-	private static <T extends Matrix<T>> LPSoln tryBasis(final PreMatrix A, final int[] basis, final double[] b, final LinalgFactory<T> factory) {
-		if ((basis == null) || (basis.length != A.rows())) {
-			return null;
-		}
-		double[] x = null;
-		try {
-			final Matrix<T> AP = A.extractColumns(basis,factory);
-			x = AP.solve(b);
-		} catch (Exception e) {
-		}
-		if (x == null) {
-			return null;
-		}
-		for(int j=0;j<x.length;++j) {
-			if (x[j] < 0) {
-				return null;
-			}
-		}
-		return new LPSoln(x, basis);
-	}
-
 	static String stringBasis(final int[] b) {
 		if (b == null) {
 			return null;
@@ -369,12 +339,12 @@ abstract class LPSolverImpl implements LPSolver {
 							"unbounded minimum solving 0 x = 0");
 				}
 			}
-			final double[] x = new double[origProb.A.cols];
-			int[] b = new int[x.length];
+			final HVec x = new HVec(new int[0],new double[0]);
+			int[] b = new int[origProb.c.length];
 			for (int i = 0; i < b.length; ++i) {
 				b[i] = i;
 			}
-			return new LPSoln(HVec.hVec(x), b, rb);
+			return new LPSoln(x, b, rb);
 		}
 		LPEQProb prob = null;
 		// select out irredundant rows
@@ -387,20 +357,21 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		// deal with square system
 		if (prob.A.rows >= prob.A.cols) {
-			final double[] x = prob.A.matrixCopy(factory).solve(prob.b);
-			if (x == null) {
+			final double[] xv = prob.A.matrixCopy(factory).solve(prob.b);
+			if (xv == null) {
 				throw new LPException.LPInfeasibleException(
 						"linear problem infeasible");
 			}
-			LPEQProb.checkPrimFeas(prob.A, prob.b, HVec.hVec(x), tol);   // TODO: move off dense
+			final HVec x = HVec.hVec(xv);
+			LPEQProb.checkPrimFeas(prob.A, prob.b, x, tol);   // TODO: move off dense
 			if (prob != origProb) {
-				LPEQProb.checkPrimFeas(origProb.A, origProb.b, HVec.hVec(x), tol); // TODO: move off dense
+				LPEQProb.checkPrimFeas(origProb.A, origProb.b, x, tol); // TODO: move off dense
 			}
-			int[] b = new int[x.length];
+			int[] b = new int[prob.A.cols];
 			for (int i = 0; i < b.length; ++i) {
 				b[i] = i;
 			}
-			return new LPSoln(HVec.hVec(x), b, rb);
+			return new LPSoln(x, b, rb);
 		}
 		// re-scale
 		final double scaleRange = 10.0;
@@ -441,8 +412,8 @@ abstract class LPSolverImpl implements LPSolver {
 				for (int i = 0; i < basis0.length; ++i) {
 					basis0[i] = basis_in[i];
 				}
-				final double[] x0 = LPEQProb.primalSoln(prob.A, prob.b, basis0, tol, factory);
-				LPEQProb.checkPrimFeas(prob.A, prob.b, HVec.hVec(x0), tol); // TODO: move off dense
+				final HVec x0 = LPEQProb.primalSoln(prob.A, prob.b, basis0, tol, factory);
+				LPEQProb.checkPrimFeas(prob.A, prob.b, x0, tol); // TODO: move off dense
 			} catch (Exception e) {
 				basis0 = null;
 				System.out.println("caught: " + e);
@@ -457,17 +428,11 @@ abstract class LPSolverImpl implements LPSolver {
 		if (verbose > 0) {
 			System.out.println("phase2");
 		}
-		final LPSoln soln;
-		if (Matrix.isZero(prob.c)) {
-			// no objective function, any basis will do
-			soln = tryBasis(prob.A, basis0, prob.b, factory);
-		} else {
-			soln = rawSolve(prob, basis0, tol, maxRounds, factory, null);
-			if ((soln == null) || (soln.primalSolution == null) || (soln.basisColumns == null)
+		final LPSoln soln = rawSolve(prob, basis0, tol, maxRounds, factory, null);
+		if ((soln == null) || (soln.primalSolution == null) || (soln.basisColumns == null)
 				|| (soln.basisColumns.length != basis0.length)) {
-				throw new LPException.LPErrorException(
-						"bad basis back from phase1 raw solve");
-			}
+			throw new LPException.LPErrorException(
+					"bad basis back from phase1 raw solve");
 		}
 		//System.out.println("phase1steps " + phase1StepsTaken + ", phase2 steps " + soln.stepsTaken);
 		LPEQProb.checkPrimFeas(prob.A, prob.b, soln.primalSolution, tol);

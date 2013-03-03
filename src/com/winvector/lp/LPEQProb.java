@@ -42,7 +42,7 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 	 * @throws LPException
 	 *             on bad data
 	 */
-	public static <T extends Matrix<T>> double[] primalSoln(final PreMatrix A, final double[] b, final int[] basis, final double tol, final LinalgFactory<T> factory)
+	public static <T extends Matrix<T>> HVec primalSoln(final PreMatrix A, final double[] b, final int[] basis, final double tol, final LinalgFactory<T> factory)
 			throws LPException {
 		if ((A == null) || (b == null) || (basis == null) || (A.rows() <= 0)
 				|| (A.rows() != b.length) || (basis.length != A.rows())) {
@@ -53,15 +53,11 @@ public final class LPEQProb extends LPProbBase implements AbstractLPEQProb {
 		}
 		final Matrix<T> AP = A.extractColumns(basis,factory);
 		final double[] xp = AP.solve(b);
-		final double[] x = new double[A.cols()];
 		if (xp == null) {
 			throw new LPException.LPErrorException("basis solution failed");
 		}
-		for (int i = 0; i < basis.length; ++i) {
-			final double xpi = xp[i];
-			x[basis[i]] = xpi;
-		}
-		checkPrimFeas(A, b, HVec.hVec(x), tol);
+		final HVec x = new HVec(basis,xp);
+		checkPrimFeas(A, b, x, tol);
 		return x;
 	}
 	

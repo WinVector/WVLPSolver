@@ -9,6 +9,7 @@ import org.apache.commons.math3.optimization.linear.LinearObjectiveFunction;
 import org.apache.commons.math3.optimization.linear.Relationship;
 import org.apache.commons.math3.optimization.linear.SimplexSolver;
 
+import com.winvector.linagl.HVec;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.lp.LPEQProb;
@@ -69,7 +70,7 @@ public final class M3Solver implements LPSolver {
 		for(int i=0;i<s.length;++i) {
 			solnVec[i] = s[i];
 		}
-		final LPSoln r = new LPSoln(solnVec,null);
+		final LPSoln r = new LPSoln(HVec.hVec(solnVec),null,null);
 		return r;
 	}
 

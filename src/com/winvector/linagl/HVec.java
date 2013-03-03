@@ -47,6 +47,11 @@ public class HVec implements Serializable {
 		return values[ii];
 	}
 	
+	/**
+	 * build from dense vector (not the prefered construciton)
+	 * @param x
+	 * @return
+	 */
 	public static HVec hVec(final double[] x) {
 		final int dim = x.length;
 		int index = 0;

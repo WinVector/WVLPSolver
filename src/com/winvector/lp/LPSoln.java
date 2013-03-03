@@ -19,11 +19,6 @@ public final class LPSoln implements Serializable {
 		basisColumns = basisColumns_in;
 		basisRows = basisRows_in;
 	}
-	
-	// TODO: replace this constructor
-	public LPSoln(final double[] primalSoln_in, final int[] basisColumns_in) {
-		this(HVec.hVec(primalSoln_in),basisColumns_in,null);
-	}
 
 	public String toString() {
 		final StringBuilder b = new StringBuilder();

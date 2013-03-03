@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintStream;
 
+import com.winvector.linagl.HVec;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.lp.LPEQProb;
@@ -54,7 +55,7 @@ public class GLPKSolver implements LPSolver {
 			}
 			tempFI.delete();
 			tempFS.delete();
-			return new LPSoln(v,null);
+			return new LPSoln(HVec.hVec(v),null,null);
 		} catch (IOException e) {
 			throw new LPErrorException("glpk caught: " + e);
 		} catch (InterruptedException e) {
