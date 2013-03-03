@@ -31,7 +31,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	private final int[] binvNZJTmp;
 	public T BInv = null;
 	// run counters
-	private int normalSteps = 0;
+	private long normalSteps = 0;
 
 
 	/**

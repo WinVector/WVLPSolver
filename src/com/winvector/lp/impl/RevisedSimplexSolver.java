@@ -28,22 +28,32 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public boolean earlyR = true;                 // allow partial inspection for entering columns
 	public boolean resuffle = true;               // re-shuffle inspection order each pass
 	private final Random rand = new Random(3252351L);
+	// run counters
+	public long normalSteps = 0;
+	public long inspections = 0;
+	public long totalTimeMS = 0;
+	public long inspectionTimeMS = 0;
+	public long pivotTimeMS = 0;
 
 	
-
 	
 	private <T extends Matrix<T>> int[] runSimplex(final EnhancedBasis<T> tab, final double tol, 
 			final int maxRounds, final EarlyExitCondition earlyExitCondition) throws LPException {
 		if (debug > 0) {
 			System.out.println("start: " + stringBasis(tab.basis));
 		}
-		// run counters
-		int normalSteps = 0;
-		int inspections = 0;
+		// start timing clear counters
+		final long startTimeMS = System.currentTimeMillis();
+		normalSteps = 0;
+		inspections = 0;
+		totalTimeMS = 0;
+		inspectionTimeMS = 0;
+		pivotTimeMS = 0;
 		final InspectionOrder inspectionOrder = tab.prob.buildOrderTracker(rand);
 		final double[] bRatPtr = new double[1];
 		double[] b = tab.prob.b();
 		while (normalSteps<=maxRounds) {
+			final long startRoundMS = System.currentTimeMillis();
 			++normalSteps;
 			//prob.soln(basis,tol);
 			//System.out.println("basis good");
@@ -60,6 +70,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			// determines joining variable
 			int rEnteringV = -1;
 			double bestRi = Double.NaN;
+			final long startInspectionMS = System.currentTimeMillis();
 			inspectionLoop:
 			while(inspectionOrder.hasNext()) {
 				++inspections;
@@ -80,16 +91,19 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 					inspectionOrder.disliked(v);
 				}
 			}
+			final long endInspectionMS = System.currentTimeMillis();
+			inspectionTimeMS += endInspectionMS - startInspectionMS;
 			final int enteringV = rEnteringV;
 			if (enteringV < 0) {
 				// no entry, at optimum
-				//System.out.println("steps: " + normalSteps + ", inspections: " + inspections + ", ratio: " + (inspections/(double)normalSteps));
+				totalTimeMS = System.currentTimeMillis() - startTimeMS;
 				return tab.basis();
 			}
 			final SparseVec u = tab.prob.extractColumn(enteringV,tab.extractTemps);
 			final double[] binvu = tab.basisSolveRight(u);
 			final int leavingI = findLeaving(preB,binvu,bRatPtr);
 			if (leavingI < 0) {
+				totalTimeMS = System.currentTimeMillis() - startTimeMS;
 				throw new LPException.LPUnboundedException(
 						"problem unbounded");
 			}
@@ -106,10 +120,14 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			if(null!=earlyExitCondition) {
 				if(earlyExitCondition.canExit(tab.basis)) {
 					//System.out.println("steps: " + normalSteps + ", inspections: " + inspections + ", ratio: " + (inspections/(double)normalSteps));
+					totalTimeMS = System.currentTimeMillis() - startTimeMS;
 					return tab.basis();
 				}
 			}
+			final long endRoundMS = System.currentTimeMillis();
+			pivotTimeMS += (startInspectionMS-startRoundMS) + (endRoundMS-endInspectionMS);
 		}
+		totalTimeMS = System.currentTimeMillis() - startTimeMS;
 		throw new LPTooManyStepsException("max steps>" + maxRounds);
 	}
 
