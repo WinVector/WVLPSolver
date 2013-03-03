@@ -2,6 +2,7 @@ package com.winvector.lp.impl;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.Set;
 
 import com.winvector.lp.InspectionOrder;
 
@@ -85,7 +86,7 @@ public final class TrackingOrder implements InspectionOrder {
 	}
 	
 	@Override
-	public int take() {
+	public int take(final Set<Integer> current, final double[] lambda) {
 		final InspectionRecord r = workingRecs[ptr];
 		++ptr;
 		++r.nTimesTaken;

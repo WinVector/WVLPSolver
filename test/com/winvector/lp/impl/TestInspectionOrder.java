@@ -16,7 +16,7 @@ public class TestInspectionOrder {
 		io.startPass();
 		for(int i=0;i<5;++i) {
 			assertTrue(io.hasNext());
-			io.take();
+			io.take(null,null);
 		}
 		assertFalse(io.hasNext());
 	}

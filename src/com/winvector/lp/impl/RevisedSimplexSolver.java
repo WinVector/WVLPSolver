@@ -63,7 +63,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			inspectionLoop:
 			while(inspectionOrder.hasNext()) {
 				++inspections;
-				final int v = inspectionOrder.take();
+				final int v = inspectionOrder.take(tab.curBasisSet,lambda);
 				if(!tab.curBasisSet.contains(v)) {
 					final double ri = tab.computeRI(lambda, v);
 					//System.out.println("\t" + v + " ri: " + ri);
