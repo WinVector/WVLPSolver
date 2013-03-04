@@ -2,21 +2,19 @@ package com.winvector.lp.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
 
 import com.winvector.linagl.ColumnMatrix;
 import com.winvector.linagl.DenseVec;
-import com.winvector.linagl.HVec;
 import com.winvector.linagl.LinalgFactory;
 import com.winvector.linagl.Matrix;
 import com.winvector.linagl.PreMatrixI;
 import com.winvector.linagl.PreVecI;
 import com.winvector.linagl.SparseVec;
-import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.LPEQProb;
+import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.LPSolver;
@@ -33,6 +31,7 @@ import com.winvector.lp.LPSolver;
 abstract class LPSolverImpl implements LPSolver {
 	public int verbose = 0;
 	public double minBasisEpsilon = 1.0e-5;
+	public boolean rescale = false;
 
 	/**
 	 * from Gilbert String Linear Algebra and its Applications second edition.
@@ -294,7 +293,7 @@ abstract class LPSolverImpl implements LPSolver {
 				rowset[i] = i;
 			}
 			// TODO: cut down the copies here!
-			final int[] nb = A.matrixCopy(factory).extractRows(rowset,factory).colBasis(sb,minBasisEpsilon);
+			final int[] nb = A.matrixCopy(factory).colBasis(sb,minBasisEpsilon);
 			return nb;
 		}
 		return soln.basisColumns;
@@ -319,82 +318,27 @@ abstract class LPSolverImpl implements LPSolver {
 				origProb.print();
 			}
 		}
-		// get rid of degenerate cases
-		//System.out.println("start rb1");
-		final int[] rb;
-		if(obviouslyFullRowRank(origProb.A)) {
-			rb = new int[origProb.A.rows()];
-			for(int i=0;i<rb.length;++i) {
-				rb[i] = i;
-			}
-		} else {
-			rb = origProb.A.matrixCopy(factory).rowBasis(minBasisEpsilon);
-		}
-		if ((rb == null) || (rb.length <= 0)) {
-			//solving 0 x = b
-			if (!Matrix.isZero(origProb.b)) {
-				throw new LPException.LPInfeasibleException(
-						"linear relaxation incosistent");
-			}
-			for (int i = 0; i < origProb.c.dim(); ++i) {
-				if (origProb.c.get(i) < 0) {
-					throw new LPException.LPUnboundedException(
-							"unbounded minimum solving 0 x = 0");
-				}
-			}
-			final HVec x = new HVec(new int[0],new double[0]);
-			int[] b = new int[origProb.c.dim()];
-			for (int i = 0; i < b.length; ++i) {
-				b[i] = i;
-			}
-			return new LPSoln(x, b, rb);
-		}
-		LPEQProb prob = null;
-		// select out irredundant rows
-		final DenseVec newC = new DenseVec(origProb.c);
-		if (rb.length != origProb.A.rows()) {
-			final ColumnMatrix nA = new ColumnMatrix(origProb.A).extractRows(rb);
-			final double[] nb = Matrix.extract(origProb.b,rb);
-			prob = new LPEQProb(nA, nb, newC);
-		} else {
-			prob = new LPEQProb(origProb.A, origProb.b.clone(), newC);
-		}
-		// deal with square system
-		if (prob.A.rows() >= prob.A.cols()) {
-			final double[] xv = prob.A.matrixCopy(factory).solve(prob.b);
-			if (xv == null) {
-				throw new LPException.LPInfeasibleException(
-						"linear problem infeasible");
-			}
-			final HVec x = HVec.hVec(xv);
-			LPEQProb.checkPrimFeas(prob.A, prob.b, x, tol);   // TODO: move off dense
-			if (prob != origProb) {
-				LPEQProb.checkPrimFeas(origProb.A, origProb.b, x, tol); // TODO: move off dense
-			}
-			int[] b = new int[prob.A.cols()];
-			for (int i = 0; i < b.length; ++i) {
-				b[i] = i;
-			}
-			return new LPSoln(x, b, rb);
-		}
+		LPEQProb prob = origProb;
 		// re-scale
-		final double scaleRange = 10.0;
-		{
-			final ColumnMatrix probA = new ColumnMatrix(prob.A);
-			final double[] rowTots = probA.sumAbsRowValues();
-			final double[] scale = new double[rowTots.length];
-			for(int i=0;i<prob.b.length;++i) {
-				final double sumAbs = rowTots[i] + Math.abs(prob.b[i]);
-				if((sumAbs>0)&&((sumAbs>=scaleRange*(prob.A.cols()+1.0))||(sumAbs<=(prob.A.cols()+1.0)/scaleRange))) {
-					scale[i] = (prob.A.cols()+1.0)/sumAbs;
-				} else {
-					scale[i] = 1.0;
+		if(rescale) {
+			final DenseVec newC = new DenseVec(origProb.c); // copy so we can re-scale without side effects
+			prob = new LPEQProb(origProb.A, origProb.b.clone(),newC);
+			final double scaleRange = 10.0;
+			{
+				final ColumnMatrix probA = new ColumnMatrix(prob.A);
+				final double[] rowTots = probA.sumAbsRowValues();
+				final double[] scale = new double[rowTots.length];
+				for(int i=0;i<prob.b.length;++i) {
+					final double sumAbs = rowTots[i] + Math.abs(prob.b[i]);
+					if((sumAbs>0)&&((sumAbs>=scaleRange*(prob.A.cols()+1.0))||(sumAbs<=(prob.A.cols()+1.0)/scaleRange))) {
+						scale[i] = (prob.A.cols()+1.0)/sumAbs;
+					} else {
+						scale[i] = 1.0;
+					}
+					prob.b[i] *= scale[i];
 				}
-				prob.b[i] *= scale[i];
+				prob = new LPEQProb(probA.rescaleRows(scale), prob.b, newC);
 			}
-			prob = new LPEQProb(probA.rescaleRows(scale), prob.b, newC);
-		}
-		{
 			double sumAbs = 0.0;
 			for(int j=0;j<prob.c.dim();++j) {
 				sumAbs += Math.abs(prob.c.get(j));
@@ -406,32 +350,17 @@ abstract class LPSolverImpl implements LPSolver {
 				}
 			}
 		}
-		// work on basis
-		int[] basis0 = null;
-		if ((basis_in != null) && (basis_in.length == prob.A.rows())) {
-			try {
-				if (verbose > 0) {
-					System.out.println("import basis");
-				}
-				basis0 = new int[basis_in.length];
-				for (int i = 0; i < basis0.length; ++i) {
-					basis0[i] = basis_in[i];
-				}
-				final HVec x0 = LPEQProb.primalSoln(prob.A, prob.b, basis0, tol, factory);
-				LPEQProb.checkPrimFeas(prob.A, prob.b, x0, tol); // TODO: move off dense
-			} catch (Exception e) {
-				basis0 = null;
-				System.out.println("caught: " + e);
-			}
+		final int[] rb = origProb.A.matrixCopy(factory).rowBasis(minBasisEpsilon); // TODO: get a better solution here, this is using nearly 1/2 of the time
+		if (rb.length != origProb.A.rows()) {
+			 final ColumnMatrix nA = new ColumnMatrix(origProb.A).extractRows(rb);
+			 final double[] nb = Matrix.extract(origProb.b,rb);
+			 prob = new LPEQProb(nA, nb, prob.c);
 		}
-		if (basis0 == null) {
-			if (verbose > 0) {
-				System.out.println("phase1");
-			}
+		final int[] basis0;
+		if(null==basis_in) {
 			basis0 = solvePhase1(prob.A, prob.b , prob.c, tol, maxRounds, factory);
-		}
-		if (verbose > 0) {
-			System.out.println("phase2");
+		} else {
+			basis0 = basis_in;
 		}
 		final LPSoln soln = rawSolve(prob, basis0, tol, maxRounds, factory, null);
 		if ((soln == null) || (soln.primalSolution == null) || (soln.basisColumns == null)
@@ -445,22 +374,9 @@ abstract class LPSolverImpl implements LPSolver {
 			LPEQProb.checkPrimFeas(origProb.A, origProb.b, soln.primalSolution, tol);
 		}
 		soln.basisRows = rb;
+		for(int i=0;i<rb.length;++i) {
+			rb[i] = i;
+		}
 		return soln;
-	}
-
-	private boolean obviouslyFullRowRank(final PreMatrixI a) {
-		if(a.cols()<a.rows()) {
-			return false;
-		}
-		final BitSet haveBasis = new BitSet(a.rows());
-		final Object extractTemps = a.buildExtractTemps();
-		for(int j=0;j<a.cols();++j) {
-			final SparseVec col = a.extractColumn(j,extractTemps);
-			if(col.popCount()==1) {
-				final int i = col.nzIndex();
-				haveBasis.set(i);
-			}
-		}
-		return haveBasis.cardinality()>=a.rows();
 	}
 }

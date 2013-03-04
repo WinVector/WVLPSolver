@@ -60,6 +60,8 @@ public final class AssignmentSpeed {
 					res.prePivotTimeMS = rs.prePivotTimeMS;
 					res.postPivotTimeMS = rs.postPivotTimeMS;
 					rs.clearCounters();
+					final double[] dualSoln = prob.dualSolution(soln, 1.0e-5,factory);
+					LPEQProb.checkPrimDualOpt(prob.A, prob.b, prob.c, soln.primalSolution, dualSoln, 1.0e-5);
 				}
 				final long endMS = System.currentTimeMillis();
 				final long durationMS = endMS-startMS;
