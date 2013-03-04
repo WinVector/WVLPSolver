@@ -158,6 +158,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 		p.println();
 	}
 
+	@Override
 	public <Z extends Matrix<Z>> Z extractColumns(final int[] basis, final LinalgFactory<Z> zfactory) {
 		final int blength = basis.length;
 		final int rows = rows();
