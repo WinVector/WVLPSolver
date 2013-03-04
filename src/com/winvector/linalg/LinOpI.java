@@ -1,4 +1,4 @@
-package com.winvector.linagl;
+package com.winvector.linalg;
 
 public interface LinOpI {
 	int rows();

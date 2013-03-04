@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintStream;
 
-import com.winvector.linagl.HVec;
-import com.winvector.linagl.LinalgFactory;
-import com.winvector.linagl.Matrix;
+import com.winvector.linalg.HVec;
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;

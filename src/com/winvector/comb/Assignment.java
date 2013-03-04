@@ -4,10 +4,10 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.winvector.linagl.ColumnMatrix;
-import com.winvector.linagl.DenseVec;
-import com.winvector.linagl.LinalgFactory;
-import com.winvector.linagl.Matrix;
+import com.winvector.linalg.ColumnMatrix;
+import com.winvector.linalg.DenseVec;
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPMalformedException;

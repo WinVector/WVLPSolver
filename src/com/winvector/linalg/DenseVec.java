@@ -1,4 +1,4 @@
-package com.winvector.linagl;
+package com.winvector.linalg;
 
 public class DenseVec implements PreVecI {
 	private final double[] x;

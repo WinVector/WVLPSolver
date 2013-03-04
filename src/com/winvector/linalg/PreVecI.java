@@ -1,4 +1,4 @@
-package com.winvector.linagl;
+package com.winvector.linalg;
 
 public interface PreVecI {
 	int dim();

@@ -1,7 +1,7 @@
 package com.winvector.lp;
 
-import com.winvector.linagl.LinalgFactory;
-import com.winvector.linagl.Matrix;
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
 
 
 

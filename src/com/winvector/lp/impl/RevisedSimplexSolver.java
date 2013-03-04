@@ -2,9 +2,9 @@ package com.winvector.lp.impl;
 
 import java.util.Random;
 
-import com.winvector.linagl.LinalgFactory;
-import com.winvector.linagl.Matrix;
-import com.winvector.linagl.SparseVec;
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
+import com.winvector.linalg.SparseVec;
 import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.InspectionOrder;

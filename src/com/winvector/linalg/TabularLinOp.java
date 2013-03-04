@@ -1,4 +1,4 @@
-package com.winvector.linagl;
+package com.winvector.linalg;
 
 import java.util.Arrays;
 

@@ -2,12 +2,12 @@ package com.winvector.lp;
 
 import java.util.Random;
 
-import com.winvector.linagl.HVec;
-import com.winvector.linagl.LinalgFactory;
-import com.winvector.linagl.Matrix;
-import com.winvector.linagl.PreMatrixI;
-import com.winvector.linagl.PreVecI;
-import com.winvector.linagl.SparseVec;
+import com.winvector.linalg.HVec;
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
+import com.winvector.linalg.PreMatrixI;
+import com.winvector.linalg.PreVecI;
+import com.winvector.linalg.SparseVec;
 import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.impl.RandomOrder;
 

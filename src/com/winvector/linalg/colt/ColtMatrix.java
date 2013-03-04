@@ -9,10 +9,10 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 
-import com.winvector.linagl.HVec;
-import com.winvector.linagl.LinalgFactory;
-import com.winvector.linagl.Matrix;
-import com.winvector.linagl.SparseVec;
+import com.winvector.linalg.HVec;
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
+import com.winvector.linalg.SparseVec;
 
 
 

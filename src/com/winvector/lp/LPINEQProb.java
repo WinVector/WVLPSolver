@@ -2,11 +2,11 @@ package com.winvector.lp;
 
 import java.util.ArrayList;
 
-import com.winvector.linagl.ColumnMatrix;
-import com.winvector.linagl.DenseVec;
-import com.winvector.linagl.PreMatrixI;
-import com.winvector.linagl.PreVecI;
-import com.winvector.linagl.SparseVec;
+import com.winvector.linalg.ColumnMatrix;
+import com.winvector.linalg.DenseVec;
+import com.winvector.linalg.PreMatrixI;
+import com.winvector.linalg.PreVecI;
+import com.winvector.linalg.SparseVec;
 import com.winvector.lp.LPException.LPMalformedException;
 
 /**

@@ -14,10 +14,10 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
-import com.winvector.linagl.ColumnMatrix;
-import com.winvector.linagl.DenseVec;
-import com.winvector.linagl.LinalgFactory;
-import com.winvector.linagl.Matrix;
+import com.winvector.linalg.ColumnMatrix;
+import com.winvector.linalg.DenseVec;
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.impl.RevisedSimplexSolver;

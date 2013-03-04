@@ -5,9 +5,9 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import com.winvector.linagl.Matrix;
-import com.winvector.linagl.PreMatrixI;
-import com.winvector.linagl.PreVecI;
+import com.winvector.linalg.Matrix;
+import com.winvector.linalg.PreMatrixI;
+import com.winvector.linalg.PreVecI;
 import com.winvector.lp.LPException.LPMalformedException;
 
 abstract class LPProbBase implements Serializable {

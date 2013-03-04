@@ -1,4 +1,4 @@
-package com.winvector.linagl;
+package com.winvector.linalg;
 
 import java.io.PrintStream;
 import java.util.BitSet;
@@ -241,7 +241,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 
 	
 	/**
-	 * elime all of elims from target
+	 * elim all of elims from target
 	 * @param c
 	 * @param elims (target not in this set)
 	 * @param target

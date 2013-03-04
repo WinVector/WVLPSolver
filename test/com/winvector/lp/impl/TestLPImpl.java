@@ -6,9 +6,9 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
-import com.winvector.linagl.LinalgFactory;
-import com.winvector.linagl.Matrix;
-import com.winvector.linagl.SparseVec;
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
+import com.winvector.linalg.SparseVec;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;

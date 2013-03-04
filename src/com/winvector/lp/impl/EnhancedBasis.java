@@ -5,10 +5,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.winvector.linagl.LinalgFactory;
-import com.winvector.linagl.Matrix;
-import com.winvector.linagl.SparseVec;
-import com.winvector.linagl.TabularLinOp;
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
+import com.winvector.linalg.SparseVec;
+import com.winvector.linalg.TabularLinOp;
 import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;

@@ -4,8 +4,8 @@ import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 
-import com.winvector.linagl.LinalgFactory;
-import com.winvector.linagl.Matrix;
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
 
 
 public class NativeMatrix extends Matrix<NativeMatrix> {
