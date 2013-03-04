@@ -3,6 +3,8 @@ library(reshape)
 library(ggplot2)
 d <- read.table('assignmentSpeed.tsv',header=T,sep='\t')
 d2 <- melt(d,id.vars=c('assignmentSize'))
+d2 <- subset(d2,d2$variable %in% list('assignmentSize',
+  'ApacheM3Simplex','GLPK','WVLPSolver'))
 ggplot(data=d2,aes(x=assignmentSize,y=value,color=variable)) + geom_point(alpha=0.5) + geom_smooth(alpha=0.7)
 ggsave('assignmentSpeed.png',width=8,height=6,dpi=90)
 d2$value = pmax(1,d2$value)

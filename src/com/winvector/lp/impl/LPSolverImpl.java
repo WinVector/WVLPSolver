@@ -2,6 +2,7 @@ package com.winvector.lp.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -298,6 +299,22 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		return soln.basisColumns;
 	}
+	
+	private static boolean obviouslyFullRowRank(final PreMatrixI a) {
+		if(a.cols()<a.rows()) {
+			return false;
+		}
+		final BitSet haveBasis = new BitSet(a.rows());
+		final Object extractTemps = a.buildExtractTemps();
+		for(int j=0;j<a.cols();++j) {
+			final SparseVec col = a.extractColumn(j,extractTemps);
+			if(col.popCount()==1) {
+				final int i = col.nzIndex();
+				haveBasis.set(i);
+			}
+		}
+		return haveBasis.cardinality()>=a.rows();
+	}
 
 	/**
 	 * @param prob
@@ -350,10 +367,18 @@ abstract class LPSolverImpl implements LPSolver {
 				}
 			}
 		}
-		final int[] rb = origProb.A.matrixCopy(factory).rowBasis(minBasisEpsilon); // TODO: get a better solution here, this is using nearly 1/2 of the time
-		if (rb.length != origProb.A.rows()) {
-			 final ColumnMatrix nA = new ColumnMatrix(origProb.A).extractRows(rb);
-			 final double[] nb = Matrix.extract(origProb.b,rb);
+		final int[] rb;
+		if(obviouslyFullRowRank(prob.A)) {
+			rb = new int[prob.A.rows()];
+			for(int i=0;i<rb.length;++i) {
+				rb[i] = i;
+			}
+		} else {
+			rb = prob.A.matrixCopy(factory).rowBasis(minBasisEpsilon); // TODO: get a better solution here, this is using nearly 1/2 of the time
+		}
+		if (rb.length != prob.A.rows()) {
+			 final ColumnMatrix nA = new ColumnMatrix(prob.A).extractRows(rb);
+			 final double[] nb = Matrix.extract(prob.b,rb);
 			 prob = new LPEQProb(nA, nb, prob.c);
 		}
 		final int[] basis0;
@@ -369,10 +394,7 @@ abstract class LPSolverImpl implements LPSolver {
 					"bad basis back from phase1 raw solve");
 		}
 		//System.out.println("phase1steps " + phase1StepsTaken + ", phase2 steps " + soln.stepsTaken);
-		LPEQProb.checkPrimFeas(prob.A, prob.b, soln.primalSolution, tol);
-		if (prob != origProb) {
-			LPEQProb.checkPrimFeas(origProb.A, origProb.b, soln.primalSolution, tol);
-		}
+		LPEQProb.checkPrimFeas(origProb.A, origProb.b, soln.primalSolution, tol);
 		soln.basisRows = rb;
 		for(int i=0;i<rb.length;++i) {
 			rb[i] = i;
