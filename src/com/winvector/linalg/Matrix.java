@@ -1,11 +1,9 @@
 package com.winvector.linalg;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Map.Entry;
-import java.util.SortedMap;
 import java.util.SortedSet;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 
@@ -271,16 +269,23 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 		set(row,col,1.0); // get rid of some rounding error
 	}
 	
-	private void addBasisRowAndElim(final SortedMap<Integer,Integer> foundRowToCol, final BitSet usedColumns,
-			final int newRow, final int newCol) {
-		final int crows = rows();
-		for(int i=0;i<crows;++i) {
-			if(i!=newRow) {
-				clearCol(newRow,i,newCol);
+	private void elimBasis(final int[] foundRow, final int[] foundCol, final int row) {
+		for(int ii=0;ii<foundRow.length;++ii) {
+			final int r = foundRow[ii];
+			if(r<0) {
+				break;
 			}
+			final int c =  foundCol[ii];
+			clearCol(r,row,c);
 		}
+	}
+	
+	private void addBasis(final int nFound, final int[] foundRow, final int[] foundCol,
+			final BitSet usedColumns,
+			final int newRow, final int newCol) {
 		rescaleRow(newRow,newCol);
-		foundRowToCol.put(newRow,newCol);
+		foundRow[nFound] = newRow;
+		foundCol[nFound] = newCol;
 		usedColumns.set(newCol);
 	}
 	
@@ -301,34 +306,39 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 			rowsToCheck.add(i);
 		}
 		final BitSet usedColumns = new BitSet(ccols);
-		final SortedMap<Integer,Integer> foundRowToCol = new TreeMap<Integer,Integer>();
+		final int[] foundRow = new int[nGoal];
+		final int[] foundCol = new int[nGoal];
+		Arrays.fill(foundRow,-1);
+		Arrays.fill(foundCol,-1);
+		int nFound = 0;
 		if(null!=forcedRows) {
 			for(final int ri: forcedRows) {
 				rowsToCheck.remove(ri);
+				c.elimBasis(foundRow,foundCol,ri);
 				final int j = c.firstNZCol(ri,minVal,usedColumns);
 				if(j<0) {
 					throw new IllegalArgumentException("candidate rows were not independent");	
 				}
-				c.addBasisRowAndElim(foundRowToCol, usedColumns,ri,j);
+				c.addBasis(nFound,foundRow,foundCol,usedColumns,ri,j);
+				++nFound;
 			}
 		}
-		if(foundRowToCol.size()<nGoal) {
+		if(nFound<nGoal) {
 			for(final Integer ri: rowsToCheck) {
+				c.elimBasis(foundRow,foundCol,ri);
 				final int j = c.firstNZCol(ri,minVal,usedColumns);
 				if(j>=0) {
-					c.addBasisRowAndElim(foundRowToCol,usedColumns,ri,j);
-					if(foundRowToCol.size()>=nGoal) {
+					c.addBasis(nFound,foundRow,foundCol,usedColumns,ri,j);
+					++nFound;
+					if(nFound>=nGoal) {
 						break;
 					}
 				}
 			}
 		}
-		final int nFound = foundRowToCol.size();
 		final int[] r = new int[nFound];
-		int i = 0;
-		for(final Integer fR: foundRowToCol.keySet()) {
-			r[i] = fR;
-			++i;
+		for(int i=0;i<nFound;++i) {
+			r[i] = foundRow[i];
 		}
 		return r;
 	}
