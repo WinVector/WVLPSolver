@@ -294,7 +294,11 @@ abstract class LPSolverImpl implements LPSolver {
 				rowset[i] = i;
 			}
 			// TODO: cut down the copies here!
-			final int[] nb = A.matrixCopy(factory).colBasis(sb,minBasisEpsilon);
+			final int[] eligableCols = new int[n];
+			for(int i=0;i<n;++i) {
+				eligableCols[i] = i;
+			}
+			final int[] nb = A.matrixCopy(factory).extractColumns(eligableCols, factory).colBasis(sb,minBasisEpsilon);
 			return nb;
 		}
 		return soln.basisColumns;
@@ -367,25 +371,28 @@ abstract class LPSolverImpl implements LPSolver {
 				}
 			}
 		}
-		final int[] rb;
-		if(obviouslyFullRowRank(prob.A)) {
-			rb = new int[prob.A.rows()];
-			for(int i=0;i<rb.length;++i) {
-				rb[i] = i;
-			}
-		} else {
-			rb = prob.A.matrixCopy(factory).rowBasis(minBasisEpsilon); // TODO: get a better solution here, this is using nearly 1/2 of the time
-		}
-		if (rb.length != prob.A.rows()) {
-			 final ColumnMatrix nA = new ColumnMatrix(prob.A).extractRows(rb);
-			 final double[] nb = Matrix.extract(prob.b,rb);
-			 prob = new LPEQProb(nA, nb, prob.c);
-		}
 		final int[] basis0;
 		if(null==basis_in) {
 			basis0 = solvePhase1(prob.A, prob.b , prob.c, tol, maxRounds, factory);
 		} else {
 			basis0 = basis_in;
+		}
+		final int[] rb;
+		{
+			final T colSet = prob.A.extractColumns(basis0, factory);
+			if(obviouslyFullRowRank(colSet)) {
+				rb = new int[prob.A.rows()];
+				for(int i=0;i<rb.length;++i) {
+					rb[i] = i;
+				}
+			} else {
+				rb = colSet.rowBasis(minBasisEpsilon); // TODO: get a better solution here, this is using nearly 1/2 of the time
+			}
+		}
+		if (rb.length != prob.A.rows()) {
+			 final ColumnMatrix nA = new ColumnMatrix(prob.A).extractRows(rb);
+			 final double[] nb = Matrix.extract(prob.b,rb);
+			 prob = new LPEQProb(nA, nb, prob.c);
 		}
 		final LPSoln soln = rawSolve(prob, basis0, tol, maxRounds, factory, null);
 		if ((soln == null) || (soln.primalSolution == null) || (soln.basisColumns == null)

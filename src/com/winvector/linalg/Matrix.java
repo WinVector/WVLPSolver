@@ -269,6 +269,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 
 
 	/**
+	 * picks rows in order given (skipping rows in span of others)
 	 * destructive to c
 	 * @param c
 	 * @param forcedRows
@@ -319,11 +320,22 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 		return r;
 	}
 	
+	/**
+	 * picks rows in order given (skipping rows in span of others)
+	 * @param minVal
+	 * @return
+	 */
 	public int[] rowBasis(final double minVal) {
 		final T c = copy(factory(),false);
 		return rowBasis(c,null,minVal);
 	}
 	
+	/**
+	 * picks columns in order given (skipping columns in span of others)
+	 * @param forcedRows
+	 * @param minVal
+	 * @return
+	 */
 	public int[] colBasis(final int[] forcedRows, final double minVal) {
 		final T c = transpose(factory(),false);
 		return rowBasis(c,forcedRows,minVal);
