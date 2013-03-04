@@ -29,7 +29,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public boolean resuffle = true;              // re-shuffle inspection order each pass
 	private final Random rand = new Random(3252351L);
 	// run counters
-	public long normalSteps = 0;
+	public long pivots = 0;
 	public long inspections = 0;
 	public long totalTimeMS = 0;
 	public long inspectionTimeMS = 0;
@@ -39,8 +39,17 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	
 	private void endRunTimingUpdate(final long startTimeMS, final long endInspectionMS) {
 		final long currentTimeMillis = System.currentTimeMillis();
-		totalTimeMS = currentTimeMillis - startTimeMS;
+		totalTimeMS += currentTimeMillis - startTimeMS;
 		postPivotTimeMS += currentTimeMillis - endInspectionMS;
+	}
+	
+	public void clearCounters() {
+		pivots = 0;
+		inspections = 0;
+		totalTimeMS = 0;
+		inspectionTimeMS = 0;
+		prePivotTimeMS = 0;
+		postPivotTimeMS = 0;		
 	}
 	
 	private <T extends Matrix<T>> int[] runSimplex(final EnhancedBasis<T> tab, final double tol, 
@@ -50,18 +59,14 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		}
 		// start timing clear counters
 		final long startTimeMS = System.currentTimeMillis();
-		normalSteps = 0;
-		inspections = 0;
-		totalTimeMS = 0;
-		inspectionTimeMS = 0;
-		prePivotTimeMS = 0;
-		postPivotTimeMS = 0;
 		final InspectionOrder inspectionOrder = tab.prob.buildOrderTracker(rand);
 		final double[] bRatPtr = new double[1];
 		double[] b = tab.prob.b();
-		while (normalSteps<=maxRounds) {
+		int steps = 0;
+		while (steps<=maxRounds) {
 			final long startRoundMS = System.currentTimeMillis();
-			++normalSteps;
+			++steps;
+			++pivots;
 			//prob.soln(basis,tol);
 			//System.out.println("basis good");
 			inspectionOrder.startPass();
@@ -135,7 +140,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			final long endRoundMS = System.currentTimeMillis();
 			postPivotTimeMS += endRoundMS-endInspectionMS;
 		}
-		totalTimeMS = System.currentTimeMillis() - startTimeMS;
+		totalTimeMS += System.currentTimeMillis() - startTimeMS;
 		throw new LPTooManyStepsException("max steps>" + maxRounds);
 	}
 

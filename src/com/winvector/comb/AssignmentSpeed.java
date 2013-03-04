@@ -53,12 +53,13 @@ public final class AssignmentSpeed {
 				}
 				if(solver instanceof RevisedSimplexSolver) {
 					final RevisedSimplexSolver rs = (RevisedSimplexSolver)solver;
-					res.pivots = rs.normalSteps;
+					res.pivots = rs.pivots;
 					res.inspections = rs.inspections;
 					res.inspecionTimeMS = rs.inspectionTimeMS;
 					res.totalTimeMS = rs.totalTimeMS;
 					res.prePivotTimeMS = rs.prePivotTimeMS;
 					res.postPivotTimeMS = rs.postPivotTimeMS;
+					rs.clearCounters();
 				}
 				final long endMS = System.currentTimeMillis();
 				final long durationMS = endMS-startMS;
