@@ -2,6 +2,11 @@ package com.winvector.linalg;
 
 import java.io.PrintStream;
 import java.util.BitSet;
+import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 
 
@@ -230,45 +235,55 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 	}
 	
 
-	private static <Z extends Matrix<Z>> double rowDotRow(final Z c, final int a, final int b) {
-		double bdotb = 0.0;
-		final int dim = c.cols();
-		for(int i=0;i<dim;++i) {
-			bdotb += c.get(a,i)*c.get(b,i);
-		}
-		return bdotb;
-	}
-	
-
-	
-	/**
-	 * elim all of elims from target
-	 * @param c
-	 * @param elims (target not in this set)
-	 * @param target
-	 */
-	private static <Z extends Matrix<Z>> void elimRows(final Z c, final BitSet elims, final int target) {
-		final double tdott = rowDotRow(c,target,target);
-		if(tdott>0) {
-			final int ccols = c.cols();
-			for(int ei=elims.nextSetBit(0); ei>=0; ei=elims.nextSetBit(ei+1)) {
-				if(ei!=target) {
-					final double edote = rowDotRow(c,ei,ei);
-					if(edote>0) {
-						final double edott = rowDotRow(c,ei,target);
-						if(edott!=0.0) {
-							final double scale = edott/edote;
-							for(int i=0;i<ccols;++i) {
-								c.set(target,i,c.get(target,i) - c.get(ei,i)*scale);
-							}
-						}
-					}
-				}			
+	int firstNZCol(final int row, final double minVal, final BitSet usedColumns) {
+		final int ccols = cols();
+		for(int j=0;j<ccols;++j) {
+			if(!usedColumns.get(j)) {
+				final double cijAbs = Math.abs(get(row,j));
+				if((cijAbs>0)&&(cijAbs>=minVal)) {
+					return j;
+				}
 			}
 		}
+		return -1;
 	}
-
-
+	
+	void clearCol(final int aggressorRow, final int victimRow, final int col) {
+		final double avc = get(victimRow,col);
+		if(avc!=0.0) {
+			final double aac = get(aggressorRow,col);
+			final double scale = avc/aac;
+			final int ccols = cols();
+			for(int j=0;j<ccols;++j) {
+				set(victimRow,j,get(victimRow,j)-scale*get(aggressorRow,j));
+			}
+			set(victimRow,col,0.0); // get rid of some rounding error
+		}
+	}
+	
+	void rescaleRow(final int row, final int col) {
+		final double arc = get(row,col);
+		final double scale = 1.0/arc;
+		final int ccols = cols();
+		for(int j=0;j<ccols;++j) {
+			set(row,j,get(row,j)*scale);
+		}
+		set(row,col,1.0); // get rid of some rounding error
+	}
+	
+	private void addBasisRowAndElim(final SortedMap<Integer,Integer> foundRowToCol, final BitSet usedColumns,
+			final int newRow, final int newCol) {
+		final int crows = rows();
+		for(int i=0;i<crows;++i) {
+			if(i!=newRow) {
+				clearCol(newRow,i,newCol);
+			}
+		}
+		rescaleRow(newRow,newCol);
+		foundRowToCol.put(newRow,newCol);
+		usedColumns.set(newCol);
+	}
+	
 	/**
 	 * picks rows in order given (skipping rows in span of others)
 	 * destructive to c
@@ -278,44 +293,41 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 	 * @return
 	 */
 	private static <Z extends Matrix<Z>> int[] rowBasis(final Z c, final int[] forcedRows, final double minVal) {
-		final double minNormSq = minVal*minVal;
 		final int crows = c.rows();
-		final BitSet checked = new BitSet(crows);
-		final BitSet found = new BitSet(crows);
 		final int ccols = c.cols();
 		final int nGoal = Math.min(ccols,crows);
-		int nFound = 0;
+		final SortedSet<Integer> rowsToCheck = new TreeSet<Integer>();
+		for(int i=0;i<crows;++i) {
+			rowsToCheck.add(i);
+		}
+		final BitSet usedColumns = new BitSet(ccols);
+		final SortedMap<Integer,Integer> foundRowToCol = new TreeMap<Integer,Integer>();
 		if(null!=forcedRows) {
 			for(final int ri: forcedRows) {
-				checked.set(ri);
-				elimRows(c,found,ri);
-				final double bdotb = rowDotRow(c,ri,ri);
-				if((bdotb>0)&&(bdotb>=minNormSq)) {
-					found.set(ri);
-					++nFound;
-					if(nFound>=nGoal) {
+				rowsToCheck.remove(ri);
+				final int j = c.firstNZCol(ri,minVal,usedColumns);
+				if(j<0) {
+					throw new IllegalArgumentException("candidate rows were not independent");	
+				}
+				c.addBasisRowAndElim(foundRowToCol, usedColumns,ri,j);
+			}
+		}
+		if(foundRowToCol.size()<nGoal) {
+			for(final Integer ri: rowsToCheck) {
+				final int j = c.firstNZCol(ri,minVal,usedColumns);
+				if(j>=0) {
+					c.addBasisRowAndElim(foundRowToCol,usedColumns,ri,j);
+					if(foundRowToCol.size()>=nGoal) {
 						break;
 					}
 				}
 			}
-			if(nFound!=forcedRows.length) {
-				throw new IllegalArgumentException("candidate rows were not independent");
-			}
 		}
-		for(int ri=0;(ri<crows)&&(nFound<nGoal);++ri) {
-			if(!checked.get(ri)) {
-				elimRows(c,found,ri);
-				final double bdotb = rowDotRow(c,ri,ri);
-				if((bdotb>0)&&(bdotb>=minNormSq)) {
-					found.set(ri);
-					++nFound;
-				}
-			}
-		}
+		final int nFound = foundRowToCol.size();
 		final int[] r = new int[nFound];
 		int i = 0;
-		for(int fi=found.nextSetBit(0); fi>=0; fi=found.nextSetBit(fi+1)) {
-			r[i] = fi;
+		for(final Integer fR: foundRowToCol.keySet()) {
+			r[i] = fR;
 			++i;
 		}
 		return r;
