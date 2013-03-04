@@ -2,7 +2,6 @@ package com.winvector.lp.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -304,21 +303,6 @@ abstract class LPSolverImpl implements LPSolver {
 		return soln.basisColumns;
 	}
 	
-	private static boolean obviouslyFullRowRank(final PreMatrixI a) {
-		if(a.cols()<a.rows()) {
-			return false;
-		}
-		final BitSet haveBasis = new BitSet(a.rows());
-		final Object extractTemps = a.buildExtractTemps();
-		for(int j=0;j<a.cols();++j) {
-			final SparseVec col = a.extractColumn(j,extractTemps);
-			if(col.popCount()==1) {
-				final int i = col.nzIndex();
-				haveBasis.set(i);
-			}
-		}
-		return haveBasis.cardinality()>=a.rows();
-	}
 
 	/**
 	 * @param prob
@@ -379,13 +363,13 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		final int[] rb;
 		{
-			final T colSet = prob.A.extractColumns(basis0, factory);
-			if(obviouslyFullRowRank(colSet)) {
+			if(basis0.length>=prob.A.rows()) {
 				rb = new int[prob.A.rows()];
 				for(int i=0;i<rb.length;++i) {
 					rb[i] = i;
 				}
 			} else {
+				final T colSet = prob.A.extractColumns(basis0, factory);
 				rb = colSet.rowBasis(minBasisEpsilon); // TODO: get a better solution here, this is using nearly 1/2 of the time
 			}
 		}
