@@ -16,22 +16,46 @@ public class HVec implements Serializable {
 	final double[] values;  // do not alter!
 	
 	public HVec(final int[] indices, final double[] values) {
-		this.indices = indices;
-		this.values = values;
-		if(indices.length!=values.length) {
+		final int origvlen = values.length;
+		if(indices.length!=origvlen) {
 			throw new IllegalArgumentException("indices.length=" + indices.length 
 					+ ", values.length=" + values.length);
 		}
-		final int nindices = indices.length;
-		if(nindices>0) {
+		final double epsilon = 1.0e-12;
+		int nnz = 0;
+		if(origvlen>0) {
 			if(indices[0]<0) {
 				throw new IllegalArgumentException("negative index");
 			}
-			for(int i=0;i<nindices-1;++i) {
+			for(int i=0;i<origvlen-1;++i) {
 				if(indices[i+1]<=indices[i]) {
 					throw new IllegalArgumentException("disordered indices");
 				}
 			}
+		}
+		for(final double vi: values) {
+			if(Math.abs(vi)>epsilon) {
+				++nnz;
+			}
+		}
+		if(nnz<origvlen) {
+			this.indices = new int[nnz];
+			this.values = new double[nnz];
+			int k = 0;
+			for(int i=0;i<origvlen;++i) {
+				final double vi = values[i];
+				if(Math.abs(vi)>epsilon) {
+					this.indices[k] = indices[i];
+					this.values[k] = vi;
+					++k;
+					if(k>=nnz) {
+						break;
+					}
+				}
+			}
+		} else {
+			this.indices = indices;
+			this.values = values;
 		}
 	}
 	

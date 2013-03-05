@@ -2,12 +2,15 @@ package com.winvector.comb;
 
 import java.util.BitSet;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 import com.winvector.linalg.ColumnMatrix;
 import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
+import com.winvector.linalg.colt.ColtMatrix;
+import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPMalformedException;
@@ -151,5 +154,53 @@ public final class Assignment {
 			tot += cost[i][assignment[i]];
 		}
 		return tot;
+	}
+	
+	public static void main(final String[] args) throws LPException {
+		final Random rand = new Random(235135L);
+		final int n = 120;
+		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
+		final double[][] c = new double[n][n];
+		for(int i=0;i<n;++i) {
+			for(int j=0;j<n;++j) {
+				c[i][j] = rand.nextDouble();
+			}
+		}
+		final LPEQProb prob = Assignment.buildAssignmentProb(ColtMatrix.factory,c);
+		System.out.print("assignmentSize");
+		System.out.print("\t" + "dim");
+		System.out.print("\t" + "rows");
+		System.out.print("\t" + "inspections");
+		System.out.print("\t" + "pivots");
+		System.out.print("\t" + "totTimeMS");
+		System.out.print("\t" + "inspectionTimeMS");
+		System.out.print("\t" + "prePivotTimeMS");
+		System.out.print("\t" + "postPivotTimeMS");
+		System.out.print("\t" + "solnTimeMS");
+		System.out.println();
+		while(true) {
+			final long solnStart = System.currentTimeMillis();
+			final LPSoln soln = solver.solve(prob,null,1.0e-5,100000,NativeMatrix.factory);
+			final long solnDone = System.currentTimeMillis();
+			final long pivots = solver.pivots;
+			final long inspections = solver.inspections;
+			final long inspecionTimeMS = solver.inspectionTimeMS;
+			final long totalTimeMS = solver.totalTimeMS;
+			final long prePivotTimeMS = solver.prePivotTimeMS;
+			final long postPivotTimeMS = solver.postPivotTimeMS;
+			final long solnTimeMS = solnDone - solnStart;
+			solver.clearCounters();
+			System.out.print(n);
+			System.out.print("\t" + prob.nvars());
+			System.out.print("\t" + prob.rows());
+			System.out.print("\t" + inspections);
+			System.out.print("\t" + pivots);
+			System.out.print("\t" + totalTimeMS);
+			System.out.print("\t" + inspecionTimeMS);
+			System.out.print("\t" + prePivotTimeMS);
+			System.out.print("\t" + postPivotTimeMS);
+			System.out.print("\t" + solnTimeMS);
+			System.out.println();
+		}
 	}
 }

@@ -118,7 +118,7 @@ public final class AssignmentSpeed {
 						c[i][j] = rand.nextDouble();
 					}
 				}
-				final LPEQProb prob = Assignment.buildAssignmentProb(ColtMatrix.factory,c);
+				final LPEQProb prob = Assignment.buildAssignmentProb(NativeMatrix.factory,c);
 				final RunStats durations = runSet(prob,solvers,NativeMatrix.factory);
 				zaps.addAll(durations.zaps);
 				System.out.print(n);
