@@ -1,14 +1,16 @@
 package com.winvector.lp.impl;
 
+import java.util.Arrays;
 import java.util.Random;
 
+import com.winvector.linalg.HVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.SparseVec;
-import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.InspectionOrder;
 import com.winvector.lp.LPEQProb;
+import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPTooManyStepsException;
 import com.winvector.lp.LPSoln;
@@ -61,6 +63,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		final long startTimeMS = System.currentTimeMillis();
 		final InspectionOrder inspectionOrder = tab.prob.buildOrderTracker(rand);
 		final double[] bRatPtr = new double[1];
+		final int[] sortedBasis = new int[tab.basis.length];
 		double[] b = tab.prob.b();
 		int steps = 0;
 		while (steps<=maxRounds) {
@@ -84,33 +87,33 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			double bestRi = Double.NaN;
 			final long startInspectionMS = System.currentTimeMillis();
 			prePivotTimeMS += startInspectionMS-startRoundMS;
+			// quick low-object way to check for items in basis
+			for(int i=0;i<tab.basis.length;++i) {
+				sortedBasis[i] = tab.basis[i];
+			}
+			Arrays.sort(sortedBasis);
+			// try to find pivot
 			inspectionLoop:
-			while(inspectionOrder.hasNext()) {
-				++inspections;
-				final int v = inspectionOrder.take(tab.basis,lambda);
-				final double ri = tab.computeRI(lambda, v);
-				//System.out.println("\t" + v + " ri: " + ri);
-				if(ri < -enteringTol) {
-					if((rEnteringV < 0)||(ri < bestRi)) {
-						boolean inBasis = false;
-						for(final int bi: tab.basis) { // TODO: prove a lemma that ri isn't negative on current basis so we can eliminate this check
-							if(bi==ri) {
-								inBasis = true;
-								break;
-							}
-						}
-						if(!inBasis) {
-							rEnteringV = v;
-							bestRi = ri;
-							if(earlyR) {
-								inspectionOrder.liked(v);
-								break inspectionLoop;
+				while(inspectionOrder.hasNext()) {
+					++inspections;
+					final int v = inspectionOrder.take(tab.basis,lambda);
+					final double ri = tab.computeRI(lambda, v);
+					//System.out.println("\t" + v + " ri: " + ri);
+					if(ri < -enteringTol) {
+						if((rEnteringV < 0)||(ri < bestRi)) {
+							final int basisIndex = Arrays.binarySearch(sortedBasis,v);
+							if(basisIndex<0) { // not already in basis
+								rEnteringV = v;
+								bestRi = ri;
+								if(earlyR) {
+									inspectionOrder.liked(v);
+									break inspectionLoop;
+								}
 							}
 						}
 					}
+					inspectionOrder.disliked(v);
 				}
-				inspectionOrder.disliked(v);
-			}
 			final long endInspectionMS = System.currentTimeMillis();
 			inspectionTimeMS += endInspectionMS - startInspectionMS;
 			final int enteringV = rEnteringV;
