@@ -1,9 +1,7 @@
 package com.winvector.comb;
 
 import java.util.BitSet;
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 
 import com.winvector.linalg.ColumnMatrix;
 import com.winvector.linalg.DenseVec;
@@ -128,7 +126,7 @@ public final class Assignment {
 		if(n!=assignment.length) {
 			return false;
 		}
-		final Set<Integer> saw = new HashSet<Integer>();
+		final BitSet saw = new BitSet(n);
 		for(int i=0;i<n;++i) {
 			if((assignment[i]<0)||(assignment[i]>=n)) {
 				return false;
@@ -137,12 +135,12 @@ public final class Assignment {
 			if((Double.isNaN(cij))||(Double.isInfinite(cij))) {
 				return false;
 			}
-			if(saw.contains(i)) {
+			if(saw.get(i)) {
 				return false;
 			}
-			saw.add(i);
+			saw.set(i);
 		}
-		if(saw.size()!=n) {
+		if(saw.cardinality()!=n) {
 			return false;
 		}
 		return true;

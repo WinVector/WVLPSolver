@@ -3,8 +3,6 @@ package com.winvector.linalg;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 
 
@@ -301,10 +299,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 		final int crows = c.rows();
 		final int ccols = c.cols();
 		final int nGoal = Math.min(ccols,crows);
-		final SortedSet<Integer> rowsToCheck = new TreeSet<Integer>();
-		for(int i=0;i<crows;++i) {
-			rowsToCheck.add(i);
-		}
+		final BitSet rowsSeen = new BitSet(crows);
 		final BitSet usedColumns = new BitSet(ccols);
 		final int[] foundRow = new int[nGoal];
 		final int[] foundCol = new int[nGoal];
@@ -313,7 +308,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 		int nFound = 0;
 		if(null!=forcedRows) {
 			for(final int ri: forcedRows) {
-				rowsToCheck.remove(ri);
+				rowsSeen.set(ri);
 				c.elimBasis(foundRow,foundCol,ri);
 				final int j = c.firstNZCol(ri,minVal,usedColumns);
 				if(j<0) {
@@ -324,14 +319,16 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 			}
 		}
 		if(nFound<nGoal) {
-			for(final Integer ri: rowsToCheck) {
-				c.elimBasis(foundRow,foundCol,ri);
-				final int j = c.firstNZCol(ri,minVal,usedColumns);
-				if(j>=0) {
-					c.addBasis(nFound,foundRow,foundCol,usedColumns,ri,j);
-					++nFound;
-					if(nFound>=nGoal) {
-						break;
+			for(int ri=0;ri<crows;++ri) {
+				if(!rowsSeen.get(ri)) {
+					c.elimBasis(foundRow,foundCol,ri);
+					final int j = c.firstNZCol(ri,minVal,usedColumns);
+					if(j>=0) {
+						c.addBasis(nFound,foundRow,foundCol,usedColumns,ri,j);
+						++nFound;
+						if(nFound>=nGoal) {
+							break;
+						}
 					}
 				}
 			}
