@@ -3,7 +3,6 @@ package com.winvector.lp.impl;
 import java.util.Arrays;
 import java.util.Random;
 
-import com.winvector.linalg.HVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.SparseVec;

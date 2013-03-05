@@ -20,6 +20,7 @@ import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
+import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.impl.RevisedSimplexSolver;
 
 /**
@@ -27,22 +28,24 @@ import com.winvector.lp.impl.RevisedSimplexSolver;
  */
 public final class TestLP  {
 	
-	public <Z extends Matrix<Z>> void testLPSolverTrivial(final LinalgFactory<Z> factory) {
-		boolean caught1 = false;
-		try {
+	public <Z extends Matrix<Z>> void testLPSolverTrivial(final LinalgFactory<Z> factory) throws LPMalformedException {
+		{
+			boolean caught1 = false;
 			final double[] c = new double[1];
 			c[0] = -1.0;
 			final LPEQProb prob = new LPEQProb(new ColumnMatrix(factory.newMatrix(1, 1,false)),
 					new double[1], new DenseVec(c));
-			final RevisedSimplexSolver solver = new RevisedSimplexSolver();
-			solver.solve(prob, null, 0.0, 1000, factory);
-		} catch (LPException.LPUnboundedException ue) {
-			caught1 = true;
-		} catch (LPException le) {
-			assertTrue("caught: " + le,false);
-		}
-		if (!caught1) {
-			assertTrue("didn't detect unbounded case",false);
+			try {
+				final RevisedSimplexSolver solver = new RevisedSimplexSolver();
+				solver.solve(prob, null, 0.0, 1000, factory);
+			} catch (LPException.LPUnboundedException ue) {
+				caught1 = true;
+			} catch (LPException le) {
+				assertTrue("caught: " + le,false);
+			}
+			if (!caught1) {
+				assertTrue("didn't detect unbounded case",false);
+			}
 		}
 		try {
 			final double[] c = new double[1];

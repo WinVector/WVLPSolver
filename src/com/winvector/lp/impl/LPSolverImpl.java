@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import com.winvector.linalg.ColumnMatrix;
 import com.winvector.linalg.DenseVec;
+import com.winvector.linalg.HVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.PreMatrixI;
@@ -346,22 +347,36 @@ abstract class LPSolverImpl implements LPSolver {
 				rb = colSet.rowBasis(minBasisEpsilon); // TODO: get a better solution here, this is using nearly 1/2 of the time
 			}
 		}
-		if (rb.length != prob.A.rows()) {
-			 final ColumnMatrix nA = new ColumnMatrix(prob.A).extractRows(rb);
-			 final double[] nb = Matrix.extract(prob.b,rb);
-			 prob = new LPEQProb(nA, nb, prob.c);
+		final LPSoln soln;
+		if(rb.length>0) {
+			if (rb.length != prob.A.rows()) {
+				final ColumnMatrix nA = new ColumnMatrix(prob.A).extractRows(rb);
+				final double[] nb = Matrix.extract(prob.b,rb);
+				prob = new LPEQProb(nA, nb, prob.c);
+			}
+			soln = rawSolve(prob, basis0, tol, maxRounds, factory, null);
+			if ((soln == null) || (soln.primalSolution == null) || (soln.basisColumns == null)
+					|| (soln.basisColumns.length != basis0.length)) {
+				throw new LPException.LPErrorException(
+						"bad basis back from phase1 raw solve");
+			}
+			soln.basisRows = rb;
+		} else {
+			soln = new LPSoln(new HVec(new int[0],new double[0]),new int[0],new int[0]);
 		}
-		final LPSoln soln = rawSolve(prob, basis0, tol, maxRounds, factory, null);
-		if ((soln == null) || (soln.primalSolution == null) || (soln.basisColumns == null)
-				|| (soln.basisColumns.length != basis0.length)) {
-			throw new LPException.LPErrorException(
-					"bad basis back from phase1 raw solve");
-		}
-		//System.out.println("phase1steps " + phase1StepsTaken + ", phase2 steps " + soln.stepsTaken);
+		// check is needed as b-entries dropped out of the row set may be violated by solution, check causes throw
 		LPEQProb.checkPrimFeas(origProb.A, origProb.b, soln.primalSolution, tol);
-		soln.basisRows = rb;
-		for(int i=0;i<rb.length;++i) {
-			rb[i] = i;
+		// now check for zero columns (which can't enter a basis) for negative c (unbounded)
+		{
+			final Object extractTemps = origProb.A.buildExtractTemps();
+			for(int j=0;j<origProb.c.dim();++j) {
+				if(origProb.c.get(j)<0) {
+					final SparseVec col = origProb.A.extractColumn(j,extractTemps);
+					if(col.nzIndex()<0) {
+						throw new LPException.LPUnboundedException("col " + j + " empty with c[j]=" + origProb.c.get(j));
+					}
+				}
+			}
 		}
 		return soln;
 	}
