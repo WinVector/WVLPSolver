@@ -11,6 +11,7 @@ import java.util.Arrays;
  */
 public class HVec implements Serializable {
 	private static final long serialVersionUID = 1L;
+	private static final double epsilon = 1.0e-12;
 	
 	final int[] indices;    // do not alter!
 	final double[] values;  // do not alter!
@@ -21,7 +22,7 @@ public class HVec implements Serializable {
 			throw new IllegalArgumentException("indices.length=" + indices.length 
 					+ ", values.length=" + values.length);
 		}
-		final double epsilon = 1.0e-12;
+		
 		int nnz = 0;
 		if(origvlen>0) {
 			if(indices[0]<0) {
@@ -80,7 +81,7 @@ public class HVec implements Serializable {
 		final int dim = x.length;
 		int index = 0;
 		for(int i=0;i<dim;++i) {
-			if(x[i]!=0) {
+			if(Math.abs(x[i])>epsilon) {
 				++index;
 			}
 		}
@@ -89,7 +90,7 @@ public class HVec implements Serializable {
 		final double[] values = new double[nnz];
 		index = 0;
 		for(int i=0;(i<dim)&&(index<nnz);++i) {
-			if(x[i]!=0) {
+			if(Math.abs(x[i])>epsilon) {
 				indices[index] = i;
 				values[index] = x[i];
 				++index;
@@ -114,23 +115,15 @@ public class HVec implements Serializable {
 	}
 	
 	public int popCount() {
-		int npop = 0;
-		for(final double vi: values) {
-			if(0.0!=vi) {
-				++npop;
-			}
-		}
-		return npop;
+		return indices.length;
 	}
 	
 	public int nzIndex() {
-		for(int ii=0;ii<values.length;++ii) {
-			final double vi = values[ii];
-			if(0.0!=vi) {
-				return indices[ii];
-			}
+		if(indices.length<=0) {
+			return -1;
+		} else {
+			return indices[0];
 		}
-		return -1;
 	}
 	
 	

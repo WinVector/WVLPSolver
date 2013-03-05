@@ -87,12 +87,19 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			inspectionLoop:
 			while(inspectionOrder.hasNext()) {
 				++inspections;
-				final int v = inspectionOrder.take(tab.curBasisSet,lambda);
-				if(!tab.curBasisSet.contains(v)) {
-					final double ri = tab.computeRI(lambda, v);
-					//System.out.println("\t" + v + " ri: " + ri);
-					if(ri < -enteringTol) {
-						if((rEnteringV < 0)||(ri < bestRi)) {
+				final int v = inspectionOrder.take(tab.basis,lambda);
+				final double ri = tab.computeRI(lambda, v);
+				//System.out.println("\t" + v + " ri: " + ri);
+				if(ri < -enteringTol) {
+					if((rEnteringV < 0)||(ri < bestRi)) {
+						boolean inBasis = false;
+						for(final int bi: tab.basis) { // TODO: prove a lemma that ri isn't negative on current basis so we can eliminate this check
+							if(bi==ri) {
+								inBasis = true;
+								break;
+							}
+						}
+						if(!inBasis) {
 							rEnteringV = v;
 							bestRi = ri;
 							if(earlyR) {
@@ -101,8 +108,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 							}
 						}
 					}
-					inspectionOrder.disliked(v);
 				}
+				inspectionOrder.disliked(v);
 			}
 			final long endInspectionMS = System.currentTimeMillis();
 			inspectionTimeMS += endInspectionMS - startInspectionMS;

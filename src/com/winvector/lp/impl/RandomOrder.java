@@ -1,7 +1,6 @@
 package com.winvector.lp.impl;
 
 import java.util.Random;
-import java.util.Set;
 
 import com.winvector.lp.InspectionOrder;
 
@@ -28,7 +27,7 @@ public final class RandomOrder implements InspectionOrder {
 	}
 	
 	@Override
-	public int take(final Set<Integer> current, final double[] lambda) {
+	public int take(final int[] basis, final double[] lambda) {
 		final int r = ids[ptr];
 		++ptr;
 		return r;

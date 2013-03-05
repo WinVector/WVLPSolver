@@ -1,12 +1,11 @@
 package com.winvector.lp;
 
-import java.util.Set;
 
 public interface InspectionOrder {
 	void startPass();
 	void shuffle();
 	boolean hasNext();
-	int take(Set<Integer> current, double[] lambda);
+	int take(int[] basis, double[] lambda);
 	void liked(int v);
 	void disliked(int v);
 }

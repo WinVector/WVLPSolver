@@ -2,8 +2,6 @@ package com.winvector.lp.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 import com.winvector.linalg.ColumnMatrix;
 import com.winvector.linalg.DenseVec;
@@ -98,47 +96,22 @@ abstract class LPSolverImpl implements LPSolver {
 		if (m > n) {
 			throw new LPException.LPMalformedException("m>n");
 		}
-		final Set<Integer> seen = new HashSet<Integer>();
 		for (int i = 0; i < basis.length; ++i) {
 			if ((basis[i] < 0) || (basis[i] >= n)) {
 				throw new LPException.LPMalformedException(
 						"out of range column in basis");
 			}
-			Integer key = new Integer(basis[i]);
-			if (seen.contains(key)) {
+		}
+		final int[] bSorted = basis.clone();
+		Arrays.sort(bSorted);
+		for (int i = 1; i < basis.length; ++i) {
+			if(bSorted[i-1]==bSorted[i]) {
 				throw new LPException.LPMalformedException(
 						"duplicate column in basis");
 			}
 		}
 	}
 
-	/**
-	 * @param ncols
-	 *            the number of columns we are dealing with
-	 * @param basis
-	 *            a list of columns
-	 * @return [0..ncols-1] set-minus basis
-	 */
-	static int[] complementaryColumns(int ncols, int[] basis) {
-		final Set<Integer> seen = new HashSet<Integer>();
-		if (basis != null) {
-			for (int i = 0; i < basis.length; ++i) {
-				if ((basis[i] >= 0) && (basis[i] < ncols)) {
-					seen.add(new Integer(basis[i]));
-				}
-			}
-		}
-		int[] r = new int[ncols - seen.size()];
-		int j = 0;
-		for (int i = 0; (i < ncols) && (j < r.length); ++i) {
-			Integer key = new Integer(i);
-			if (!seen.contains(key)) {
-				r[j] = i;
-				++j;
-			}
-		}
-		return r;
-	}
 
 	static String stringBasis(final int[] b) {
 		if (b == null) {

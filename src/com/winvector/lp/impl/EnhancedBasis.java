@@ -2,8 +2,6 @@ package com.winvector.lp.impl;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
@@ -27,7 +25,6 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 
 	public final int m;  // rank of basis
 	public final int[] basis; // variables in basis
-	public final Set<Integer> curBasisSet = new HashSet<Integer>(); // set of variables in basis
 	
 	public final LinalgFactory<T> factory;
 	private final int[] binvNZJTmp;
@@ -127,7 +124,6 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 		basis = new int[basis_in.length];
 		for (int i = 0; i < basis.length; ++i) {
 			basis[i] = basis_in[i];
-			curBasisSet.add(basis[i]);
 		}
 		readyBinv();
 	}
@@ -151,8 +147,6 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 
 
 	public void basisPivot(final int leavingI, final int enteringV, final double[] binvu) throws LPErrorException {
-		curBasisSet.remove(basis[leavingI]);
-		curBasisSet.add(enteringV);
 		basis[leavingI] = enteringV;
 		++normalSteps;
 		if(normalSteps%(25*m+1)==0) {
@@ -209,10 +203,8 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	}
 
 	public void resetBasis(final int[] d) throws LPErrorException {
-		curBasisSet.clear();
 		for(int i=0;i<basis.length;++i) {
 			basis[i] = d[i];
-			curBasisSet.add(basis[i]);
 		}
 		binvW = null;
 		readyBinv();

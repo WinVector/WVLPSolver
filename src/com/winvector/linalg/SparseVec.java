@@ -14,7 +14,7 @@ public final class SparseVec extends HVec {
 	public SparseVec(final int dim, final int[] indices, final double[] values) {
 		super(indices,values);
 		this.dim = dim;
-		final int nindices = indices.length;
+		final int nindices = this.indices.length;
 		if(nindices>0) {
 			if(indices[nindices-1]>=dim) {
 				throw new IllegalArgumentException("out of bounds index");
@@ -58,17 +58,17 @@ public final class SparseVec extends HVec {
 	
 	
 	SparseVec scale(final double[] scale) {
-		SparseVec v = new SparseVec(dim,indices,new double[values.length]); // share indices
 		final int nindices = indices.length;
+		double[] nvalues = new double[nindices];
 		for(int ii=0;ii<nindices;++ii) {
 			final int i = indices[ii];
 			if(null==scale) {
-				v.values[ii] = values[ii];
+				nvalues[ii] = values[ii];
 			} else {
-				v.values[ii] = values[ii]*scale[i];
+				nvalues[ii] = values[ii]*scale[i];
 			}
 		}
-		return v;
+		return new SparseVec(dim,indices,nvalues); // share indices
 	}
 	
 
@@ -83,15 +83,7 @@ public final class SparseVec extends HVec {
 	
 
 	public double[] toDense() {
-		final double[] x = new double[dim];
-		final int nindices = indices.length;
-		for(int ii=0;ii<nindices;++ii) {
-			final double vi = values[ii];
-			if(0.0!=vi) {
-				x[indices[ii]] = vi;
-			}
-		}
-		return x;
+		return toArray(dim);
 	}
 	
 	/**
