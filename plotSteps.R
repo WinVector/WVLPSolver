@@ -1,5 +1,5 @@
 library(plyr)
-library(reshape)
+library(reshape2)
 library(ggplot2)
 d <- read.table('assignmentSpeed.tsv',header=T,sep='\t')
 d2 <- melt(d,id.vars=c('assignmentSize'))
