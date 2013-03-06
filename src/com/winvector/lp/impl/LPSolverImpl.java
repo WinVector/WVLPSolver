@@ -298,46 +298,49 @@ abstract class LPSolverImpl implements LPSolver {
 			}
 		}
 		LPEQProb prob = origProb;
-		// re-scale
-		if(rescale) {
-			final DenseVec newC = new DenseVec(origProb.c); // copy so we can re-scale without side effects
-			prob = new LPEQProb(origProb.A, origProb.b.clone(),newC);
-			final double scaleRange = 10.0;
-			{
-				final ColumnMatrix probA = new ColumnMatrix(prob.A);
-				final double[] rowTots = probA.sumAbsRowValues();
-				final double[] scale = new double[rowTots.length];
-				for(int i=0;i<prob.b.length;++i) {
-					final double sumAbs = rowTots[i] + Math.abs(prob.b[i]);
-					if((sumAbs>0)&&((sumAbs>=scaleRange*(prob.A.cols()+1.0))||(sumAbs<=(prob.A.cols()+1.0)/scaleRange))) {
-						scale[i] = (prob.A.cols()+1.0)/sumAbs;
-					} else {
-						scale[i] = 1.0;
+		final LPSoln soln;
+		if((prob.A.rows()>0)&&(prob.A.cols()>0)) {
+			// re-scale
+			if(rescale) {
+				final DenseVec newC = new DenseVec(origProb.c); // copy so we can re-scale without side effects
+				prob = new LPEQProb(origProb.A, origProb.b.clone(),newC);
+				final double scaleRange = 10.0;
+				{
+					final ColumnMatrix probA = new ColumnMatrix(prob.A);
+					final double[] rowTots = probA.sumAbsRowValues();
+					final double[] scale = new double[rowTots.length];
+					for(int i=0;i<prob.b.length;++i) {
+						final double sumAbs = rowTots[i] + Math.abs(prob.b[i]);
+						if((sumAbs>0)&&((sumAbs>=scaleRange*(prob.A.cols()+1.0))||(sumAbs<=(prob.A.cols()+1.0)/scaleRange))) {
+							scale[i] = (prob.A.cols()+1.0)/sumAbs;
+						} else {
+							scale[i] = 1.0;
+						}
+						prob.b[i] *= scale[i];
 					}
-					prob.b[i] *= scale[i];
+					prob = new LPEQProb(probA.rescaleRows(scale), prob.b, newC);
 				}
-				prob = new LPEQProb(probA.rescaleRows(scale), prob.b, newC);
-			}
-			double sumAbs = 0.0;
-			for(int j=0;j<prob.c.dim();++j) {
-				sumAbs += Math.abs(prob.c.get(j));
-			}
-			if((sumAbs>0)&&((sumAbs>=scaleRange*prob.c.dim())||(sumAbs<=prob.c.dim()/scaleRange))) {
-				final double scale = prob.c.dim()/sumAbs;
+				double sumAbs = 0.0;
 				for(int j=0;j<prob.c.dim();++j) {
-					newC.set(j,newC.get(j)*scale);
+					sumAbs += Math.abs(prob.c.get(j));
+				}
+				if((sumAbs>0)&&((sumAbs>=scaleRange*prob.c.dim())||(sumAbs<=prob.c.dim()/scaleRange))) {
+					final double scale = prob.c.dim()/sumAbs;
+					for(int j=0;j<prob.c.dim();++j) {
+						newC.set(j,newC.get(j)*scale);
+					}
 				}
 			}
-		}
-		final int[] basis0;
-		if(null==basis_in) {
-			basis0 = solvePhase1(prob.A, prob.b , prob.c, tol, maxRounds, factory);
-		} else {
-			basis0 = basis_in;
-		}
-		final int[] rb;
-		{
-			if(basis0.length>=prob.A.rows()) {
+			final int[] basis0;
+			if(null==basis_in) {
+				basis0 = solvePhase1(prob.A, prob.b , prob.c, tol, maxRounds, factory);
+			} else {
+				basis0 = basis_in;
+			}
+			final int[] rb;
+			if(basis0.length<=0) {
+				rb = new int[0];
+			} else if(basis0.length>=prob.A.rows()) { 
 				rb = new int[prob.A.rows()];
 				for(int i=0;i<rb.length;++i) {
 					rb[i] = i;
@@ -346,21 +349,22 @@ abstract class LPSolverImpl implements LPSolver {
 				final T colSet = prob.A.extractColumns(basis0, factory);
 				rb = colSet.rowBasis(minBasisEpsilon); // TODO: get a better solution here, this is using nearly 1/2 of the time
 			}
-		}
-		final LPSoln soln;
-		if(rb.length>0) {
-			if (rb.length != prob.A.rows()) {
-				final ColumnMatrix nA = new ColumnMatrix(prob.A).extractRows(rb);
-				final double[] nb = Matrix.extract(prob.b,rb);
-				prob = new LPEQProb(nA, nb, prob.c);
+			if(rb.length>0) {
+				if (rb.length != prob.A.rows()) {
+					final ColumnMatrix nA = new ColumnMatrix(prob.A).extractRows(rb);
+					final double[] nb = Matrix.extract(prob.b,rb);
+					prob = new LPEQProb(nA, nb, prob.c);
+				}
+				soln = rawSolve(prob, basis0, tol, maxRounds, factory, null);
+				if ((soln == null) || (soln.primalSolution == null) || (soln.basisColumns == null)
+						|| (soln.basisColumns.length != basis0.length)) {
+					throw new LPException.LPErrorException(
+							"bad basis back from phase1 raw solve");
+				}
+				soln.basisRows = rb;
+			} else {
+				soln = new LPSoln(new HVec(new int[0],new double[0]),new int[0],new int[0]);
 			}
-			soln = rawSolve(prob, basis0, tol, maxRounds, factory, null);
-			if ((soln == null) || (soln.primalSolution == null) || (soln.basisColumns == null)
-					|| (soln.basisColumns.length != basis0.length)) {
-				throw new LPException.LPErrorException(
-						"bad basis back from phase1 raw solve");
-			}
-			soln.basisRows = rb;
 		} else {
 			soln = new LPSoln(new HVec(new int[0],new double[0]),new int[0],new int[0]);
 		}
