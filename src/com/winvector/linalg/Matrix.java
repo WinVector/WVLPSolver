@@ -91,24 +91,7 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 		return r;
 	}
 
-	public static boolean isZero(final double[] x) {
-		for(final double xi: x) {
-			if(Math.abs(xi)>0.0) {
-				return false;
-			}
-		}
-		return true;
-	}
 
-	public static int nNonZero(final double[] x) {
-		int n = 0;
-		for(final double xi: x) {
-			if(xi!=0.0) {
-				++n;
-			}
-		}
-		return n;
-	}
 
 	public static double dot(final double[] x, final double[] y) {
 		double r = 0.0;
@@ -119,15 +102,6 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 		return r;
 	}
 	
-	public static double distSq(final double[] x, final double[] y) {
-		double r = 0.0;
-		final int n = x.length;
-		for(int i=0;i<n;++i) {
-			final double diffi = x[i]-y[i];
-			r += diffi*diffi;
-		}
-		return r;
-	}
 	
 	public static String toString(final double[] x) {
 		final StringBuilder b = new StringBuilder();
@@ -173,20 +147,6 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 		p.println();
 	}
 
-	public <Z extends Matrix<Z>> Z extractColumns(final int[] basis, final LinalgFactory<Z> zfactory) {
-		final int blength = basis.length;
-		final int rows = rows();
-		final Z r = zfactory.newMatrix(rows, blength, false);
-		for (int col = 0; col < blength; ++col) {
-			for (int row = 0; row < rows; ++row) {
-				final double e = get(row, basis[col]);
-				if (e!=0) {
-					r.set(row, col, e);
-				}
-			}
-		}
-		return r;
-	}
 
 	public double[] mult(final double[] x) {
 		final int cols = cols();
@@ -377,21 +337,5 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 			final double e = row[i];
 			set(ri,i, e);
 		}
-	}
-
-
-	public <Z extends Matrix<Z>> Z extractRows(final int[] rowset, final LinalgFactory<Z> zfactory) {
-		final int rowsetlength = rowset.length;
-		final int cols = cols();
-		final Z r = zfactory.newMatrix(rowsetlength,cols,sparseRep());
-		for (int row = 0; row < rowsetlength; ++row) {
-			for (int col = 0; col < cols; ++col) {
-				final double e = get(rowset[row],col);
-				if (e!=0) {
-					r.set(row, col, e);
-				}
-			}
-		}
-		return r;
 	}
 }

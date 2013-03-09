@@ -143,28 +143,7 @@ public class ColtMatrix extends Matrix<ColtMatrix> {
 		return new SparseVec(rows(),indices,values);
 	}
 	
-	@Override
-	public <Z extends Matrix<Z>> Z extractColumns(final int[] basis, final LinalgFactory<Z> zfactory) {
-		if(sparseRep()) {
-			final int blength = basis.length;
-			final int rows = rows();
-			final Z r = zfactory.newMatrix(rows, blength, true);
-			final ExtractTemps et = new ExtractTemps(rows());
-			for (int col = 0; col < blength; ++col) {
-				final DoubleMatrix1D colV = underlying.viewColumn(col);
-				colV.getNonZeros(et.indexList,et.valueList);
-				final int k = et.indexList.size();
-				for(int ii=0;ii<k;++ii) {
-					final int index = et.indexList.get(ii);
-					final double value = et.valueList.get(ii);
-					r.set(index,col,value);
-				}
-			}
-			return r;
-		} else {
-			return super.extractColumns(basis,zfactory);
-		}
-	}
+
 	
 	@Override
 	public double[] mult(final double[] x) {

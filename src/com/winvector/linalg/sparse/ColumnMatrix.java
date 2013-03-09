@@ -19,16 +19,6 @@ public final class ColumnMatrix implements PreMatrixI {
 	private final SparseVec[] columns;
 	
 	
-	public ColumnMatrix(final PreMatrixI a) {
-		rows = a.rows();
-		cols = a.cols();
-		columns = new SparseVec[cols];
-		for(int j=0;j<cols;++j) {
-			columns[j] = a.extractColumn(j);
-		}
-	}
-	
-	
 	public ColumnMatrix(final int rows, final SparseVec[] columns) {
 		this.rows = rows;
 		this.cols = columns.length;
@@ -149,6 +139,7 @@ public final class ColumnMatrix implements PreMatrixI {
 		return r;
 	}
 	
+	@Override
 	public double[] sumAbsRowValues() {
 		final double[] r = new double[rows];
 		for(int j=0;j<cols;++j) {

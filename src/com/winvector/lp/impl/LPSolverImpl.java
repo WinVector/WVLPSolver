@@ -8,7 +8,6 @@ import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.PreMatrixI;
 import com.winvector.linalg.PreVecI;
-import com.winvector.linalg.sparse.ColumnMatrix;
 import com.winvector.linalg.sparse.HVec;
 import com.winvector.linalg.sparse.SparseVec;
 import com.winvector.lp.EarlyExitCondition;
@@ -197,7 +196,7 @@ abstract class LPSolverImpl implements LPSolver {
 				return basis0;
 			}
 		}
-		final ColumnMatrix AP = new ColumnMatrix(A).addColumns(artificialSlackCols);
+		final PreMatrixI AP = A.addColumns(artificialSlackCols);
 		final double[] c = new double[n + artificialSlackCols.size()];
 		if(null!=cin) {
 			// hint at actual objective fn
@@ -306,8 +305,7 @@ abstract class LPSolverImpl implements LPSolver {
 				prob = new LPEQProb(origProb.A, origProb.b.clone(),newC);
 				final double scaleRange = 10.0;
 				{
-					final ColumnMatrix probA = new ColumnMatrix(prob.A);
-					final double[] rowTots = probA.sumAbsRowValues();
+					final double[] rowTots = prob.A.sumAbsRowValues();
 					final double[] scale = new double[rowTots.length];
 					for(int i=0;i<prob.b.length;++i) {
 						final double sumAbs = rowTots[i] + Math.abs(prob.b[i]);
@@ -318,7 +316,7 @@ abstract class LPSolverImpl implements LPSolver {
 						}
 						prob.b[i] *= scale[i];
 					}
-					prob = new LPEQProb(probA.rescaleRows(scale), prob.b, newC);
+					prob = new LPEQProb(prob.A.rescaleRows(scale), prob.b, newC);
 				}
 				double sumAbs = 0.0;
 				for(int j=0;j<prob.c.dim();++j) {
@@ -351,7 +349,7 @@ abstract class LPSolverImpl implements LPSolver {
 			}
 			if(rb.length>0) {
 				if (rb.length != prob.A.rows()) {
-					final ColumnMatrix nA = new ColumnMatrix(prob.A).extractRows(rb);
+					final PreMatrixI nA = prob.A.extractRows(rb);
 					final double[] nb = Matrix.extract(prob.b,rb);
 					prob = new LPEQProb(nA, nb, prob.c);
 				}

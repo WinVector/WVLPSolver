@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.PreMatrixI;
 import com.winvector.linalg.PreVecI;
-import com.winvector.linalg.sparse.ColumnMatrix;
 import com.winvector.linalg.sparse.SparseVec;
 import com.winvector.lp.LPException.LPMalformedException;
 
@@ -35,6 +34,6 @@ public final class LPINEQProb extends LPProbBase {
 		for(int j=0;j<n;++j) {
 			newc[j] = c.get(j);
 		}
-		return new LPEQProb(new ColumnMatrix(A).addColumns(slacks),b,new DenseVec(newc));
+		return new LPEQProb(A.addColumns(slacks),b,new DenseVec(newc));
 	}
 }
