@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.BitSet;
 
+import com.winvector.linalg.sparse.ColumnMatrix;
 import com.winvector.linalg.sparse.HVec;
 import com.winvector.linalg.sparse.SparseVec;
 
@@ -31,6 +32,15 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	abstract public SparseVec extractColumn(final int ci, final Object extractTemps);
 
 	
+	public ColumnMatrix columnMatrix() {		
+		final int cols = cols();
+		final SparseVec[] columns = new SparseVec[cols];
+		final Object extractTemps = buildExtractTemps();
+		for(int j=0;j<cols;++j) {
+			columns[j] = extractColumn(j,extractTemps);
+		}
+		return new ColumnMatrix(rows(),columns);
+	}
 	
 	public <Z extends Matrix<Z>> Z copy(final LinalgFactory<Z> factory, final boolean wantSparse) {
 		final int rows = rows();
@@ -47,10 +57,6 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 		return r;
 	}
 	
-	public <Z extends Matrix<Z>> Z matrixCopy(final LinalgFactory<Z> factory) {
-		return copy(factory,sparseRep());
-	}
-
 	public <Z extends Matrix<Z>> Z transpose(final LinalgFactory<Z> factory, final boolean wantSparse) {
 		final int rows = rows();
 		final int cols = cols();

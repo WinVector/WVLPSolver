@@ -51,7 +51,7 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 			throw new LPException.LPErrorException("m>n in soln()");
 		}
 		final PreMatrixI AP = A.extractColumns(basis);
-		final double[] xp = AP.matrixCopy(factory).solve(b);
+		final double[] xp = factory.matrixCopy(AP).solve(b);
 		if (xp == null) {
 			throw new LPException.LPErrorException("basis solution failed");
 		}
@@ -62,7 +62,7 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 	
 	public static <T extends Matrix<T>> HVec primalSoln(final LPEQProbI prob, final int[] basis, final LinalgFactory<T> factory)
 			throws LPException {
-		final Matrix<T> AP = prob.extractColumns(basis).matrixCopy(factory);
+		final Matrix<T> AP = factory.matrixCopy(prob.extractColumns(basis));
 		final double[] xp = AP.solve(prob.b());
 		if (xp == null) {
 			throw new LPException.LPErrorException("basis solution failed");
@@ -240,7 +240,7 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 		 if(p.basisRows!=null) {
 			 rb = p.basisRows;
 		 } else {
-			 rb = A.matrixCopy(factory).rowBasis(1.0e-5);
+			 rb = factory.matrixCopy(A).rowBasis(1.0e-5);
 		 }
 		 if ((rb == null) || (rb.length <= 0)) {
 			 final double[] y = new double[b.length];

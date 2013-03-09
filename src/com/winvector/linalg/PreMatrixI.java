@@ -6,10 +6,9 @@ import com.winvector.linalg.sparse.SparseVec;
 
 
 public interface PreMatrixI extends LinOpI,Serializable {
-	Object buildExtractTemps();
 	SparseVec extractColumn(int ci, Object extractTemps);
+	Object buildExtractTemps();
 	PreMatrixI extractColumns(int[] basis);
-	<T extends Matrix<T>> T matrixCopy(LinalgFactory<T> factory);
 	
 	/**
 	 * not a preferred method (can be slow)

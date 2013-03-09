@@ -8,7 +8,6 @@ import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
-import com.winvector.linalg.sparse.ColumnMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPMalformedException;
@@ -77,7 +76,7 @@ public final class Assignment {
 		for(int i=0;i<m;++i) {
 			b[i] = 1.0;
 		}
-		final LPEQProb prob = new LPEQProb(new ColumnMatrix(a),b,new DenseVec(c));
+		final LPEQProb prob = new LPEQProb(a.columnMatrix(),b,new DenseVec(c));
 		return prob;
 	}
 	

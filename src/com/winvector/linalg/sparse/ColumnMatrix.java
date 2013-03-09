@@ -4,8 +4,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.BitSet;
 
-import com.winvector.linalg.LinalgFactory;
-import com.winvector.linalg.Matrix;
 import com.winvector.linalg.PreMatrixI;
 
 /**
@@ -31,16 +29,14 @@ public final class ColumnMatrix implements PreMatrixI {
 		}
 	}
 	
-	public <T extends Matrix<T>> ColumnMatrix(final Matrix<T> a) {
-		rows = a.rows();
-		cols = a.cols();
-		columns = new SparseVec[cols];
-		final Object extractTemps = a.buildExtractTemps();
-		for(int j=0;j<cols;++j) {
-			columns[j] = a.extractColumn(j,extractTemps);
-		}
+	
+	public ColumnMatrix(final int rows, final SparseVec[] columns) {
+		this.rows = rows;
+		this.cols = columns.length;
+		this.columns = columns;
 	}
-
+	
+	
 	private ColumnMatrix(final int rows, final int cols) {
 		this.rows = rows;
 		this.cols = cols;
@@ -143,26 +139,6 @@ public final class ColumnMatrix implements PreMatrixI {
 		return newMatrix;
 	}
 
-	
-	public <T extends Matrix<T>> T matrixCopy(final LinalgFactory<T> factory) {
-		int npop = 0;
-		for(int j=0;j<cols;++j) {
-			npop += columns[j].popCount();
-		}
-		boolean wantSparse = npop<(0.1*rows)*cols;		
-		final T m = factory.newMatrix(rows,cols,wantSparse);
-		for(int j=0;j<cols;++j) {
-			final SparseVec col = columns[j];
-			final int colindiceslength = col.indices.length;
-			for(int ii=0;ii<colindiceslength;++ii) {
-				final double aij = col.values[ii];
-				if(0.0!=aij) {
-					m.set(col.indices[ii],j,aij);
-				}
-			}
-		}
-		return m;
-	}
 
 	public ColumnMatrix addColumns(final ArrayList<SparseVec> cs) {
 		final int cssize = cs.size();

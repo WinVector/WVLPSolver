@@ -271,7 +271,7 @@ abstract class LPSolverImpl implements LPSolver {
 				eligableCols[i] = i;
 			}
 			// TODO: cut down the copies here!
-			final int[] nb = A.matrixCopy(factory).extractColumns(eligableCols, factory).colBasis(sb,minBasisEpsilon);
+			final int[] nb = factory.matrixCopy(A.extractColumns(eligableCols)).colBasis(sb,minBasisEpsilon);
 			return nb;
 		}
 		return soln.basisColumns;
@@ -347,7 +347,7 @@ abstract class LPSolverImpl implements LPSolver {
 				}
 			} else {
 				final PreMatrixI colSet = prob.A.extractColumns(basis0);
-				rb = colSet.matrixCopy(factory).rowBasis(minBasisEpsilon); // TODO: get a better solution here, this is using nearly 1/2 of the time
+				rb = factory.matrixCopy(colSet).rowBasis(minBasisEpsilon); // TODO: get a better solution here, this is using nearly 1/2 of the time
 			}
 			if(rb.length>0) {
 				if (rb.length != prob.A.rows()) {
