@@ -91,12 +91,26 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 	@Override
 	public SparseVec extractColumn(final int ci, final Object extractTemps) {
 		final int rows = rows();
-		final double[] r = new double[rows];
+		int k = 0;
 		for(int i=0;i<rows;++i) {
 			final double e = get(i, ci);
-			r[i] = e;
+			if(e!=0.0) {
+				++k;
+			}
 		}
-		return SparseVec.sparseVec(r);
+		final int nnz = k;
+		k = 0;
+		final int[] indices = new int[nnz];
+		final double[] values = new double[nnz];
+		for(int i=0;(i<rows)&&(k<nnz);++i) {
+			final double e = get(i, ci);
+			if(e!=0.0) {
+				values[k] = e;
+				indices[k] = i;
+				++k;
+			}
+		}
+		return new SparseVec(rows,indices,values);
 	}
 	
 	@Override

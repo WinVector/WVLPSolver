@@ -33,28 +33,7 @@ public final class SparseVec extends HVec {
 		}
 	}
 	
-	
-	public static SparseVec sparseVec(final double[] x) {
-		final int dim = x.length;
-		int index = 0;
-		for(int i=0;i<dim;++i) {
-			if(x[i]!=0) {
-				++index;
-			}
-		}
-		final int nnz = index;
-		final int[] indices = new int[nnz];
-		final double[] values = new double[nnz];
-		index = 0;
-		for(int i=0;(i<dim)&&(index<nnz);++i) {
-			if(x[i]!=0) {
-				indices[index] = i;
-				values[index] = x[i];
-				++index;
-			}
-		}
-		return new SparseVec(dim,indices,values);
-	}
+
 	
 	
 	SparseVec scale(final double[] scale) {
