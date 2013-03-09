@@ -65,12 +65,14 @@ public final class M3Solver implements LPSolver {
 		final M3Prob m3Prob = convertProbToM3(prob);
 		final SimplexSolver m3solver = new SimplexSolver();
 		m3solver.setMaxIterations(maxRounds);
+		final long startTimeMS = System.currentTimeMillis();
 		final double[] s = m3Prob.solve(m3solver);
+		final long endTimeMS = System.currentTimeMillis();
 		final double[] solnVec = new double[s.length];
 		for(int i=0;i<s.length;++i) {
 			solnVec[i] = s[i];
 		}
-		final LPSoln r = new LPSoln(HVec.hVec(solnVec),null,null);
+		final LPSoln r = new LPSoln(HVec.hVec(solnVec),null,null,endTimeMS-startTimeMS);
 		return r;
 	}
 

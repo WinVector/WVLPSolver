@@ -204,6 +204,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 	public <T extends Matrix<T>> LPSoln rawSolve(final LPEQProbI prob,
 			final int[] basis0, double tol, final int maxRounds, final LinalgFactory<T> factory,
 			final EarlyExitCondition earlyExitCondition) throws LPException {
+		final long startTimeMS = System.currentTimeMillis();
 		if ((tol<=0)||Double.isNaN(tol)||Double.isInfinite(tol)) {
 			tol = 0.0;
 		}
@@ -215,7 +216,8 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		if (rbasis == null) {
 			return null;
 		}
-		final LPSoln lpSoln = new LPSoln(LPEQProb.primalSoln(prob, rbasis, factory), rbasis, null); // TODO: annotate row basis
+		final long endTimeMS = System.currentTimeMillis();
+		final LPSoln lpSoln = new LPSoln(LPEQProb.primalSoln(prob, rbasis, factory), rbasis, null,endTimeMS-startTimeMS);
 		return lpSoln;
 	}
 }

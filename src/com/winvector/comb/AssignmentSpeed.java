@@ -45,10 +45,17 @@ public final class AssignmentSpeed {
 			double sawValue = Double.NaN;
 			if(null!=solver) {
 				LPSoln soln = null;
-				final long startMS = System.currentTimeMillis();
+				final long startTimeMS = System.currentTimeMillis();
 				try {
 					soln = solver.solve(prob,null,1.0e-5,100000,factory);
 				} catch (LPException e) {
+				}
+				final long endTimeMS = System.currentTimeMillis();
+				final long durationMS;
+				if(null!=soln) {
+					durationMS = soln.reportedRunTimeMS;
+				} else {
+					durationMS = endTimeMS - startTimeMS;
 				}
 				if(solver instanceof RevisedSimplexSolver) {
 					final RevisedSimplexSolver rs = (RevisedSimplexSolver)solver;
@@ -62,8 +69,6 @@ public final class AssignmentSpeed {
 					final double[] dualSoln = prob.dualSolution(soln, 1.0e-5,factory);
 					LPEQProb.checkPrimDualOpt(prob.A, prob.b, prob.c, soln.primalSolution, dualSoln, 1.0e-5);
 				}
-				final long endMS = System.currentTimeMillis();
-				final long durationMS = endMS-startMS;
 				if(null!=soln) {
 					LPEQProb.checkPrimFeas(prob.A, prob.b, soln.primalSolution, 1.0e-3);
 					final double value = soln.primalSolution.dot(prob.c);

@@ -36,8 +36,10 @@ public class GLPKSolver implements LPSolver {
 			p.close();
 			// glpsol --lp tmp.txt -w soln.txt
 			final String[] cmd = { glpksolverPath, "--lp", tempFI.getAbsolutePath(), "-w", tempFS.getAbsolutePath() };
+			final long startTimeMS = System.currentTimeMillis();
 			final Process r = Runtime.getRuntime().exec(cmd);
 			final int status = r.waitFor();
+			final long endTimeMS = System.currentTimeMillis();
 			if(status!=0) {
 				throw new LPErrorException("glpk status: " + status);
 			}
@@ -55,7 +57,7 @@ public class GLPKSolver implements LPSolver {
 			}
 			tempFI.delete();
 			tempFS.delete();
-			return new LPSoln(HVec.hVec(v),null,null);
+			return new LPSoln(HVec.hVec(v),null,null,endTimeMS-startTimeMS);
 		} catch (IOException e) {
 			throw new LPErrorException("glpk caught: " + e);
 		} catch (InterruptedException e) {

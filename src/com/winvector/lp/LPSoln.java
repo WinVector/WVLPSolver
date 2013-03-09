@@ -12,12 +12,15 @@ public final class LPSoln implements Serializable {
 
 	public final HVec primalSolution;
 	public final int[] basisColumns;
+	public long reportedRunTimeMS;
 	public int[] basisRows;
 
-	public LPSoln(final HVec primalSoln_in, final int[] basisColumns_in, final int[] basisRows_in) {
+	public LPSoln(final HVec primalSoln_in, final int[] basisColumns_in, final int[] basisRows_in,
+			final long reportedRunTimeMS_in) {
 		primalSolution = primalSoln_in;
 		basisColumns = basisColumns_in;
 		basisRows = basisRows_in;
+		reportedRunTimeMS = reportedRunTimeMS_in;
 	}
 
 	public String toString() {

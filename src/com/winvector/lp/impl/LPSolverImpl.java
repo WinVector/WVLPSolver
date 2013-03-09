@@ -290,6 +290,7 @@ abstract class LPSolverImpl implements LPSolver {
 	@Override
 	public <T extends Matrix<T>> LPSoln solve(final LPEQProb origProb, final int[] basis_in, final double tol,final int maxRounds, final LinalgFactory<T> factory)
 			throws LPException {
+		final long startTimeMS = System.currentTimeMillis();
 		if (verbose > 0) {
 			System.out.println("solve:");
 			if (verbose > 1) {
@@ -362,10 +363,10 @@ abstract class LPSolverImpl implements LPSolver {
 				}
 				soln.basisRows = rb;
 			} else {
-				soln = new LPSoln(new HVec(new int[0],new double[0]),new int[0],new int[0]);
+				soln = new LPSoln(new HVec(new int[0],new double[0]),new int[0],new int[0],0L);
 			}
 		} else {
-			soln = new LPSoln(new HVec(new int[0],new double[0]),new int[0],new int[0]);
+			soln = new LPSoln(new HVec(new int[0],new double[0]),new int[0],new int[0],0L);
 		}
 		// check is needed as b-entries dropped out of the row set may be violated by solution, check causes throw
 		LPEQProb.checkPrimFeas(origProb.A, origProb.b, soln.primalSolution, tol);
@@ -380,6 +381,8 @@ abstract class LPSolverImpl implements LPSolver {
 				}
 			}
 		}
+		final long endTimeMS = System.currentTimeMillis();
+		soln.reportedRunTimeMS = endTimeMS - startTimeMS;
 		return soln;
 	}
 }
