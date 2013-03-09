@@ -16,8 +16,8 @@ import com.winvector.linalg.colt.NativeMatrix;
 public final class ColumnMatrix implements PreMatrixI {
 	private static final long serialVersionUID = 1L;
 
-	public final int rows;
-	public final int cols;
+	private final int rows;
+	private final int cols;
 	private final SparseVec[] columns;
 	
 	public ColumnMatrix(final PreMatrixI a) {
@@ -42,6 +42,7 @@ public final class ColumnMatrix implements PreMatrixI {
 	 * @param col
 	 * @return
 	 */
+	@Override
 	public double get(final int row, final int col) {
 		return columns[col].get(row);
 	}
@@ -225,13 +226,17 @@ public final class ColumnMatrix implements PreMatrixI {
 	public double[] mult(final HVec x) {
 		final int rows = rows();
 		final double[] r = new double[rows];
-		final int nindices = x.indices.length;
-		for(int ii=0;ii<nindices;++ii) {
-			final int k = x.indices[ii];
-			final double xk = x.values[ii];
+		final int nColIndices = x.indices.length;
+		for(int jj=0;jj<nColIndices;++jj) {
+			final int k = x.indices[jj];
+			final double xk = x.values[jj];
 			if(Math.abs(xk)>1.0e-8) {
-				for (int i = 0; i < rows; ++i) {
-					r[i] += xk*get(i,k);
+				final SparseVec col = columns[k];
+				final int nRowIndices = col.nIndices();
+				for(int ii=0;ii<nRowIndices;++ii) {
+					final int i = col.index(ii);
+					final double vij = col.value(ii);
+					r[i] += xk*vij;
 				}
 			}
 		}

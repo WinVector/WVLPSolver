@@ -59,8 +59,6 @@ public final class SparseVec extends HVec {
 		return super.dot(x);
 	}
 	
-	
-
 	public double[] toDense() {
 		return toArray(dim);
 	}
@@ -70,6 +68,7 @@ public final class SparseVec extends HVec {
 	 * @param i
 	 * @return
 	 */
+	@Override
 	public double get(final int i) {
 		if((i<0)||(i>=dim)) {
 			throw new ArrayIndexOutOfBoundsException(""+i);
