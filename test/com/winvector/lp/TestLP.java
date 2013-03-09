@@ -14,12 +14,12 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
-import com.winvector.linalg.ColumnMatrix;
 import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
+import com.winvector.linalg.sparse.ColumnMatrix;
 import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.impl.RevisedSimplexSolver;
 

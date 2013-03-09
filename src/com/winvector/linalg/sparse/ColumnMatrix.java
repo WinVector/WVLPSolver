@@ -1,8 +1,11 @@
-package com.winvector.linalg;
+package com.winvector.linalg.sparse;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
 
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
+import com.winvector.linalg.PreMatrixI;
 import com.winvector.linalg.colt.NativeMatrix;
 
 /**

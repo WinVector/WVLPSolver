@@ -9,9 +9,9 @@ import org.apache.commons.math3.optimization.linear.LinearObjectiveFunction;
 import org.apache.commons.math3.optimization.linear.Relationship;
 import org.apache.commons.math3.optimization.linear.SimplexSolver;
 
-import com.winvector.linalg.HVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
+import com.winvector.linalg.sparse.HVec;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPSoln;

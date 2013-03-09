@@ -4,6 +4,8 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.BitSet;
 
+import com.winvector.linalg.sparse.HVec;
+
 
 
 
@@ -368,28 +370,7 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 			set(ri,i, e);
 		}
 	}
-	
 
-	@Override
-	public Object buildExtractTemps() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	/**
-	 * 
-	 * @param ci
-	 * @return
-	 */
-	public SparseVec extractColumn(final int ci, final Object extractTemps) {
-		final int rows = rows();
-		final double[] r = new double[rows];
-		for(int i=0;i<rows;++i) {
-			final double e = get(i, ci);
-			r[i] = e;
-		}
-		return SparseVec.sparseVec(r);
-	}
 
 	public <Z extends Matrix<Z>> Z extractRows(final int[] rowset, final LinalgFactory<Z> zfactory) {
 		final int rowsetlength = rowset.length;

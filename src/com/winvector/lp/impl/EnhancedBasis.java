@@ -5,8 +5,8 @@ import java.util.Arrays;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
-import com.winvector.linalg.SparseVec;
 import com.winvector.linalg.TabularLinOp;
+import com.winvector.linalg.sparse.SparseVec;
 import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;

@@ -6,6 +6,7 @@ import cern.colt.matrix.linalg.Algebra;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
+import com.winvector.linalg.sparse.SparseVec;
 
 
 public class NativeMatrix extends Matrix<NativeMatrix> {
@@ -79,6 +80,23 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 			}
 		}
 		return r;
+	}
+	
+
+	@Override
+	public Object buildExtractTemps() {
+		return null;
+	}
+	
+	@Override
+	public SparseVec extractColumn(final int ci, final Object extractTemps) {
+		final int rows = rows();
+		final double[] r = new double[rows];
+		for(int i=0;i<rows;++i) {
+			final double e = get(i, ci);
+			r[i] = e;
+		}
+		return SparseVec.sparseVec(r);
 	}
 	
 	@Override

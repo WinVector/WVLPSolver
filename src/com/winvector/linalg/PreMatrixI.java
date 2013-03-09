@@ -2,6 +2,8 @@ package com.winvector.linalg;
 
 import java.io.Serializable;
 
+import com.winvector.linalg.sparse.SparseVec;
+
 
 public interface PreMatrixI extends LinOpI,Serializable {
 	Object buildExtractTemps();

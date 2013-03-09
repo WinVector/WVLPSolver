@@ -9,10 +9,10 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 
-import com.winvector.linalg.HVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
-import com.winvector.linalg.SparseVec;
+import com.winvector.linalg.sparse.HVec;
+import com.winvector.linalg.sparse.SparseVec;
 
 
 
@@ -128,23 +128,19 @@ public class ColtMatrix extends Matrix<ColtMatrix> {
 
 	@Override
 	public SparseVec extractColumn(final int ci, final Object extractTemps) {
-		if(sparseRep()) {
-			final ExtractTemps et = (ExtractTemps)extractTemps;
-			final DoubleMatrix1D col = underlying.viewColumn(ci);
-			col.getNonZeros(et.indexList,et.valueList);
-			final int k = et.indexList.size();
-			final int[] indices = new int[k];
-			final double[] values = new double[k];
-			for(int ii=0;ii<k;++ii) {
-				final int index = et.indexList.get(ii);
-				final double value = et.valueList.get(ii);
-				indices[ii] = index;
-				values[ii] = value;
-			}
-			return new SparseVec(rows(),indices,values);
-		} else {
-			return super.extractColumn(ci,null);
+		final ExtractTemps et = (ExtractTemps)extractTemps;
+		final DoubleMatrix1D col = underlying.viewColumn(ci);
+		col.getNonZeros(et.indexList,et.valueList);
+		final int k = et.indexList.size();
+		final int[] indices = new int[k];
+		final double[] values = new double[k];
+		for(int ii=0;ii<k;++ii) {
+			final int index = et.indexList.get(ii);
+			final double value = et.valueList.get(ii);
+			indices[ii] = index;
+			values[ii] = value;
 		}
+		return new SparseVec(rows(),indices,values);
 	}
 	
 	@Override

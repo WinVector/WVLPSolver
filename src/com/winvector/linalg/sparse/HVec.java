@@ -1,7 +1,9 @@
-package com.winvector.linalg;
+package com.winvector.linalg.sparse;
 
 import java.io.Serializable;
 import java.util.Arrays;
+
+import com.winvector.linalg.PreVecI;
 
 
 /**

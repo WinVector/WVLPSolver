@@ -5,7 +5,7 @@ import java.util.Random;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
-import com.winvector.linalg.SparseVec;
+import com.winvector.linalg.sparse.SparseVec;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.InspectionOrder;
 import com.winvector.lp.LPEQProb;

@@ -1,4 +1,4 @@
-package com.winvector.linalg;
+package com.winvector.linalg.sparse;
 
 
 /**
@@ -34,7 +34,7 @@ public final class SparseVec extends HVec {
 	}
 	
 	
-	static SparseVec sparseVec(final double[] x) {
+	public static SparseVec sparseVec(final double[] x) {
 		final int dim = x.length;
 		int index = 0;
 		for(int i=0;i<dim;++i) {

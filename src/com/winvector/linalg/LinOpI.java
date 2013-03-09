@@ -1,5 +1,7 @@
 package com.winvector.linalg;
 
+import com.winvector.linalg.sparse.HVec;
+
 public interface LinOpI {
 	int rows();
 	int cols();

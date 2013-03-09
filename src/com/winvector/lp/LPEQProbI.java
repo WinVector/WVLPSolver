@@ -4,7 +4,7 @@ import java.util.Random;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
-import com.winvector.linalg.SparseVec;
+import com.winvector.linalg.sparse.SparseVec;
 
 /**
  * represents primal: min c.x: A x = b, x>=0

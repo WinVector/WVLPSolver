@@ -2,6 +2,8 @@ package com.winvector.linalg;
 
 import java.util.Arrays;
 
+import com.winvector.linalg.sparse.HVec;
+
 
 public final class TabularLinOp implements LinOpI {
 	private final double epsilon = 1.0e-20;

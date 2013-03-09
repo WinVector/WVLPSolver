@@ -3,14 +3,14 @@ package com.winvector.lp.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.winvector.linalg.ColumnMatrix;
 import com.winvector.linalg.DenseVec;
-import com.winvector.linalg.HVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.PreMatrixI;
 import com.winvector.linalg.PreVecI;
-import com.winvector.linalg.SparseVec;
+import com.winvector.linalg.sparse.ColumnMatrix;
+import com.winvector.linalg.sparse.HVec;
+import com.winvector.linalg.sparse.SparseVec;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPEQProbI;
@@ -172,7 +172,7 @@ abstract class LPSolverImpl implements LPSolver {
 		final int n = A.cols();
 		final int[] basis0 = new int[m];
 		final ArrayList<SparseVec> artificialSlackCols = new ArrayList<SparseVec>(m);
-		{
+		{ // find if any columns we have are already usable in place of slacks
 			Arrays.fill(basis0,-1);
 			final Object extractTemps = A.buildExtractTemps();
 			for(int j=0;j<n;++j) {
@@ -266,11 +266,11 @@ abstract class LPSolverImpl implements LPSolver {
 			for (int i = 0; i < rowset.length; ++i) {
 				rowset[i] = i;
 			}
-			// TODO: cut down the copies here!
 			final int[] eligableCols = new int[n];
 			for(int i=0;i<n;++i) {
 				eligableCols[i] = i;
 			}
+			// TODO: cut down the copies here!
 			final int[] nb = A.matrixCopy(factory).extractColumns(eligableCols, factory).colBasis(sb,minBasisEpsilon);
 			return nb;
 		}

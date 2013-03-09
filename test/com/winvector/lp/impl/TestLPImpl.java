@@ -8,9 +8,9 @@ import org.junit.Test;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
-import com.winvector.linalg.SparseVec;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
+import com.winvector.linalg.sparse.SparseVec;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.TestLP;
