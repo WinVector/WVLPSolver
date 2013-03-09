@@ -252,10 +252,9 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 		 final double[] eqvec = new double[p.basisColumns.length];
 		 // put in all complementary slackness relns
 		 // Schrijver p. 95
-		 final Object extractTemps = A.buildExtractTemps();
 		 for (int bi = 0; bi < p.basisColumns.length; ++bi) {
 			 int i = p.basisColumns[bi];
-			 eqmat.setRow(bi,Matrix.extract(A.extractColumn(i,extractTemps).toDense(),rb));
+			 eqmat.setRow(bi,Matrix.extract(A.extractColumn(i).toDense(),rb));
 			 eqvec[bi] = c.get(i);
 		 }
 		 final double[] yr = eqmat.solve(eqvec);
@@ -307,14 +306,10 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 		return A.rows();
 	}
 	
-	@Override
-	public Object buildExtractTemps() {
-		return A.buildExtractTemps();
-	}
 
 	@Override
-	public SparseVec extractColumn(final int j, final Object extractTemps) {
-		return A.extractColumn(j,extractTemps);
+	public SparseVec extractColumn(final int j) {
+		return A.extractColumn(j);
 	}
 
 	@Override

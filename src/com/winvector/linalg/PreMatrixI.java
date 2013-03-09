@@ -6,8 +6,7 @@ import com.winvector.linalg.sparse.SparseVec;
 
 
 public interface PreMatrixI extends LinOpI,Serializable {
-	SparseVec extractColumn(int ci, Object extractTemps);
-	Object buildExtractTemps();
+	SparseVec extractColumn(int ci);
 	PreMatrixI extractColumns(int[] basis);
 	
 	/**

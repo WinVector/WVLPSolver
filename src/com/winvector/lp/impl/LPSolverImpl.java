@@ -174,9 +174,8 @@ abstract class LPSolverImpl implements LPSolver {
 		final ArrayList<SparseVec> artificialSlackCols = new ArrayList<SparseVec>(m);
 		{ // find if any columns we have are already usable in place of slacks
 			Arrays.fill(basis0,-1);
-			final Object extractTemps = A.buildExtractTemps();
 			for(int j=0;j<n;++j) {
-				final SparseVec col = A.extractColumn(j,extractTemps);
+				final SparseVec col = A.extractColumn(j);
 				if(col.popCount()==1) {
 					final int i = col.nzIndex();
 					final double vi = col.get(i);
@@ -372,10 +371,9 @@ abstract class LPSolverImpl implements LPSolver {
 		LPEQProb.checkPrimFeas(origProb.A, origProb.b, soln.primalSolution, tol);
 		// now check for zero columns (which can't enter a basis) for negative c (unbounded)
 		{
-			final Object extractTemps = origProb.A.buildExtractTemps();
 			for(int j=0;j<origProb.c.dim();++j) {
 				if(origProb.c.get(j)<0) {
-					final SparseVec col = origProb.A.extractColumn(j,extractTemps);
+					final SparseVec col = origProb.A.extractColumn(j);
 					if(col.nzIndex()<0) {
 						throw new LPException.LPUnboundedException("col " + j + " empty with c[j]=" + origProb.c.get(j));
 					}

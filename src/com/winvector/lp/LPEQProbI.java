@@ -14,8 +14,7 @@ public interface LPEQProbI {
 	int rows();
 	double[] b();
 	double c(int i);
-	Object buildExtractTemps();
-	SparseVec extractColumn(int j, Object extractTemps);
+	SparseVec extractColumn(int j);
 	PreMatrixI extractColumns(int[] basis);
 	InspectionOrder buildOrderTracker(Random rand);
 }

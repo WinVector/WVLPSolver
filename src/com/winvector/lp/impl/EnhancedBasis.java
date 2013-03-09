@@ -21,7 +21,6 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	public boolean useTabular = true;
 
 	public final LPEQProbI prob;
-	public final Object extractTemps;
 
 	public final int m;  // rank of basis
 	public final int[] basis; // variables in basis
@@ -113,7 +112,6 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 		prob = prob_in;
 		m = prob.rows();
 		cBTemp = new double[m];
-		extractTemps = prob.buildExtractTemps();
 		//RevisedSimplexSolver.checkParams(prob.A, prob.b, prob.c, basis_in);
 		binvNZJTmp = new int[m];
 		if((m<46340)&&(useTabular)) {  // don't overrun 2^31 storage slots
@@ -139,7 +137,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	
 	public double computeRI(final double[] lambda, final int vi) {
 		final double cFi = prob.c(vi);
-		final double lambdaFi = prob.extractColumn(vi,extractTemps).dot(lambda);
+		final double lambdaFi = prob.extractColumn(vi).dot(lambda);
 		final double ri = cFi - lambdaFi; 
 		return ri;
 	}

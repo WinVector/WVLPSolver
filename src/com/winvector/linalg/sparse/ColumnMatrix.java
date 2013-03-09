@@ -23,9 +23,8 @@ public final class ColumnMatrix implements PreMatrixI {
 		rows = a.rows();
 		cols = a.cols();
 		columns = new SparseVec[cols];
-		final Object extractTemps = a.buildExtractTemps();
 		for(int j=0;j<cols;++j) {
-			columns[j] = a.extractColumn(j,extractTemps);
+			columns[j] = a.extractColumn(j);
 		}
 	}
 	
@@ -53,14 +52,9 @@ public final class ColumnMatrix implements PreMatrixI {
 	public double get(final int row, final int col) {
 		return columns[col].get(row);
 	}
-
-	@Override
-	public Object buildExtractTemps() {
-		return null;
-	}
 	
 	@Override
-	public SparseVec extractColumn(final int j, final Object extractTemps) {
+	public SparseVec extractColumn(final int j) {
 		return columns[j];
 	}
 	

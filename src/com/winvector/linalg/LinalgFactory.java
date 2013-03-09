@@ -20,16 +20,15 @@ public abstract class LinalgFactory<T extends Matrix<T>> implements Serializable
 	public T matrixCopy(final PreMatrixI a) {
 		final int cols = a.cols();
 		final int rows = a.rows();
-		final Object extractTemps = a.buildExtractTemps();
 		int npop = 0;
 		for(int j=0;j<cols;++j) {
-			final SparseVec col = a.extractColumn(j, extractTemps);
+			final SparseVec col = a.extractColumn(j);
 			npop += col.popCount();
 		}
 		boolean wantSparse = npop<(0.1*rows)*cols;		
 		final T m = newMatrix(rows,cols,wantSparse);
 		for(int j=0;j<cols;++j) {
-			final SparseVec col = a.extractColumn(j, extractTemps);
+			final SparseVec col = a.extractColumn(j);
 			final int colindiceslength = col.nIndices();
 			for(int ii=0;ii<colindiceslength;++ii) {
 				final double aij = col.value(ii);

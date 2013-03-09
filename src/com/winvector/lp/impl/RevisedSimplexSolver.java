@@ -121,7 +121,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 				endRunTimingUpdate(startTimeMS,endInspectionMS);
 				return tab.basis();
 			}
-			final SparseVec u = tab.prob.extractColumn(enteringV,tab.extractTemps);
+			final SparseVec u = tab.prob.extractColumn(enteringV);
 			final double[] binvu = tab.basisSolveRight(u);
 			final int leavingI = findLeaving(preB,binvu,bRatPtr);
 			if (leavingI < 0) {
