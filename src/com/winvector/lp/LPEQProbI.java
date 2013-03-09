@@ -2,8 +2,7 @@ package com.winvector.lp;
 
 import java.util.Random;
 
-import com.winvector.linalg.LinalgFactory;
-import com.winvector.linalg.Matrix;
+import com.winvector.linalg.PreMatrixI;
 import com.winvector.linalg.sparse.SparseVec;
 
 /**
@@ -17,6 +16,6 @@ public interface LPEQProbI {
 	double c(int i);
 	Object buildExtractTemps();
 	SparseVec extractColumn(int j, Object extractTemps);
-	<T extends Matrix<T>> T extractColumns(int[] basis, LinalgFactory<T> factory);
+	PreMatrixI extractColumns(int[] basis);
 	InspectionOrder buildOrderTracker(Random rand);
 }

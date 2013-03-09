@@ -2,11 +2,11 @@ package com.winvector.linalg.sparse;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.BitSet;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.PreMatrixI;
-import com.winvector.linalg.colt.NativeMatrix;
 
 /**
  * immutable sparse matrix
@@ -20,7 +20,18 @@ public final class ColumnMatrix implements PreMatrixI {
 	private final int cols;
 	private final SparseVec[] columns;
 	
+	
 	public ColumnMatrix(final PreMatrixI a) {
+		rows = a.rows();
+		cols = a.cols();
+		columns = new SparseVec[cols];
+		final Object extractTemps = a.buildExtractTemps();
+		for(int j=0;j<cols;++j) {
+			columns[j] = a.extractColumn(j,extractTemps);
+		}
+	}
+	
+	public <T extends Matrix<T>> ColumnMatrix(final Matrix<T> a) {
 		rows = a.rows();
 		cols = a.cols();
 		columns = new SparseVec[cols];
@@ -67,7 +78,7 @@ public final class ColumnMatrix implements PreMatrixI {
 				if(j>0) {
 					b.append(",");
 				}
-				b.append(" " + get(i,j));
+				b.append(" " + columns[j].get(i));
 			}
 			b.append("}");
 			if(i<rows-1) {
@@ -123,28 +134,13 @@ public final class ColumnMatrix implements PreMatrixI {
 	
 	
 
-	public <T extends Matrix<T>> T extractColumns(final int[] basis,
-			final LinalgFactory<T> factory) {
-		int npop = 0;
-		final int blength = basis.length;
-		for(int jj=0;jj<blength;++jj) {
-			final int j = basis[jj];
-			npop += columns[j].popCount();
+	public ColumnMatrix extractColumns(final int[] basis) {
+		final int newCols = basis.length;
+		final ColumnMatrix newMatrix = new ColumnMatrix(rows,newCols);
+		for(int j=0;j<newCols;++j) {
+			newMatrix.columns[j] = columns[basis[j]];
 		}
-		boolean wantSparse = npop<(0.1*rows)*blength;
-		final T r = factory.newMatrix(rows,blength,wantSparse);
-		for(int jj=0;jj<blength;++jj) {
-			final int j = basis[jj];
-			final SparseVec col = columns[j];
-			final int colindiceslength = col.indices.length;
-			for(int ii=0;ii<colindiceslength;++ii) {
-				final double aij = col.values[ii];
-				if(0.0!=aij) {
-					r.set(col.indices[ii],jj,aij);
-				}
-			}
-		}
-		return r;
+		return newMatrix;
 	}
 
 	
@@ -200,8 +196,16 @@ public final class ColumnMatrix implements PreMatrixI {
 	}
 	
 	public ColumnMatrix extractRows(final int[] rb) {
-		// TODO better implementation
-		return new ColumnMatrix(matrixCopy(NativeMatrix.factory).extractRows(rb,NativeMatrix.factory));
+		final int newDim = rb.length;
+		final BitSet rows = new BitSet(rows());
+		for(final int ri: rb) {
+			rows.set(ri);
+		}
+		final ColumnMatrix newMat = new ColumnMatrix(newDim,cols);
+		for(int j=0;j<cols;++j) {
+			newMat.columns[j] = columns[j].extractRows(newDim, rows);
+		}
+		return newMat;
 	}
 
 	public ColumnMatrix rescaleRows(double[] scale) {

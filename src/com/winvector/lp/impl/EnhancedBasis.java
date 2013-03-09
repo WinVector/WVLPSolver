@@ -38,7 +38,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	private void readyBinv() throws LPErrorException {
 		if(null==binvW) {
 			try {
-				binvW = prob.extractColumns(basis,factory).inverse();
+				binvW = prob.extractColumns(basis).matrixCopy(factory).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert basis");
 			}

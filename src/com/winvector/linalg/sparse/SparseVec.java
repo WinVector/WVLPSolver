@@ -1,5 +1,7 @@
 package com.winvector.linalg.sparse;
 
+import java.util.BitSet;
+
 
 /**
  * immutable vector, pop count can not be taking from length (some zero entries may be stored)
@@ -61,6 +63,34 @@ public final class SparseVec extends HVec {
 	
 	public double[] toDense() {
 		return toArray(dim);
+	}
+	
+	SparseVec extractRows(final int newDim, final BitSet rows) {
+		final int nindices = indices.length;
+		int k = 0;
+		for(int ii=0;ii<nindices;++ii) {
+			final int i = indices[ii];
+			if((i<newDim)&&rows.get(i)) {
+				++k;
+			}
+		}
+		final int nnz = k;
+		if((dim==newDim)&&(nnz>=nindices)) {
+			return this;
+		} else {
+			final int[] newIndices = new int[nnz];
+			final double[] newValues = new double[nnz];
+			k = 0;
+			for(int ii=0;(ii<nindices)&&(k<nnz);++ii) {
+				final int i = indices[ii];
+				if((i<newDim)&&rows.get(i)) {
+					newIndices[k] = i;
+					newValues[k] = values[ii];
+					++k;
+				}
+			}
+			return new SparseVec(newDim,newIndices,newValues);
+		}
 	}
 	
 	/**

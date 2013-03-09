@@ -3,6 +3,7 @@ package com.winvector.linalg;
 import java.util.Arrays;
 
 import com.winvector.linalg.sparse.HVec;
+import com.winvector.linalg.sparse.SparseVec;
 
 
 public final class TabularLinOp implements LinOpI {
@@ -44,7 +45,7 @@ public final class TabularLinOp implements LinOpI {
 		return cols;
 	}
 
-	public void setV(final PreMatrixI m) {
+	public <T extends Matrix<T>> void setV(final T m) {
 		if((m.rows()!=rows)||(m.cols()!=cols)) {
 			throw new IllegalArgumentException();
 		}
@@ -55,13 +56,17 @@ public final class TabularLinOp implements LinOpI {
 		final int[] lastSameJ = new int[cols];
 		Arrays.fill(lastSameI,-1);
 		Arrays.fill(lastSameJ,-1);
+		final Object extractTemps = m.buildExtractTemps();
 		for(int j=0;j<cols;++j) {
-			for(int i=0;i<rows;++i) {
-				final double aij = m.get(i, j); 
-				if(Math.abs(aij)>epsilon) {
+			final SparseVec col = m.extractColumn(j, extractTemps);
+			final int nRowIndices = col.nIndices();
+			for(int ii=0;ii<nRowIndices;++ii) {
+				final int i = col.index(ii);
+				final double mij = col.value(ii);
+				if(Math.abs(mij)>epsilon) {
 					iv[k] = i;
 					jv[k] = j;
-					av[k] = aij;
+					av[k] = mij;
 					nextWithSameI[k] = -1;
 					nextWithSameJ[k] = -1;
 					if(firstWithI[i]<0) {

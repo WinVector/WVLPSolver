@@ -1,15 +1,17 @@
 package com.winvector.linalg;
 
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.BitSet;
 
 import com.winvector.linalg.sparse.HVec;
+import com.winvector.linalg.sparse.SparseVec;
 
 
 
 
-public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
+public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 
@@ -24,6 +26,10 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 	abstract public <Z extends T> T multMat(final Z o);
 	abstract public double[] solve(final double[] y);
 	abstract public T inverse();
+	
+	abstract public Object buildExtractTemps();
+	abstract public SparseVec extractColumn(final int ci, final Object extractTemps);
+
 	
 	
 	public <Z extends Matrix<Z>> Z copy(final LinalgFactory<Z> factory, final boolean wantSparse) {
@@ -161,7 +167,6 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 		p.println();
 	}
 
-	@Override
 	public <Z extends Matrix<Z>> Z extractColumns(final int[] basis, final LinalgFactory<Z> zfactory) {
 		final int blength = basis.length;
 		final int rows = rows();
@@ -177,7 +182,6 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 		return r;
 	}
 
-	@Override
 	public double[] mult(final double[] x) {
 		final int cols = cols();
 		if(cols!=x.length) {
@@ -196,7 +200,6 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 		return r;		
 	}
 	
-	@Override
 	public double[] mult(final HVec x) {
 		final int rows = rows();
 		final double[] r = new double[rows];
@@ -213,7 +216,6 @@ public abstract class Matrix<T extends Matrix<T>> implements PreMatrixI {
 		return r;		
 	}
 
-	@Override
 	public double[] multLeft(final double[] b) {
 		final int rows = rows();
 		if (rows != b.length) {
