@@ -19,7 +19,6 @@ import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
-import com.winvector.linalg.sparse.ColumnMatrix;
 import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.impl.RevisedSimplexSolver;
 
@@ -33,7 +32,7 @@ public final class TestLP  {
 			boolean caught1 = false;
 			final double[] c = new double[1];
 			c[0] = -1.0;
-			final LPEQProb prob = new LPEQProb(new ColumnMatrix(factory.newMatrix(1, 1,false)),
+			final LPEQProb prob = new LPEQProb(factory.newMatrix(1, 1,false).columnMatrix(),
 					new double[1], new DenseVec(c));
 			try {
 				final RevisedSimplexSolver solver = new RevisedSimplexSolver();
@@ -50,7 +49,7 @@ public final class TestLP  {
 		try {
 			final double[] c = new double[1];
 			c[0] = 1.0;
-			final LPEQProb prob = new LPEQProb(new ColumnMatrix(factory.newMatrix(1, 1,false)),
+			final LPEQProb prob = new LPEQProb(factory.newMatrix(1, 1,false).columnMatrix(),
 					new double[1], new DenseVec(c));
 			final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 			solver.solve(prob, null, 0.0, 1000, factory);
@@ -69,7 +68,7 @@ public final class TestLP  {
 		m.set(1,0,1.0); m.set(1,1,3.0); m.set(1,3,-1.0); b[1] = 12.0;  // x1 + 3*x2 - s2 = 12
 		m.set(2,0,1.0); m.set(2,1,-1.0); m.set(2,4,-1.0);                // x1 - x2 - s3 = 0
 		c[0] = 2.0; c[1] = 1.0;                                     // minimize 2*x1 + x2
-		final LPEQProb prob = new LPEQProb(new ColumnMatrix(m),b,new DenseVec(c));
+		final LPEQProb prob = new LPEQProb(m.columnMatrix(),b,new DenseVec(c));
 		return prob;
 	}
 	
@@ -107,7 +106,7 @@ public final class TestLP  {
 		m.set(2,2,1.0); b[2] = 3.0;   // x2 <= 10
 		m.set(3,0,1.0); m.set(3,1,1.0); m.set(3,2,1.0); b[3] = 10.0;   // x0 + x1 + x2 <= 10
 		c[0] = -10.0; c[1] = -50.0; c[2] = -100.0;                   // maximize 10*x0 + 50*x1 + 100*x2
-		final LPEQProb prob = new LPINEQProb(new ColumnMatrix(m),b,new DenseVec(c)).eqForm();
+		final LPEQProb prob = new LPINEQProb(m.columnMatrix(),b,new DenseVec(c)).eqForm();
 		//prob.printCPLEX(System.out);
 		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 		final double tol = 1.0e-10;

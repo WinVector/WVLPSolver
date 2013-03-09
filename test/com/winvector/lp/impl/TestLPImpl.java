@@ -22,7 +22,7 @@ public class TestLPImpl {
 		final EnhancedBasis<Z> tab = new EnhancedBasis<Z>(prob,new int[] {0,1,2},factory);
 		final int leavingI = 0;
 		final int enteringI = 3;
-		final SparseVec u = tab.prob.extractColumn(enteringI,tab.extractTemps);
+		final SparseVec u = tab.prob.extractColumn(enteringI);
 		final double[] v = tab.basisSolveRight(u);
 		final NativeMatrix priorBInv = tab.binvW.copy(NativeMatrix.factory,false);
 		tab.basisPivot(leavingI,enteringI,v);
