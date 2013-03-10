@@ -24,6 +24,11 @@ public final class SparseVec extends HVec {
 		}
 	}
 	
+	private SparseVec(final double[] x) {
+		super(x);
+		dim = x.length;
+	}
+	
 	public static SparseVec sparseVec(final int dim, final int coord, final double val) {
 		if(val==0) {
 			return new SparseVec(dim,new int[0],new double[0]);
@@ -35,11 +40,18 @@ public final class SparseVec extends HVec {
 		}
 	}
 	
+	
+	public static SparseVec sparseVec(final double[] x) {
+		return new SparseVec(x);
+	}
 
 	
 	
 	SparseVec scale(final double[] scale) {
 		final int nindices = indices.length;
+		if(nindices<=0) {
+			return this;
+		}
 		double[] nvalues = new double[nindices];
 		for(int ii=0;ii<nindices;++ii) {
 			final int i = indices[ii];
@@ -50,6 +62,22 @@ public final class SparseVec extends HVec {
 			}
 		}
 		return new SparseVec(dim,indices,nvalues); // share indices
+	}
+	
+	public SparseVec scale(final double scale) {
+		final int nindices = indices.length;
+		if(nindices<=0) {
+			return this;
+		}
+		if(scale==0.0) {
+			return new SparseVec(dim,new int[0],new double[0]);
+		}
+		double[] nvalues = new double[nindices];
+		for(int ii=0;ii<nindices;++ii) {
+			nvalues[ii] = values[ii]*scale;
+		}
+		return new SparseVec(dim,indices,nvalues); // share indices
+
 	}
 	
 

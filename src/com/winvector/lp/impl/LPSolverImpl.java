@@ -269,7 +269,8 @@ abstract class LPSolverImpl implements LPSolver {
 				eligableCols[i] = i;
 			}
 			// TODO: cut down the copies here!
-			final int[] nb = factory.matrixCopy(A.extractColumns(eligableCols)).colBasis(sb,minBasisEpsilon);
+			//final int[] nb = factory.matrixCopy(A.extractColumns(eligableCols)).colBasis(sb,minBasisEpsilon);
+			final int[] nb = A.extractColumns(eligableCols).colBasis(sb,minBasisEpsilon);
 			return nb;
 		}
 		return soln.basisColumns;

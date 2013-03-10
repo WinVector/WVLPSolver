@@ -2,6 +2,7 @@ package com.winvector.linalg.sparse;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 
 import com.winvector.linalg.PreMatrixI;
@@ -208,5 +209,106 @@ public final class ColumnMatrix implements PreMatrixI {
 			}
 		}
 		return r;		
+	}
+	
+	
+	
+	
+	private static int firstNZRow(final double[] col, final double minVal, final BitSet usedRows) {
+		final int nrows = col.length;
+		for(int i=0;i<nrows;++i) {
+			if(!usedRows.get(i)) {
+				final double coliAbs = Math.abs(col[i]);
+				if((coliAbs>0)&&(coliAbs>=minVal)) {
+					return i;
+				}
+			}
+		}
+		return -1;
+	}
+	
+	private static void elimBasis(final SparseVec[] basisCols, final int[] foundRow, final double[] col) {
+		final int nf = basisCols.length;
+		for(int jj=0;jj<nf;++jj) {
+			final SparseVec v = basisCols[jj];
+			if(null==v) {
+				break;
+			}
+			final int r = foundRow[jj];
+			final double scale = -col[r];
+			if(Math.abs(scale)>0) {
+				final int nr = v.nIndices();
+				for(int ii=0;ii<nr;++ii) {
+					final int i = v.index(ii);
+					final double vi = v.value(ii);
+					col[i] += scale*vi;
+				}
+			}
+			col[r] = 0.0;  //smash some floating point error
+		}
+	}
+	
+	private static SparseVec addBasis(final int nFound, final double[] workCol,
+			final int[] foundRow, final int[] foundCol,
+			final BitSet usedRows,
+			final int newRow, final int newCol) { 
+		final SparseVec nC = SparseVec.sparseVec(workCol).scale(1.0/workCol[newRow]);
+		foundRow[nFound] = newRow;
+		foundCol[nFound] = newCol;
+		usedRows.set(newRow);
+		return nC;
+	}
+	
+	/**
+	 * picks rows in order given (skipping rows in span of others)
+	 * @param forcedCols
+	 * @param minVal
+	 * @return
+	 */
+	public int[] colBasis(final int[] forcedCols, final double minVal) {
+		final int nGoal = Math.min(cols,rows);
+		final BitSet colsSeen = new BitSet(cols);
+		final BitSet usedRows = new BitSet(rows);
+		final int[] foundRow = new int[nGoal];
+		final int[] foundCol = new int[nGoal];
+		final SparseVec[] basisCols = new SparseVec[nGoal];
+		final double[] workCol = new double[rows];
+		Arrays.fill(foundRow,-1);
+		Arrays.fill(foundCol,-1);
+		int nFound = 0;
+		if(null!=forcedCols) {
+			for(final int cj: forcedCols) {
+				colsSeen.set(cj);
+				columns[cj].toArray(workCol);
+				elimBasis(basisCols,foundRow,workCol);
+				final int i = firstNZRow(workCol,minVal,usedRows);
+				if(i<0) {
+					throw new IllegalArgumentException("candidate cols were not independent");	
+				}
+				basisCols[nFound] = addBasis(nFound,workCol,foundRow,foundCol,usedRows,i,cj);
+				++nFound;
+			}
+		}
+		if(nFound<nGoal) {
+			for(int cj=0;cj<cols;++cj) {
+				if(!colsSeen.get(cj)) {
+					columns[cj].toArray(workCol);
+					elimBasis(basisCols,foundRow,workCol);
+					final int i = firstNZRow(workCol,minVal,usedRows);
+					if(i>=0) {
+						basisCols[nFound] = addBasis(nFound,workCol,foundRow,foundCol,usedRows,i,cj);
+						++nFound;
+						if(nFound>=nGoal) {
+							break;
+						}
+					}
+				}
+			}
+		}
+		final int[] b = new int[nFound];
+		for(int j=0;j<nFound;++j) {
+			b[j] = foundCol[j];
+		}
+		return b;
 	}
 }

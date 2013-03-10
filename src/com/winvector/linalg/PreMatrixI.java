@@ -15,6 +15,8 @@ public interface PreMatrixI extends LinOpI,Serializable {
 	double[] sumAbsRowValues();
 	PreMatrixI rescaleRows(double[] scale);
 	
+	int[] colBasis(final int[] forcedCols, final double minVal);
+	
 	/**
 	 * not a preferred method (can be slow)
 	 * @param i

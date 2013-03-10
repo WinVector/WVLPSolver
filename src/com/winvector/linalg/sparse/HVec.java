@@ -62,6 +62,27 @@ public class HVec implements Serializable {
 		}
 	}
 	
+	HVec(final double[] x) {
+		final int dim = x.length;
+		int index = 0;
+		for(int i=0;i<dim;++i) {
+			if(Math.abs(x[i])>epsilon) {
+				++index;
+			}
+		}
+		final int nnz = index;
+		indices = new int[nnz];
+		values = new double[nnz];
+		index = 0;
+		for(int i=0;(i<dim)&&(index<nnz);++i) {
+			if(Math.abs(x[i])>epsilon) {
+				indices[index] = i;
+				values[index] = x[i];
+				++index;
+			}
+		}
+	}
+	
 	public int nIndices() {
 		return indices.length;
 	}
@@ -80,25 +101,7 @@ public class HVec implements Serializable {
 	 * @return
 	 */
 	public static HVec hVec(final double[] x) {
-		final int dim = x.length;
-		int index = 0;
-		for(int i=0;i<dim;++i) {
-			if(Math.abs(x[i])>epsilon) {
-				++index;
-			}
-		}
-		final int nnz = index;
-		final int[] indices = new int[nnz];
-		final double[] values = new double[nnz];
-		index = 0;
-		for(int i=0;(i<dim)&&(index<nnz);++i) {
-			if(Math.abs(x[i])>epsilon) {
-				indices[index] = i;
-				values[index] = x[i];
-				++index;
-			}
-		}
-		return new HVec(indices,values);
+		return new HVec(x);
 	}
 	
 	@Override
@@ -174,6 +177,14 @@ public class HVec implements Serializable {
 		return values[ii];
 	}
 
+	public void toArray(final double[] x) {
+		Arrays.fill(x,0.0);
+		final int nindices = indices.length;
+		for(int ii=0;ii<nindices;++ii) {
+			x[indices[ii]] = values[ii];
+		}
+	}
+	
 	public double[] toArray(final int columns) {
 		final double[] x = new double[columns];
 		final int nindices = indices.length;
