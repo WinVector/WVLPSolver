@@ -75,7 +75,7 @@ public final class ColumnMatrix implements PreMatrixI {
 	}
 
 
-
+	@Override
 	public double[] mult(final double[] x) {
 		final double[] res = new double[rows];
 		for(int j=0;j<cols;++j) {
@@ -95,7 +95,7 @@ public final class ColumnMatrix implements PreMatrixI {
 	}
 
 
-
+	@Override
 	public double[] multLeft(final double[] y) {
 		final double[] res = new double[cols];
 		for(int j=0;j<cols;++j) {
@@ -113,7 +113,7 @@ public final class ColumnMatrix implements PreMatrixI {
 	}
 	
 	
-
+	@Override
 	public ColumnMatrix extractColumns(final int[] basis) {
 		final int newCols = basis.length;
 		final ColumnMatrix newMatrix = new ColumnMatrix(rows,newCols);
@@ -123,7 +123,7 @@ public final class ColumnMatrix implements PreMatrixI {
 		return newMatrix;
 	}
 
-
+	@Override
 	public ColumnMatrix addColumns(final ArrayList<SparseVec> cs) {
 		final int cssize = cs.size();
 		final ColumnMatrix r = new ColumnMatrix(rows,cols+cssize);
@@ -156,6 +156,7 @@ public final class ColumnMatrix implements PreMatrixI {
 		return r;
 	}
 	
+	@Override
 	public ColumnMatrix extractRows(final int[] rb) {
 		final int newDim = rb.length;
 		final BitSet rows = new BitSet(rows());
@@ -169,6 +170,7 @@ public final class ColumnMatrix implements PreMatrixI {
 		return newMat;
 	}
 
+	@Override
 	public ColumnMatrix rescaleRows(double[] scale) {
 		final ColumnMatrix r = new ColumnMatrix(rows,cols);
 		for(int j=0;j<cols;++j) {
