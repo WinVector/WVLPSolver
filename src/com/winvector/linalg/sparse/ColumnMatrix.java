@@ -311,4 +311,44 @@ public final class ColumnMatrix implements PreMatrixI {
 		}
 		return b;
 	}
+	
+	@Override
+	public ColumnMatrix transpose() {
+		// TODO: implement
+		// count number of indices in each row
+		final int[] nc = new int[rows];
+		for(int cj=0;cj<cols;++cj) {
+			final SparseVec col = columns[cj];
+			final int nr = col.nIndices();
+			for(int ii=0;ii<nr;++ii) {
+				final int i = col.index(ii);
+				nc[i] += 1;
+			}
+		}
+		// alloc them and copy values in
+		final int[][] nindices = new int[rows][];
+		final double[][] nvalues = new double[rows][];
+		for(int i=0;i<rows;++i) {
+			nindices[i] = new int[nc[i]];
+			nvalues[i] = new double[nc[i]];
+		}
+		Arrays.fill(nc,0);
+		for(int cj=0;cj<cols;++cj) {
+			final SparseVec col = columns[cj];
+			final int nr = col.nIndices();
+			for(int ii=0;ii<nr;++ii) {
+				final int i = col.index(ii);
+				final double v = col.value(ii);
+				nindices[i][nc[i]] = cj;
+				nvalues[i][nc[i]] = v;
+				nc[i] += 1;
+			}
+		}
+		// copy out to matrix structure
+		final ColumnMatrix t = new ColumnMatrix(cols,rows);
+		for(int i=0;i<rows;++i) {
+			t.columns[i] = new SparseVec(cols,nindices[i],nvalues[i]);
+		}
+		return t;
+	}
 }

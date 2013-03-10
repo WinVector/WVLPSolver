@@ -346,7 +346,7 @@ abstract class LPSolverImpl implements LPSolver {
 				}
 			} else {
 				final PreMatrixI colSet = prob.A.extractColumns(basis0);
-				rb = factory.matrixCopy(colSet).rowBasis(minBasisEpsilon); // TODO: get a better solution here, this is using nearly 1/2 of the time
+				rb = colSet.transpose().colBasis(null,minBasisEpsilon);
 			}
 			if(rb.length>0) {
 				if (rb.length != prob.A.rows()) {

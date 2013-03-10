@@ -16,6 +16,7 @@ public interface PreMatrixI extends LinOpI,Serializable {
 	PreMatrixI rescaleRows(double[] scale);
 	
 	int[] colBasis(final int[] forcedCols, final double minVal);
+	PreMatrixI transpose();
 	
 	/**
 	 * not a preferred method (can be slow)

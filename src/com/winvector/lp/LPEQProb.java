@@ -240,7 +240,7 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 		 if(p.basisRows!=null) {
 			 rb = p.basisRows;
 		 } else {
-			 rb = factory.matrixCopy(A).rowBasis(1.0e-5);
+			 rb = A.transpose().colBasis(null,1.0e-5);
 		 }
 		 if ((rb == null) || (rb.length <= 0)) {
 			 final double[] y = new double[b.length];
