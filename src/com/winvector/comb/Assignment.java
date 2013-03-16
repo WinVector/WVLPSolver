@@ -7,7 +7,6 @@ import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
-import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPMalformedException;
@@ -177,7 +176,7 @@ public final class Assignment {
 		System.out.println();
 		while(true) {
 			final long solnStart = System.currentTimeMillis();
-			final LPSoln soln = solver.solve(prob,null,1.0e-5,100000,NativeMatrix.factory);
+			final LPSoln soln = solver.solve(prob,null,1.0e-5,100000,ColtMatrix.factory);
 			final long solnDone = System.currentTimeMillis();
 			final long pivots = solver.pivots;
 			final long inspections = solver.inspections;

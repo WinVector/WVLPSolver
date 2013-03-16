@@ -8,7 +8,7 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import com.winvector.linalg.colt.NativeMatrix;
+import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.lp.apachem3.M3Solver;
 
 public class TestAssignment {
@@ -19,7 +19,7 @@ public class TestAssignment {
 				{ 1, Double.NaN, 4 },
 				{ 3, 100, 3 }
 		};
-		final int[] assignment = Assignment.computeAssignment(c,1000,NativeMatrix.factory);
+		final int[] assignment = Assignment.computeAssignment(c,1000,ColtMatrix.factory);
 		assertNotNull(assignment);
 		final boolean valid = Assignment.checkValid(c,assignment);
 		assertTrue(valid);
@@ -45,12 +45,12 @@ public class TestAssignment {
 			for(int splotch=0;splotch<n-1;++splotch) {
 				c[rand.nextInt(n)][rand.nextInt(n)] = Double.NaN;
 			}
-			final int[] assignment = Assignment.computeAssignment(c,1000,NativeMatrix.factory);
+			final int[] assignment = Assignment.computeAssignment(c,1000,ColtMatrix.factory);
 			assertNotNull(assignment);
 			final boolean valid = Assignment.checkValid(c,assignment);
 			assertTrue(valid);
 			final double solnCost = Assignment.cost(c,assignment);
-			final int[] check = Assignment.computeAssignment(c, NativeMatrix.factory, new M3Solver(), 1000);
+			final int[] check = Assignment.computeAssignment(c, ColtMatrix.factory, new M3Solver(), 1000);
 			final double checkCost = Assignment.cost(c,check);
 			final double relAbsDiff = Math.abs(solnCost-checkCost)/Math.max(1.0,Math.abs(checkCost));
 			//System.out.println("\t" + solnCost + "\t" + checkCost + "\t" + relAbsDiff);

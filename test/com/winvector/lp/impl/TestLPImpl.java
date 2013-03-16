@@ -24,9 +24,9 @@ public class TestLPImpl {
 		final int enteringI = 3;
 		final SparseVec u = tab.prob.extractColumn(enteringI);
 		final double[] v = tab.basisSolveRight(u);
-		final NativeMatrix priorBInv = tab.binvW.copy(NativeMatrix.factory,false);
+		final Matrix<?> priorBInv = tab.binvW.copy(ColtMatrix.factory,false);
 		tab.basisPivot(leavingI,enteringI,v);
-		final NativeMatrix incBInv = tab.binvW.copy(NativeMatrix.factory,false);
+		final Matrix<?> incBInv = tab.binvW.copy(ColtMatrix.factory,false);
 		{
 			double maxDiff = 0.0;
 			for(int i=0;i<priorBInv.rows();++i) {
@@ -37,7 +37,7 @@ public class TestLPImpl {
 			assertTrue(maxDiff>0.5);
 		}
 		tab.resetBasis(tab.basis); // force fresh b inverse calculation
-		final NativeMatrix batchBInv = tab.binvW.copy(NativeMatrix.factory,false);
+		final Matrix<?> batchBInv = tab.binvW.copy(ColtMatrix.factory,false);
 		{
 			double maxDiff = 0.0;
 			for(int i=0;i<priorBInv.rows();++i) {

@@ -110,8 +110,8 @@ public final class TestLP  {
 		//prob.printCPLEX(System.out);
 		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 		final double tol = 1.0e-10;
-		final LPSoln soln = solver.solve(prob, null, tol, 1000, NativeMatrix.factory);
-		final double[] dual = prob.dualSolution(soln, tol,NativeMatrix.factory);
+		final LPSoln soln = solver.solve(prob, null, tol, 1000, ColtMatrix.factory);
+		final double[] dual = prob.dualSolution(soln, tol,ColtMatrix.factory);
 		assertNotNull(dual);
 	}
 }

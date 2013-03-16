@@ -5,7 +5,6 @@ import java.util.Arrays;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
-import com.winvector.linalg.TabularLinOp;
 import com.winvector.linalg.sparse.SparseVec;
 import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.LPException;
@@ -18,7 +17,8 @@ import com.winvector.lp.LPException.LPErrorException;
  */
 final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	private static final long serialVersionUID = 1L;
-	public boolean useTabular = true;
+	private final double epsilon = 1.0e-8; // zeroness test in inverse
+
 
 	public final LPEQProbI prob;
 
@@ -28,7 +28,6 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	public final LinalgFactory<T> factory;
 	private final int[] binvNZJTmp;
 	public T binvW = null;
-	private final TabularLinOp binvS;
 	private final double[] cBTemp;
 	// run counters
 	private long normalSteps = 0;
@@ -40,9 +39,6 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 				binvW = factory.matrixCopy(prob.extractColumns(basis)).inverse();
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert basis");
-			}
-			if(null!=binvS) {
-				binvS.setV(binvW);
 			}
 		}
 	}
@@ -57,11 +53,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveRight(final double[] y) throws LPErrorException {
-		if(null!=binvS) {
-			return binvS.mult(y);
-		} else {
-			return binvW.mult(y);
-		}
+		return binvW.mult(y);
 	}
 
 	/**
@@ -74,11 +66,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveRight(final SparseVec y) throws LPErrorException {
-		if(null!=binvS) {
-			return binvS.mult(y);
-		} else {
-			return binvW.mult(y);
-		}
+		return binvW.mult(y);
 	}
 
 	/**
@@ -90,11 +78,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveLeft(final double[] y) throws LPErrorException {
-		if(null!=binvS) {
-			return binvS.multLeft(y);
-		} else {
-			return binvW.multLeft(y);
-		}
+		return binvW.multLeft(y);
 	}
 
 	/**
@@ -114,11 +98,6 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 		cBTemp = new double[m];
 		//RevisedSimplexSolver.checkParams(prob.A, prob.b, prob.c, basis_in);
 		binvNZJTmp = new int[m];
-		if((m<46340)&&(useTabular)) {  // don't overrun 2^31 storage slots
-			binvS = new TabularLinOp(m,m);
-		} else {
-			binvS = null;
-		}
 		basis = new int[basis_in.length];
 		for (int i = 0; i < basis.length; ++i) {
 			basis[i] = basis_in[i];
@@ -159,7 +138,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 			final double vKInv = 1.0/binvu[leavingI];
 			int nextJJ = 0;
 			for(int j=0;j<m;++j) {
-				if(Math.abs(binvW.get(leavingI,j))>1.0e-8) {
+				if(Math.abs(binvW.get(leavingI,j))>epsilon) {
 					binvNZJTmp[nextJJ] = j;
 					++nextJJ;
 				}
@@ -168,7 +147,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 			for(int i=0;i<m;++i) {
 				if(leavingI!=i) {
 					final double binvui = binvu[i];
-					if(binvui!=0.0) {
+					if(Math.abs(binvui)>epsilon) {
 						final double vi = -binvui*vKInv;
 						for(nextJJ=0;nextJJ<nJJ;++nextJJ) {
 							final int j = binvNZJTmp[nextJJ];
@@ -180,9 +159,6 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 			for(nextJJ=0;nextJJ<nJJ;++nextJJ) {
 				final int j = binvNZJTmp[nextJJ];
 				binvW.set(leavingI, j,vKInv*binvW.get(leavingI,j));
-			}
-			if(null!=binvS) {
-				binvS.setV(binvW);
 			}
 		} else {
 			readyBinv();

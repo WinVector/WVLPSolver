@@ -22,11 +22,6 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 		u = new double[m][n];
 	}
 	
-	public NativeMatrix(final double[][] u) {
-		this.u = u;
-		this.rows = u.length;
-		this.cols = u.length;
-	}
 
 	@Override
 	public int cols() {
