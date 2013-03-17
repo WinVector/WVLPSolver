@@ -1,5 +1,6 @@
 package com.winvector.lp;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import com.winvector.linalg.DenseVec;
@@ -14,16 +15,25 @@ import com.winvector.lp.LPException.LPMalformedException;
  * @author johnmount
  *
  */
-public final class LPINEQProb extends LPProbBase {
+final class LPINEQProb implements Serializable {
 	private static final long serialVersionUID = 1L;
+	private final PreMatrixI A;
+	private final double[] b;
+	private final PreVecI c;
 
 	public LPINEQProb(final PreMatrixI A_in, final double[] b_in, final PreVecI c_in)
 			throws LPException.LPMalformedException {
-		super(A_in,b_in,c_in,"<=");
+		A = A_in;
+		b = b_in;
+		c = c_in;
 	}
 	
-	@Override
-	public LPEQProb eqForm() throws LPMalformedException {
+	/**
+	 * not a good way to convert to an equality problem
+	 * @return
+	 * @throws LPMalformedException
+	 */
+	public LPEQProb eqFormSlacks() throws LPMalformedException {
 		final int m = A.rows();
 		final int n = A.cols();
 		final ArrayList<SparseVec> slacks = new ArrayList<SparseVec>(m);
