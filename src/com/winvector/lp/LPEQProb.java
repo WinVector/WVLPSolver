@@ -236,35 +236,34 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 	 public <T extends Matrix<T>> double[] dualSolution(final LPSoln p, final double tol, final LinalgFactory<T> factory) throws LPException {
 		 checkPrimFeas(A, b, p.primalSolution, tol);
 		 // we now have a list of equality constraints to work with
-		 final int[] rb;
-		 if(p.basisRows!=null) {
-			 rb = p.basisRows;
-		 } else {
-			 rb = A.transpose().colBasis(null,1.0e-5);
-		 }
-		 if ((rb == null) || (rb.length <= 0)) {
-			 final double[] y = new double[b.length];
-			 checkPrimDualFeas(A, b, c, p.primalSolution, y, tol);
-			 checkPrimDualOpt(A, b, c, p.primalSolution, y, tol);
-			 return y;
-		 }
-		 final T eqmat = factory.newMatrix(p.basisColumns.length, p.basisColumns.length,true);
+		 final PreMatrixI eqmatT = extractColumns(p.basisColumns);
 		 final double[] eqvec = new double[p.basisColumns.length];
 		 // put in all complementary slackness relns
 		 // Schrijver p. 95
-		 for (int bi = 0; bi < p.basisColumns.length; ++bi) {
+		 final int nc = p.basisColumns.length;
+		 for (int bi = 0; bi < nc; ++bi) {
 			 int i = p.basisColumns[bi];
-			 eqmat.setRow(bi,Matrix.extract(A.extractColumn(i).toDense(),rb));
 			 eqvec[bi] = c.get(i);
 		 }
-		 final double[] yr = eqmat.solve(eqvec);
-		 final double[] y = new double[b.length];
-		 if (yr != null) {
-			 for(int j=0;j<yr.length;++j) {
-				 y[rb[j]] = yr[j];
+		 final T eqmat = factory.matrixCopy(eqmatT.transpose());
+		 double[] y = null;
+		 if(eqmat.rows()==eqmat.cols()) {
+			 try {
+				 y = eqmat.solve(eqvec);
+			 } catch (Exception ex) {
 			 }
 		 }
-		 checkPrimDualFeas(A, b, c, p.primalSolution, y, tol);
+		 if(null==y) {
+			 // likely was wrong shape or under rank Ridge form: argmin_y || E y - c ||^2 + epsilon || y ||
+			 // which is (E^t E + epsilon I) y = E^t c (yes, I know it degrades condition number)
+			 final T eT = factory.matrixCopy(eqmatT);
+			 final T eTe = eT.multMat(eqmat);
+			 for(int i=0;i<eTe.cols();++i) {
+				 eTe.set(i, i, eTe.get(i, i) + 1.0e-7);
+			 }
+			 final double[] eTc = eT.mult(eqvec);
+			 y = eTe.solve(eTc);
+		 }
 		 checkPrimDualOpt(A, b, c, p.primalSolution, y, tol);
 		 return y;
 	 }
