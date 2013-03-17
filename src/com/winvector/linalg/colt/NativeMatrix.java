@@ -84,6 +84,22 @@ public class NativeMatrix extends Matrix<NativeMatrix> {
 	}
 	
 	@Override
+	public int extractColumnToTemps(final int ci, final Object extractTemps,
+			final int[] indices, final double[] values) {
+		final int rows = rows();
+		int k = 0;
+		for(int i=0;i<rows;++i) {
+			final double e = get(i, ci);
+			if(e!=0.0) {
+				values[k] = e;
+				indices[k] = i;
+				++k;
+			}
+		}
+		return k;
+	}
+	
+	@Override
 	public SparseVec extractColumn(final int ci, final Object extractTemps) {
 		final int rows = rows();
 		int k = 0;

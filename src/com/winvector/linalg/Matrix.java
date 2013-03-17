@@ -27,6 +27,8 @@ public abstract class Matrix<T extends Matrix<T>> implements Serializable {
 	abstract public T inverse();
 	
 	abstract public Object buildExtractTemps();
+	abstract public int extractColumnToTemps(int ci, Object extractTemps, int[] indices,
+			double[] values);
 	abstract public SparseVec extractColumn(final int ci, final Object extractTemps);
 
 	

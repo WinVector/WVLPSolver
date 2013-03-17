@@ -127,6 +127,22 @@ public class ColtMatrix extends Matrix<ColtMatrix> {
 	}
 
 	@Override
+	public int extractColumnToTemps(final int ci, final Object extractTemps,
+			final int[] indices, final double[] values) {
+		final ExtractTemps et = (ExtractTemps)extractTemps;
+		final DoubleMatrix1D col = underlying.viewColumn(ci);
+		col.getNonZeros(et.indexList,et.valueList);
+		final int k = et.indexList.size();
+		for(int ii=0;ii<k;++ii) {
+			final int index = et.indexList.get(ii);
+			final double value = et.valueList.get(ii);
+			indices[ii] = index;
+			values[ii] = value;
+		}
+		return k;		
+	}
+	
+	@Override
 	public SparseVec extractColumn(final int ci, final Object extractTemps) {
 		final ExtractTemps et = (ExtractTemps)extractTemps;
 		final DoubleMatrix1D col = underlying.viewColumn(ci);

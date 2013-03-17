@@ -118,7 +118,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 		for (int i = 0; i < basis.length; ++i) {
 			basis[i] = basis_in[i];
 		}
-		binvS = null; // new TabularLinOp(m,m,100000);
+		binvS = null; // new TabularLinOp(m,m,10000);
 		readyBinv();
 	}
 	
