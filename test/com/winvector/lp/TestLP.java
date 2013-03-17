@@ -17,8 +17,11 @@ import org.junit.Test;
 import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
+import com.winvector.linalg.PreMatrixI;
+import com.winvector.linalg.PreVecI;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
+import com.winvector.linalg.sparse.SparseVec;
 import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.impl.RevisedSimplexSolver;
 
@@ -95,6 +98,39 @@ public final class TestLP  {
 			testLPExample(f);
 		}
 	}
+	
+	private static final class LPINEQProb  {
+		private final PreMatrixI A;
+		private final double[] b;
+		private final PreVecI c;
+
+		public LPINEQProb(final PreMatrixI A_in, final double[] b_in, final PreVecI c_in)
+				throws LPException.LPMalformedException {
+			A = A_in;
+			b = b_in;
+			c = c_in;
+		}
+		
+		/**
+		 * not a good way to convert to an equality problem
+		 * @return
+		 * @throws LPMalformedException
+		 */
+		public LPEQProb eqFormSlacks() throws LPMalformedException {
+			final int m = A.rows();
+			final int n = A.cols();
+			final ArrayList<SparseVec> slacks = new ArrayList<SparseVec>(m);
+			for(int i=0;i<m;++i) {
+				slacks.add(SparseVec.sparseVec(m,i,1.0));
+			}
+			final double[] newc = new double[n+m];
+			for(int j=0;j<n;++j) {
+				newc[j] = c.get(j);
+			}
+			return new LPEQProb(A.addColumns(slacks),b,new DenseVec(newc));
+		}
+	}
+
 	
 	@Test
 	public void testShadow() throws LPException {

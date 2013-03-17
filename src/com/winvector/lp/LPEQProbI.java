@@ -6,7 +6,9 @@ import com.winvector.linalg.PreMatrixI;
 import com.winvector.linalg.sparse.SparseVec;
 
 /**
- * represents primal: min c.x: A x = b, x>=0
+ * represents 
+ *  primal: min c.x: A x = b, x>=0
+ *  dual: max y.b: y A <= c (no sign conditions on y)
  * @author johnmount
  *
  */
