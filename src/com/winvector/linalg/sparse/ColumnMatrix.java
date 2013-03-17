@@ -86,9 +86,7 @@ public final class ColumnMatrix implements PreMatrixI {
 				for(int ii=0;ii<colindiceslength;++ii) {
 					final int i = col.indices[ii];
 					final double aij = col.values[ii];
-					if(0.0!=aij) {
-						res[i] += aij*x[j];
-					}
+					res[i] += aij*x[j];
 				}
 			}
 		}
@@ -105,9 +103,7 @@ public final class ColumnMatrix implements PreMatrixI {
 			for(int ii=0;ii<colindiceslength;++ii) {
 				final int i = col.indices[ii];
 				final double aij = col.values[ii];
-				if(0.0!=aij) {
-					res[j] += aij*y[i];
-				}
+				res[j] += aij*y[i];
 			}
 		}
 		return res;

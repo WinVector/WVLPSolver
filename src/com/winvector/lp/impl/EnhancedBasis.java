@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
+import com.winvector.linalg.TabularLinOp;
 import com.winvector.linalg.sparse.SparseVec;
 import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.LPException;
@@ -24,9 +25,10 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	public final int m;  // rank of basis
 	public final int[] basis; // variables in basis
 	
-	public final LinalgFactory<T> factory;
+	private final LinalgFactory<T> factory;
 	private final int[] binvNZJTmp;
-	public T binvW = null;
+	T binvW = null;
+	private final TabularLinOp binvS;
 	private final double[] cBTemp;
 	// run counters
 	private long normalSteps = 0;
@@ -36,6 +38,9 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 		if(null==binvW) {
 			try {
 				binvW = factory.matrixCopy(prob.extractColumns(basis)).inverse();
+				if(null!=binvS) {
+					binvS.setV(binvW);
+				}
 			} catch (Exception e) {
 				throw new LPErrorException("couldn't invert basis");
 			}
@@ -52,7 +57,11 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveRight(final double[] y) throws LPErrorException {
-		return binvW.mult(y);
+		if((null!=binvS)&&(binvS.valid())) {
+			return binvS.mult(y);
+		} else {
+			return binvW.mult(y);
+		}
 	}
 
 	/**
@@ -65,7 +74,11 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveRight(final SparseVec y) throws LPErrorException {
-		return binvW.mult(y);
+		if((null!=binvS)&&(binvS.valid())) {
+			return binvS.mult(y);
+		} else {
+			return binvW.mult(y);
+		}
 	}
 
 	/**
@@ -77,7 +90,11 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 	 * @throws LPErrorException 
 	 */
 	public double[] basisSolveLeft(final double[] y) throws LPErrorException {
-		return binvW.multLeft(y);
+		if((null!=binvS)&&(binvS.valid())) {
+			return binvS.multLeft(y);
+		} else {
+			return binvW.multLeft(y);
+		}
 	}
 
 	/**
@@ -101,6 +118,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 		for (int i = 0; i < basis.length; ++i) {
 			basis[i] = basis_in[i];
 		}
+		binvS = null; // new TabularLinOp(m,m,100000);
 		readyBinv();
 	}
 	
@@ -127,6 +145,7 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 		++normalSteps;
 		if(normalSteps%(25*m+1)==0) {
 			binvW = null; // forced refresh
+			binvS.invalidate();
 			// ideas is BInv is getting unreliable due to rounding
 			// a refresh takes around O(m^3) steps and updates take O(m^2) steps.
 			// so every m steps we can hide the extra m^3 work which amortizes to m^3/m per-step 
@@ -158,6 +177,9 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 			for(nextJJ=0;nextJJ<nJJ;++nextJJ) {
 				final int j = binvNZJTmp[nextJJ];
 				binvW.set(leavingI, j,vKInv*binvW.get(leavingI,j));
+			}
+			if(null!=binvS) {
+				binvS.setV(binvW);
 			}
 		} else {
 			readyBinv();

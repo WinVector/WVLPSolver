@@ -7,6 +7,7 @@ import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
+import com.winvector.linalg.colt.NativeMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPMalformedException;
@@ -15,7 +16,7 @@ import com.winvector.lp.LPSolver;
 import com.winvector.lp.impl.RevisedSimplexSolver;
 
 /**
- * assignment problem solved by a linear program.  mostly test/demo the lp code as you would want to solve actual assignemnt
+ * assignment problem solved by a linear program.  mostly test/demo the lp code as you would want to solve actual assignment
  * problems in production with direct combinatorial code like: http://algs4.cs.princeton.edu/65reductions/AssignmentProblem.java.html
  * Find permutation of 0...n-1 such that sum_i cost(i,p(i)) is minimized and for all i cost(i,p(i)) is finite and not-NaN (so 
  * user can use NaN to signal non edges).   This is a minimual weight complete matching 
@@ -154,7 +155,7 @@ public final class Assignment {
 	
 	public static void main(final String[] args) throws LPException {
 		final Random rand = new Random(235135L);
-		final int n = 120;
+		final int n = 200;
 		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 		final double[][] c = new double[n][n];
 		for(int i=0;i<n;++i) {
