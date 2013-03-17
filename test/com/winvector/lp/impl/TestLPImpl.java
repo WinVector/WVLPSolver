@@ -10,6 +10,7 @@ import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
+import com.winvector.linalg.jblas.JBlasMatrix;
 import com.winvector.linalg.sparse.SparseVec;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
@@ -24,9 +25,9 @@ public class TestLPImpl {
 		final int enteringI = 3;
 		final SparseVec u = tab.prob.extractColumn(enteringI);
 		final double[] v = tab.basisSolveRight(u);
-		final Matrix<?> priorBInv = tab.binvW.copy(ColtMatrix.factory,false);
+		final Matrix<?> priorBInv = tab.binvW.copy(factory,false);
 		tab.basisPivot(leavingI,enteringI,v);
-		final Matrix<?> incBInv = tab.binvW.copy(ColtMatrix.factory,false);
+		final Matrix<?> incBInv = tab.binvW.copy(factory,false);
 		{
 			double maxDiff = 0.0;
 			for(int i=0;i<priorBInv.rows();++i) {
@@ -37,7 +38,7 @@ public class TestLPImpl {
 			assertTrue(maxDiff>0.5);
 		}
 		tab.resetBasis(tab.basis); // force fresh b inverse calculation
-		final Matrix<?> batchBInv = tab.binvW.copy(ColtMatrix.factory,false);
+		final Matrix<?> batchBInv = tab.binvW.copy(factory,false);
 		{
 			double maxDiff = 0.0;
 			for(int i=0;i<priorBInv.rows();++i) {
@@ -55,6 +56,7 @@ public class TestLPImpl {
 		final ArrayList<LinalgFactory<?>> factories = new ArrayList<LinalgFactory<?>>();
 		factories.add(NativeMatrix.factory);
 		factories.add(ColtMatrix.factory);
+		factories.add(JBlasMatrix.factory);
 		for(final LinalgFactory<?> f: factories) {
 			testRank1Update(f);
 		}

@@ -21,6 +21,7 @@ import com.winvector.linalg.PreMatrixI;
 import com.winvector.linalg.PreVecI;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.colt.NativeMatrix;
+import com.winvector.linalg.jblas.JBlasMatrix;
 import com.winvector.linalg.sparse.SparseVec;
 import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.impl.RevisedSimplexSolver;
@@ -93,9 +94,11 @@ public final class TestLP  {
 		final ArrayList<LinalgFactory<?>> factories = new ArrayList<LinalgFactory<?>>();
 		factories.add(NativeMatrix.factory);
 		factories.add(ColtMatrix.factory);
+		factories.add(JBlasMatrix.factory);
 		for(final LinalgFactory<?> f: factories) {
 			testLPSolverTrivial(f);
 			testLPExample(f);
+			testShadow(f);
 		}
 	}
 	
@@ -132,9 +135,9 @@ public final class TestLP  {
 	}
 
 	
-	@Test
-	public void testShadow() throws LPException {
-		final Matrix<?> m = ColtMatrix.factory.newMatrix(4,3,true);
+	
+	public void testShadow(final LinalgFactory<?> factory) throws LPException {
+		final Matrix<?> m = factory.newMatrix(4,3,true);
 		final double[] b = new double[4];
 		final double[] c = new double[3];
 		m.set(0,0,1.0); b[0] = 10.0;   // x0 <= 10
@@ -146,8 +149,8 @@ public final class TestLP  {
 		//prob.printCPLEX(System.out);
 		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 		final double tol = 1.0e-10;
-		final LPSoln soln = solver.solve(prob, null, tol, 1000, ColtMatrix.factory);
-		final double[] dual = prob.dualSolution(soln, tol,ColtMatrix.factory);
+		final LPSoln soln = solver.solve(prob, null, tol, 1000, factory);
+		final double[] dual = prob.dualSolution(soln, tol,factory);
 		assertNotNull(dual);
 	}
 }
