@@ -53,7 +53,9 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		postPivotTimeMS = 0;		
 	}
 	
-	private <T extends Matrix<T>> int[] runSimplex(final EnhancedBasis<T> tab, final double tol, 
+
+	
+	private <T extends Matrix<T>> void runSimplex(final EnhancedBasis<T> tab, final double tol, 
 			final int maxRounds, final EarlyExitCondition earlyExitCondition) throws LPException {
 		if (debug > 0) {
 			System.out.println("start: " + stringBasis(tab.basis));
@@ -67,6 +69,14 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		int steps = 0;
 		while (steps<=maxRounds) {
 			final long startRoundMS = System.currentTimeMillis();
+			if(null!=earlyExitCondition) {
+				if(earlyExitCondition.canExit(tab.basis)) {
+					//System.out.println("steps: " + normalSteps + ", inspections: " + inspections + ", ratio: " + (inspections/(double)normalSteps));
+					final long endTimeMS = System.currentTimeMillis();
+					endRunTimingUpdate(startTimeMS,endTimeMS);
+					return;
+				}
+			}
 			++steps;
 			++pivots;
 			//prob.soln(basis,tol);
@@ -119,7 +129,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			if (enteringV < 0) {
 				// no entry, at optimum
 				endRunTimingUpdate(startTimeMS,endInspectionMS);
-				return tab.basis();
+				return;
 			}
 			final SparseVec u = tab.prob.extractColumn(enteringV);
 			final double[] binvu = tab.basisSolveRight(u);
@@ -139,13 +149,6 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			// perform the swap
 			tab.basisPivot(leavingI,enteringV,binvu);
 			//System.out.println("leave: " + basis[leavingI]);
-			if(null!=earlyExitCondition) {
-				if(earlyExitCondition.canExit(tab.basis)) {
-					//System.out.println("steps: " + normalSteps + ", inspections: " + inspections + ", ratio: " + (inspections/(double)normalSteps));
-					endRunTimingUpdate(startTimeMS,endInspectionMS);
-					return tab.basis();
-				}
-			}
 			final long endRoundMS = System.currentTimeMillis();
 			postPivotTimeMS += endRoundMS-endInspectionMS;
 		}
@@ -219,16 +222,17 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		if ((tol<=0)||Double.isNaN(tol)||Double.isInfinite(tol)) {
 			tol = 0.0;
 		}
-		final EnhancedBasis<T> t = new EnhancedBasis<T>(prob, basis0,factory);
-		final int[] rbasis = runSimplex(t,tol,maxRounds,earlyExitCondition);
-		//System.out.println("steps: " + t.normalSteps);
-		//System.out.println("" + "nvars" + "\t" + "ncond" + "\t" + "steps" + "\t" + "inspections");
-		//System.out.println("" + prob.nvars() + "\t" + prob.b.length + "\t" + t.normalSteps + "\t" + t.inspections);
-		if (rbasis == null) {
-			return null;
+		final int[] basis;
+		{
+			final EnhancedBasis<T> t = new EnhancedBasis<T>(prob, basis0,factory);
+			runSimplex(t,tol,maxRounds,earlyExitCondition);
+			basis = t.basis;
 		}
+		Arrays.sort(basis); // other t-structures now out of sync with basis, and no longer usable
+		final HVec x = primalSoln(prob, basis, factory); // would like to use t.preB, but it isn't correct on all exit conditions and also depens on a sorted basis
+		final LPSoln lpSoln = new LPSoln(x, basis, null,0L);
 		final long endTimeMS = System.currentTimeMillis();
-		final LPSoln lpSoln = new LPSoln(primalSoln(prob, rbasis, factory), rbasis, null,endTimeMS-startTimeMS);
+		lpSoln.reportedRunTimeMS = endTimeMS - startTimeMS; // for our solution only count construction time
 		return lpSoln;
 	}
 }

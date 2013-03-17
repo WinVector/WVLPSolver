@@ -1,7 +1,6 @@
 package com.winvector.lp.impl;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
@@ -163,17 +162,6 @@ final class EnhancedBasis<T extends Matrix<T>> implements Serializable {
 		} else {
 			readyBinv();
 		}
-	}
-
-	public int[] basis() {
-		final int[] r = new int[m];
-		for (int i = 0; i < m; ++i) {
-			r[i] = basis[i];
-		}
-		if (r.length > 1) {
-			Arrays.sort(r);
-		}
-		return r;
 	}
 
 	public void resetBasis(final int[] d) throws LPErrorException {
