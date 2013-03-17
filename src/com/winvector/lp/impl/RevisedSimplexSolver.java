@@ -5,10 +5,10 @@ import java.util.Random;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
+import com.winvector.linalg.sparse.HVec;
 import com.winvector.linalg.sparse.SparseVec;
 import com.winvector.lp.EarlyExitCondition;
 import com.winvector.lp.InspectionOrder;
-import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPTooManyStepsException;
@@ -185,6 +185,17 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		return leavingI;
 	}
 
+	private static <T extends Matrix<T>> HVec primalSoln(final LPEQProbI prob, final int[] basis, final LinalgFactory<T> factory)
+			throws LPException {
+		final Matrix<T> AP = factory.matrixCopy(prob.extractColumns(basis));
+		final double[] xp = AP.solve(prob.b());
+		if (xp == null) {
+			throw new LPException.LPErrorException("basis solution failed");
+		}
+		final HVec x = new HVec(basis,xp); 
+		return x;
+	}
+	
 	/**
 	 * solve: min c.x: A x = b, x>=0
 	 * 
@@ -217,7 +228,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			return null;
 		}
 		final long endTimeMS = System.currentTimeMillis();
-		final LPSoln lpSoln = new LPSoln(LPEQProb.primalSoln(prob, rbasis, factory), rbasis, null,endTimeMS-startTimeMS);
+		final LPSoln lpSoln = new LPSoln(primalSoln(prob, rbasis, factory), rbasis, null,endTimeMS-startTimeMS);
 		return lpSoln;
 	}
 }

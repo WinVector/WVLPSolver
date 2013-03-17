@@ -368,7 +368,7 @@ abstract class LPSolverImpl implements LPSolver {
 			soln = new LPSoln(new HVec(new int[0],new double[0]),new int[0],new int[0],0L);
 		}
 		// check is needed as b-entries dropped out of the row set may be violated by solution, check causes throw
-		LPEQProb.checkPrimFeas(origProb.A, origProb.b, soln.primalSolution, tol);
+		origProb.checkPrimFeas(soln.primalSolution, tol);
 		// now check for zero columns (which can't enter a basis) for negative c (unbounded)
 		{
 			for(int j=0;j<origProb.c.dim();++j) {

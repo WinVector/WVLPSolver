@@ -1,5 +1,9 @@
 package com.winvector.lp;
 
+import java.io.PrintStream;
+import java.io.Serializable;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Random;
 
 import com.winvector.linalg.LinalgFactory;
@@ -8,7 +12,6 @@ import com.winvector.linalg.PreMatrixI;
 import com.winvector.linalg.PreVecI;
 import com.winvector.linalg.sparse.HVec;
 import com.winvector.linalg.sparse.SparseVec;
-import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.impl.RandomOrder;
 
 
@@ -17,59 +20,75 @@ import com.winvector.lp.impl.RandomOrder;
  * dual: max y.b: y A <= c 
  * y b = y A x <= c x (by A <=c, x>=0) , so y . b <= c . x at optimal y.b = c.x
  */
-public final class LPEQProb extends LPProbBase implements LPEQProbI {
+public final class LPEQProb implements Serializable, LPEQProbI {
 	private static final long serialVersionUID = 1L;
 	
-
-	public LPEQProb(final PreMatrixI A_in, final double[] b_in, final PreVecI c_in)
-			throws LPException.LPMalformedException {
-		super(A_in,b_in,c_in,"=");
-	}
+	
+	public final PreMatrixI A;
+	public final double[] b;
+	public final PreVecI c;
+	
 
 	/**
 	 * @param A
-	 *            matrix m-row by n-column matrix m <=n
+	 *            matrix m-row by n-column matrix
 	 * @param b
 	 *            m-vector
-	 * @param basis
-	 *            m-vector that is a valid starting basis
-	 * @param tol
-	 *            tolerance for comparisons
-	 * @return x s.t. x(basis) = A(basis)^-1 b, x zero in other positions, x>=0 (
-	 *         A(basis) = square matrix of basis columns x(basis) = vector with
-	 *         entries selected by basis)
-	 * @throws LPException
-	 *             on bad data
+	 * @param c
+	 *            n-vector
+	 * @throws LPException.LPMalformedException
+	 *             if parameters don't match defs
 	 */
-	public static <T extends Matrix<T>> HVec primalSoln(final PreMatrixI A, final double[] b, final int[] basis, final double tol, final LinalgFactory<T> factory)
-			throws LPException {
-		if ((A == null) || (b == null) || (basis == null) || (A.rows() <= 0)
-				|| (A.rows() != b.length) || (basis.length != A.rows())) {
-			throw new LPException.LPErrorException("bad call to soln()");
-		}
-		if (A.rows() > A.cols()) {
-			throw new LPException.LPErrorException("m>n in soln()");
-		}
-		final PreMatrixI AP = A.extractColumns(basis);
-		final double[] xp = factory.matrixCopy(AP).solve(b);
-		if (xp == null) {
-			throw new LPException.LPErrorException("basis solution failed");
-		}
-		final HVec x = new HVec(basis,xp);
-		checkPrimFeas(A, b, x, tol);
-		return x;
+	public LPEQProb(final PreMatrixI A_in, final double[] b_in, final PreVecI c_in)
+			throws LPException.LPMalformedException {
+		checkParams(A_in, b_in, c_in);
+		A = A_in;
+		b = b_in;
+		c = c_in;
 	}
 	
-	public static <T extends Matrix<T>> HVec primalSoln(final LPEQProbI prob, final int[] basis, final LinalgFactory<T> factory)
-			throws LPException {
-		final Matrix<T> AP = factory.matrixCopy(prob.extractColumns(basis));
-		final double[] xp = AP.solve(prob.b());
-		if (xp == null) {
-			throw new LPException.LPErrorException("basis solution failed");
+	/**
+	 * @param A_
+	 *            matrix m-row by n-column matrix
+	 * @param b
+	 *            m-vector
+	 * @param c_
+	 *            n-vector
+	 * @throws LPException.LPMalformedException
+	 *             if parameters don't match defs
+	 */
+	private static void checkParams(final PreMatrixI A_, final double[] b_, final PreVecI c_)
+			throws LPException.LPMalformedException {
+		if ((A_ == null) || (b_ == null) || (c_ == null)
+				|| (A_.rows() != b_.length) || (A_.cols() != c_.dim())) {
+			String problem = "misformed problem";
+			if (A_ == null) {
+				problem = problem + " A_==null";
+			}
+			if (b_ == null) {
+				problem = problem + " b==null";
+			} else {
+				if (A_ != null) {
+					if (A_.rows() != b_.length) {
+						problem = problem + " A_.rows()(" + A_.rows()
+								+ ")!=b.length(" + b_.length + ")";
+					}
+				}
+			}
+			if (c_ == null) {
+				problem = problem + " c_==null";
+			} else {
+				if ((A_ != null) && (A_.rows() > 0)) {
+					if (A_.cols() != c_.dim()) {
+						problem = problem + " A_.cols()(" + A_.cols()
+								+ ")!=c.length(" + c_.dim() + ")";
+					}
+				}
+			}
+			throw new LPException.LPMalformedException(problem);
 		}
-		final HVec x = new HVec(basis,xp); 
-		return x;
 	}
+
 
 	/**
 	 * @param A
@@ -83,7 +102,7 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 	 * @throws LPException
 	 *             (if infeas ill-formed)
 	 */
-	public static void checkPrimFeas(final PreMatrixI A, final double[] b, final HVec x,
+	public void checkPrimFeas(final HVec x,
 			double tol) throws LPException {
 		if ((A == null) || (b == null) || (x == null)) {
 			throw new LPException.LPInfeasibleException("null argument");
@@ -128,7 +147,7 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 	 * @throws LPException
 	 *             (if infeas ill-formed)
 	 */
-	public static void checkDualFeas(final PreMatrixI A, final PreVecI c, final double[] y,
+	public void checkDualFeas(final double[] y,
 			double tol) throws LPException {
 		if ((A == null) || (c == null) || (y == null)) {
 			throw new LPException.LPInfeasibleException("null argument");
@@ -169,13 +188,12 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 	 * @throws LPException
 	 *             (if infeas ill-formed, or y.b > c.x)
 	 */
-	public static void checkPrimDualFeas(final PreMatrixI A, final double[] b, final PreVecI c,
-			final HVec x, final double[] y, double tol) throws LPException {
+	public void checkPrimDualFeas(final HVec x, final double[] y, double tol) throws LPException {
 		if ((tol <= 0.0)||Double.isNaN(tol)||Double.isInfinite(tol)) { 
 			tol = 0.0;
 		}
-		checkPrimFeas(A, b, x, tol);
-		checkDualFeas(A, c, y, tol);
+		checkPrimFeas(x, tol);
+		checkDualFeas(y, tol);
 		final double yb = Matrix.dot(y,b);
 		final double cx = x.dot(c);
 		final double d = cx - yb;
@@ -201,14 +219,13 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 	 * @throws LPException
 	 *             (if infeas ill-formed, or y.b != c.x)
 	 */
-	public static void checkPrimDualOpt(final PreMatrixI A, final double[] b, final PreVecI c, 
-			final HVec x,
+	public void checkPrimDualOpt(final HVec x,
 			final double[] y, double tol) throws LPException {
 		if ((tol <= 0.0)||Double.isNaN(tol)||Double.isInfinite(tol)) { 
 			tol = 0.0;
 		}
-		checkPrimFeas(A, b, x, tol);
-		checkDualFeas(A, c, y, tol);
+		checkPrimFeas(x, tol);
+		checkDualFeas(y, tol);
 		final double yb = Matrix.dot(y,b);
 		final double cx = x.dot(c);
 		final double d = cx - yb;
@@ -234,7 +251,7 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 	 * @return dual-optimal solution
 	 */
 	 public <T extends Matrix<T>> double[] dualSolution(final LPSoln p, final double tol, final LinalgFactory<T> factory) throws LPException {
-		 checkPrimFeas(A, b, p.primalSolution, tol);
+		 checkPrimFeas(p.primalSolution, tol);
 		 // we now have a list of equality constraints to work with
 		 final PreMatrixI eqmatT = extractColumns(p.basisColumns);
 		 final double[] eqvec = new double[p.basisColumns.length];
@@ -264,7 +281,7 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 			 final double[] eTc = eT.mult(eqvec);
 			 y = eTe.solve(eTc);
 		 }
-		 checkPrimDualOpt(A, b, c, p.primalSolution, y, tol);
+		 checkPrimDualOpt(p.primalSolution, y, tol);
 		 return y;
 	 }
 
@@ -278,11 +295,6 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 		return 0;
 	}
 	
-	@Override
-	public LPEQProb eqForm() throws LPMalformedException {
-		return this;
-	}
-
 
 	/**
 	 * solves primal and dual to prove soluton
@@ -295,9 +307,101 @@ public final class LPEQProb extends LPProbBase implements LPEQProbI {
 	public <T extends Matrix<T>> LPSoln solveDebug(final LPSolver solver, final double tol, final int maxRounds, final LinalgFactory<T> factory) throws LPException {
 		final LPSoln primSoln = solver.solve(this, null, tol, maxRounds, factory);
 		final double[] dualSoln = dualSolution(primSoln, tol,factory);
-		checkPrimDualOpt(A, b, c, primSoln.primalSolution, dualSoln, tol);
+		checkPrimDualOpt(primSoln.primalSolution, dualSoln, tol);
 		return primSoln;
 	}
+	
+	
+	public void print(final PrintStream p) {
+		p.println();
+		p.println("x>=0");
+		p.println(A);
+		p.print(" * x " + "=" + " ");
+		p.println(Matrix.toString(b));
+		p.print("minimize x . ");
+		p.println(c);
+		p.println();
+	}
+	
+	public void print() {
+		print(System.out);
+	}
+	
+	/**
+	 * print out in CPLEX problem format
+	 * @param p
+	 */
+	public void printCPLEX(final PrintStream p) {
+		final NumberFormat vnf = new DecimalFormat("00000");
+		final NumberFormat vvf = new DecimalFormat("#.######E0");
+		p.println("\\* WVLPSovler com.winvector.lp.LPEQProb see: http://www.win-vector.com/blog/2012/11/yet-another-java-linear-programming-library/ *\\");
+		p.println();
+		p.println("Minimize");
+		p.print("\tvalue: ");
+		{
+			boolean first = true;
+			for(int j=0;j<c.dim();++j) {
+				final double cj = c.get(j);
+				if(Math.abs(cj)!=0) {
+					final String valCStr = vvf.format(cj);
+					if(!first) {
+						if(valCStr.charAt(0)!='-') {
+							p.print(" +");
+						} else {
+							p.print(" ");
+						}
+					} else {
+						first = false;
+					}
+					p.print(valCStr + " " + "x" + vnf.format(j));
+				}
+			}
+		}
+		p.println();
+		p.println();
+		p.println("Subject To");
+		for(int i=0;i<b.length;++i) {
+			int nnz = 0;
+			for(int j=0;j<c.dim();++j) {
+				final double aij = A.get(i, j);
+				if(Math.abs(aij)!=0) {
+					++nnz;
+				}
+			}
+			if(nnz>0) {
+				p.print("\teq" + vnf.format(i) + ":\t");
+				boolean first = true;
+				for(int j=0;j<c.dim();++j) {
+					final double aij = A.get(i, j);
+					if(Math.abs(aij)!=0) {
+						final String valStr = vvf.format(aij);
+						if(!first) {
+							if(valStr.charAt(0)!='-') {
+								p.print(" +");
+							} else {
+								p.print(" ");
+							}
+						} else {
+							first = false;
+						}
+						p.print(valStr + " " + "x" + vnf.format(j));
+					}
+				}
+				p.println(" " + "=" + " " + vvf.format(b[i]));
+			}
+		}
+		p.println();
+		p.println("Bounds");
+		for(int j=0;j<c.dim();++j) {
+			p.println("\t0 <= x" + vnf.format(j));
+		}
+		p.println();
+		p.println("End");
+		p.println();
+		p.println("\\* eof *\\");
+	}
+
+	
 
 	// Abstract LPEQProb methods
 	@Override
