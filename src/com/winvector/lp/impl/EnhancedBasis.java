@@ -4,8 +4,8 @@ import java.io.Serializable;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
-import com.winvector.linalg.TabularLinOp;
 import com.winvector.linalg.sparse.SparseVec;
+import com.winvector.linalg.sparse.TabularLinOp;
 import com.winvector.lp.LPEQProbI;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPException.LPErrorException;

@@ -1,8 +1,9 @@
-package com.winvector.linalg;
+package com.winvector.linalg.sparse;
 
 import java.util.Arrays;
 
-import com.winvector.linalg.sparse.HVec;
+import com.winvector.linalg.LinOpI;
+import com.winvector.linalg.Matrix;
 
 
 public final class TabularLinOp implements LinOpI {
