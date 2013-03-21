@@ -150,7 +150,7 @@ public final class TestLP  {
 		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
 		final double tol = 1.0e-10;
 		final LPSoln soln = solver.solve(prob, null, tol, 1000, factory);
-		final double[] dual = prob.dualSolution(soln, tol,factory);
+		final double[] dual = prob.dualSolution(soln.basisColumns, factory);
 		assertNotNull(dual);
 	}
 }
