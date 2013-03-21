@@ -188,16 +188,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 		return leavingI;
 	}
 
-	private static <T extends Matrix<T>> HVec primalSoln(final LPEQProbI prob, final int[] basis, final LinalgFactory<T> factory)
-			throws LPException {
-		final Matrix<T> AP = factory.matrixCopy(prob.extractColumns(basis));
-		final double[] xp = AP.solve(prob.b());
-		if (xp == null) {
-			throw new LPException.LPErrorException("basis solution failed");
-		}
-		final HVec x = new HVec(basis,xp); 
-		return x;
-	}
+
 	
 	/**
 	 * solve: min c.x: A x = b, x>=0
@@ -229,7 +220,7 @@ public final class RevisedSimplexSolver extends LPSolverImpl {
 			basis = t.basis;
 		}
 		Arrays.sort(basis); // other t-structures now out of sync with basis, and no longer usable
-		final HVec x = primalSoln(prob, basis, factory); // would like to use t.preB, but it isn't correct on all exit conditions and also depens on a sorted basis
+		final HVec x = prob.primalSoln(basis, factory); // would like to use t.preB, but it isn't correct on all exit conditions and also depens on a sorted basis
 		final LPSoln lpSoln = new LPSoln(x, basis, null,0L);
 		final long endTimeMS = System.currentTimeMillis();
 		lpSoln.reportedRunTimeMS = endTimeMS - startTimeMS; // for our solution only count construction time

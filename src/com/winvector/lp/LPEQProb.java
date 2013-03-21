@@ -239,8 +239,18 @@ public final class LPEQProb implements Serializable, LPEQProbI {
 			throw new LPException.LPInfeasibleException("not optimal");
 		}
 	}
-
 	
+	@Override
+	public <T extends Matrix<T>> HVec primalSoln(final int[] colBasis, final LinalgFactory<T> factory)
+			throws LPException {
+		final Matrix<T> AP = factory.matrixCopy(extractColumns(colBasis));
+		final double[] xp = AP.solve(b());
+		if (xp == null) {
+			throw new LPException.LPErrorException("basis solution failed");
+		}
+		final HVec x = new HVec(colBasis,xp); 
+		return x;
+	}
 
 	/**
 	 * @param p
@@ -250,16 +260,16 @@ public final class LPEQProb implements Serializable, LPEQProbI {
 	 * @param factory 
 	 * @return dual-optimal solution
 	 */
-	 public <T extends Matrix<T>> double[] dualSolution(final LPSoln p, final double tol, final LinalgFactory<T> factory) throws LPException {
-		 checkPrimFeas(p.primalSolution, tol);
+	@Override
+	public <T extends Matrix<T>> double[] dualSolution(final int[] colBasis, final LinalgFactory<T> factory) throws LPException {
 		 // we now have a list of equality constraints to work with
-		 final PreMatrixI eqmatT = extractColumns(p.basisColumns);
-		 final double[] eqvec = new double[p.basisColumns.length];
+		 final PreMatrixI eqmatT = extractColumns(colBasis);
+		 final int nc = colBasis.length;
+		 final double[] eqvec = new double[nc];
 		 // put in all complementary slackness relns
 		 // Schrijver p. 95
-		 final int nc = p.basisColumns.length;
 		 for (int bi = 0; bi < nc; ++bi) {
-			 int i = p.basisColumns[bi];
+			 int i = colBasis[bi];
 			 eqvec[bi] = c.get(i);
 		 }
 		 final T eqmat = factory.matrixCopy(eqmatT.transpose());
@@ -281,7 +291,6 @@ public final class LPEQProb implements Serializable, LPEQProbI {
 			 final double[] eTc = eT.mult(eqvec);
 			 y = eTe.solve(eTc);
 		 }
-		 checkPrimDualOpt(p.primalSolution, y, tol);
 		 return y;
 	 }
 
@@ -306,7 +315,7 @@ public final class LPEQProb implements Serializable, LPEQProbI {
 	 */
 	public <T extends Matrix<T>> LPSoln solveDebug(final LPSolver solver, final double tol, final int maxRounds, final LinalgFactory<T> factory) throws LPException {
 		final LPSoln primSoln = solver.solve(this, null, tol, maxRounds, factory);
-		final double[] dualSoln = dualSolution(primSoln, tol,factory);
+		final double[] dualSoln = dualSolution(primSoln.basisColumns,factory);
 		checkPrimDualOpt(primSoln.primalSolution, dualSoln, tol);
 		return primSoln;
 	}

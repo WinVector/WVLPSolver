@@ -36,7 +36,7 @@ abstract class LPSolverImpl implements LPSolver {
 		if (b == null) {
 			return null;
 		}
-		StringBuilder r = new StringBuilder();
+		final StringBuilder r = new StringBuilder();
 		r.append('[');
 		for (int i = 0; i < b.length; ++i) {
 			if (i > 0) {
@@ -255,6 +255,7 @@ abstract class LPSolverImpl implements LPSolver {
 			} else {
 				basis0 = basis_in;
 			}
+			// find row basis
 			final int[] rb;
 			if(basis0.length<=0) {
 				rb = new int[0];
@@ -269,6 +270,7 @@ abstract class LPSolverImpl implements LPSolver {
 			}
 			if(rb.length>0) {
 				if (rb.length != prob.A.rows()) {
+					// substitute in a full row rank problem
 					final PreMatrixI nA = prob.A.extractRows(rb);
 					final double[] nb = Matrix.extract(prob.b,rb);
 					prob = new LPEQProb(nA, nb, prob.c);

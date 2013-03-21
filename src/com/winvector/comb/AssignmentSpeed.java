@@ -8,7 +8,6 @@ import java.util.TreeMap;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
-import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.jblas.JBlasMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
@@ -67,7 +66,7 @@ public final class AssignmentSpeed {
 					res.prePivotTimeMS = rs.prePivotTimeMS;
 					res.postPivotTimeMS = rs.postPivotTimeMS;
 					rs.clearCounters();
-					final double[] dualSoln = prob.dualSolution(soln, 1.0e-5,factory);
+					final double[] dualSoln = prob.dualSolution(soln.basisColumns, factory);
 					prob.checkPrimDualOpt(soln.primalSolution, dualSoln, 1.0e-5);
 				}
 				if(null!=soln) {
@@ -81,7 +80,7 @@ public final class AssignmentSpeed {
 						sawValue = value;
 					}
 					if(soln.basisColumns!=null) {
-						final double[] dual = prob.dualSolution(soln,1.0e-3,factory);
+						final double[] dual = prob.dualSolution(soln.basisColumns,factory);
 						prob.checkPrimDualOpt(soln.primalSolution, dual, 1.0e-3);
 					}
 					res.res.put(name,durationMS);

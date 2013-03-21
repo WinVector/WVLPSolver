@@ -6,7 +6,6 @@ import java.util.Random;
 import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
-import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.linalg.jblas.JBlasMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
