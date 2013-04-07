@@ -28,7 +28,7 @@ import com.winvector.lp.LPSolver;
  */
 abstract class LPSolverImpl implements LPSolver {
 	public int verbose = 0;
-	public double minBasisEpsilon = 1.0e-5;
+	public double minBasisEpsilon = 1.0e-3;
 	public boolean rescale = false;
 
 
@@ -150,7 +150,7 @@ abstract class LPSolverImpl implements LPSolver {
 		}
 		// check objective value is zero
 		final double v = soln.primalSolution.dot(c);
-		if (Math.abs(v)>1.0e-5) {
+		if (Math.abs(v)>tol) {
 			throw new LPException.LPInfeasibleException("primal infeasible");
 		}
 		// check basis is good
@@ -249,31 +249,19 @@ abstract class LPSolverImpl implements LPSolver {
 					}
 				}
 			}
-			final int[] basis0;
-			if(null==basis_in) {
-				basis0 = solvePhase1(prob.A, prob.b , prob.c, tol, maxRounds, factory);
-			} else {
-				basis0 = basis_in;
-			}
-			// find row basis
-			final int[] rb;
-			if(basis0.length<=0) {
-				rb = new int[0];
-			} else if(basis0.length>=prob.A.rows()) { 
-				rb = new int[prob.A.rows()];
-				for(int i=0;i<rb.length;++i) {
-					rb[i] = i;
-				}
-			} else {
-				final PreMatrixI colSet = prob.A.extractColumns(basis0);
-				rb = colSet.transpose().colBasis(null,minBasisEpsilon);
-			}
+			final int[] rb = prob.A.transpose().colBasis(null,minBasisEpsilon);
 			if(rb.length>0) {
 				if (rb.length != prob.A.rows()) {
 					// substitute in a full row rank problem
 					final PreMatrixI nA = prob.A.extractRows(rb);
 					final double[] nb = Matrix.extract(prob.b,rb);
 					prob = new LPEQProb(nA, nb, prob.c);
+				}
+				final int[] basis0;
+				if(null==basis_in) {
+					basis0 = solvePhase1(prob.A, prob.b , prob.c, tol, maxRounds, factory);
+				} else {
+					basis0 = basis_in;
 				}
 				soln = rawSolve(prob, basis0, tol, maxRounds, factory, null);
 				if ((soln == null) || (soln.primalSolution == null) || (soln.basisColumns == null)

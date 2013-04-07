@@ -4,6 +4,8 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.winvector.linalg.PreMatrixI;
 
@@ -154,15 +156,17 @@ public final class ColumnMatrix implements PreMatrixI {
 	}
 	
 	@Override
-	public ColumnMatrix extractRows(final int[] rb) {
+	public ColumnMatrix extractRows(final int[] rbIn) {
+		final int[] rb = Arrays.copyOf(rbIn,rbIn.length);
+		Arrays.sort(rb);
 		final int newDim = rb.length;
-		final BitSet rows = new BitSet(rows());
-		for(final int ri: rb) {
-			rows.set(ri);
+		final SortedMap<Integer,Integer> renumbering = new TreeMap<Integer,Integer>();
+		for(int i=0;i<rb.length;++i) {
+			renumbering.put(rb[i],i);
 		}
 		final ColumnMatrix newMat = new ColumnMatrix(newDim,cols);
 		for(int j=0;j<cols;++j) {
-			newMat.columns[j] = columns[j].extractRows(newDim, rows);
+			newMat.columns[j] = columns[j].extractRows(newDim, renumbering);
 		}
 		return newMat;
 	}

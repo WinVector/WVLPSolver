@@ -1,6 +1,7 @@
 package com.winvector.linalg.sparse;
 
-import java.util.BitSet;
+import java.util.SortedMap;
+
 
 
 /**
@@ -93,32 +94,32 @@ public final class SparseVec extends HVec {
 		return toArray(dim);
 	}
 	
-	SparseVec extractRows(final int newDim, final BitSet rows) {
+	SparseVec extractRows(final int newDim, final SortedMap<Integer,Integer> renumbering) {
 		final int nindices = indices.length;
-		int k = 0;
-		for(int ii=0;ii<nindices;++ii) {
-			final int i = indices[ii];
-			if((i<newDim)&&rows.get(i)) {
-				++k;
-			}
-		}
-		final int nnz = k;
-		if((dim==newDim)&&(nnz>=nindices)) {
-			return this;
-		} else {
-			final int[] newIndices = new int[nnz];
-			final double[] newValues = new double[nnz];
-			k = 0;
-			for(int ii=0;(ii<nindices)&&(k<nnz);++ii) {
+		final int nnz;
+		{
+			int k = 0;
+			for(int ii=0;ii<nindices;++ii) {
 				final int i = indices[ii];
-				if((i<newDim)&&rows.get(i)) {
-					newIndices[k] = i;
-					newValues[k] = values[ii];
+				if(renumbering.containsKey(i)) {
 					++k;
 				}
 			}
-			return new SparseVec(newDim,newIndices,newValues);
+			nnz = k;
 		}
+		final int[] newIndices = new int[nnz];
+		final double[] newValues = new double[nnz];
+		int k = 0;
+		for(int ii=0;(ii<nindices)&&(k<nnz);++ii) {
+			final int i = indices[ii];
+			final Integer newIndex = renumbering.get(i);
+			if(null!=newIndex) {
+				newIndices[k] = newIndex;
+				newValues[k] = values[ii];
+				++k;
+			}
+		}
+		return new SparseVec(newDim,newIndices,newValues);
 	}
 	
 	/**
