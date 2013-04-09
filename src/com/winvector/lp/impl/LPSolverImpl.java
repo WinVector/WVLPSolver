@@ -71,7 +71,8 @@ abstract class LPSolverImpl implements LPSolver {
 
 	/**
 	 * @param A
-	 *            matrix m-row by n-column matrix- full row rank
+	 *            matrix m-row by n-column matrix- does not need to be full row rank because we add slacks
+	 *            (which if we are not full row rank we can't pivot off)
 	 * @param b
 	 *            m-vector
 	 * @return basis0 m-vector that is a valid starting basis ( A(basis0) =
@@ -249,19 +250,30 @@ abstract class LPSolverImpl implements LPSolver {
 					}
 				}
 			}
-			final int[] rb = prob.A.transpose().colBasis(null,minBasisEpsilon);
+			final int[] basis0;
+			if(null==basis_in) {
+				basis0 = solvePhase1(prob.A, prob.b , prob.c, tol, maxRounds, factory);
+			} else {
+				basis0 = basis_in;
+			}
+			final int[] rb;
+			if(basis0.length==prob.A.rows()) {
+				// full row rank
+				rb = new int[basis0.length];
+				for(int i=0;i<rb.length;++i) {
+					rb[i] = i;
+				}
+			} else {
+				// extract row basis, only need to use columns in our column basis
+				rb = prob.A.extractColumns(basis0).transpose().colBasis(null,minBasisEpsilon);
+				Arrays.sort(rb);
+			}
 			if(rb.length>0) {
 				if (rb.length != prob.A.rows()) {
 					// substitute in a full row rank problem
 					final PreMatrixI nA = prob.A.extractRows(rb);
 					final double[] nb = Matrix.extract(prob.b,rb);
 					prob = new LPEQProb(nA, nb, prob.c);
-				}
-				final int[] basis0;
-				if(null==basis_in) {
-					basis0 = solvePhase1(prob.A, prob.b , prob.c, tol, maxRounds, factory);
-				} else {
-					basis0 = basis_in;
 				}
 				soln = rawSolve(prob, basis0, tol, maxRounds, factory, null);
 				if ((soln == null) || (soln.primalSolution == null) || (soln.basisColumns == null)
