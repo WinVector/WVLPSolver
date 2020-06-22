@@ -102,6 +102,7 @@ public final class LPEQProb implements Serializable, LPEQProbI {
 	 * @throws LPException
 	 *             (if infeas ill-formed)
 	 */
+	@Override
 	public void checkPrimFeas(final HVec x,
 			double tol) throws LPException {
 		if ((A == null) || (b == null) || (x == null)) {
@@ -147,6 +148,7 @@ public final class LPEQProb implements Serializable, LPEQProbI {
 	 * @throws LPException
 	 *             (if infeas ill-formed)
 	 */
+	@Override
 	public void checkDualFeas(final double[] y,
 			double tol) throws LPException {
 		if ((A == null) || (c == null) || (y == null)) {

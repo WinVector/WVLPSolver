@@ -23,6 +23,8 @@ public final class LPSoln implements Serializable {
 		reportedRunTimeMS = reportedRunTimeMS_in;
 	}
 
+	
+	@Override
 	public String toString() {
 		final StringBuilder b = new StringBuilder();
 		if (primalSolution != null) {

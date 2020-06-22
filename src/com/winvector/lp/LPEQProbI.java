@@ -31,6 +31,7 @@ public interface LPEQProbI {
 	 * @throws LPException
 	 */
 	<T extends Matrix<T>> HVec primalSoln(int[] colBasis, LinalgFactory<T> factory) throws LPException;
+	void checkPrimFeas(HVec x, double tol) throws LPException;
 	
 	/**
 	 * 
@@ -40,4 +41,5 @@ public interface LPEQProbI {
 	 * @throws LPException
 	 */
 	<T extends Matrix<T>> double[] dualSolution(int[] colBasis, LinalgFactory<T> factory) throws LPException;
+	void checkDualFeas(double[] y, double tol) throws LPException;
 }

@@ -314,7 +314,6 @@ public final class ColumnMatrix implements PreMatrixI {
 	
 	@Override
 	public ColumnMatrix transpose() {
-		// TODO: implement
 		// count number of indices in each row
 		final int[] nc = new int[rows];
 		for(int cj=0;cj<cols;++cj) {
